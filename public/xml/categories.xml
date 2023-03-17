@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GetCategoriesRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+    <RequesterCredentials>
+        <eBayAuthToken>$ebay->access_token</eBayAuthToken>
+    </RequesterCredentials>
+    <ErrorLanguage>en_US</ErrorLanguage>
+    <WarningLevel>High</WarningLevel>
+    <DetailLevel>ReturnAll</DetailLevel>
+    <ViewAllNodes>true</ViewAllNodes>
+</GetCategoriesRequest>

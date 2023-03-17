@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ReviseItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+  <RequesterCredentials>
+    <eBayAuthToken>$ebay->access_token</eBayAuthToken>
+  </RequesterCredentials>
+  <ErrorLanguage>en_US</ErrorLanguage>
+  <WarningLevel>High</WarningLevel>
+  <Item>
+    <ItemID>$item->id</ItemID>
+	$item->updating
+    <SellerProfiles>
+        $item->deliveryMethod
+        <SellerReturnProfile>
+          <ReturnProfileID>2########2</ReturnProfileID>
+          <ReturnProfileName>Rücksendung von Waren</ReturnProfileName>
+        </SellerReturnProfile>
+        <SellerPaymentProfile>
+          <PaymentProfileID>2######2</PaymentProfileID>
+          <PaymentProfileName>eBay Managed Payments</PaymentProfileName>
+        </SellerPaymentProfile>
+    </SellerProfiles>
+  </Item>
+</ReviseItemRequest>
