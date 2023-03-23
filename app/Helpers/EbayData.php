@@ -7,72 +7,6 @@ use App\Imports\EbayImport;
 
 class EbayData extends Ebay
 {
-    protected static function renderImportForm($routeName) {
-        $html = '<form data-action="' . route('import.' . $routeName) . '" method="post" enctype="multipart/form-data"  onsubmit="return false">
-                            <div>
-                                <h3>Importuoti ' . $routeName. '</h3>
-                                <div class="row">
-                                    <div>
-                                        <input type="file" id="import" name="import">
-                                    </div>';
-        if($routeName == 'update') {
-            $html .= '<div class="update_details">
-                        <input type="checkbox" checked="1" name="all">
-                        <label for="all">Update all</label>
-                        <input type="checkbox" checked="1" name="title">
-                        <label for="title">title</label>
-                        <input type="checkbox" checked="1" name="newTitle">
-                        <label for="newTitle">new title</label>
-                        <input type="checkbox" checked="1" name="description">
-                        <label for="description">description</label>
-                        <input type="checkbox" checked="1" name="pictures">
-                        <label for="pictures">images</label>
-                        <input type="checkbox" checked="1" name="categoryId">
-                        <label for="categoryId">category</label>
-                        <input type="checkbox" checked="1" name="quantity">
-                        <label for="quantity">quantity</label>
-                        <input type="checkbox" checked="1" name="price">
-                        <label for="price">price</label>
-                        <input type="checkbox" checked="1" name="compatibility">
-                        <label for="compatibility">compatibilities</label>
-                        <input type="checkbox" checked="1" name="deliveryMethod">
-                        <label for="deliveryMethod">delivery method</label></br>
-                        <input type="checkbox" checked="1" name="specifications">
-                        <label for="specifications">specifications:</label>
-                        <input type="checkbox" checked="1" name="hersteller">
-                        <label for="hersteller">hersteller</label>,
-                        <input type="checkbox" checked="1" name="produkttyp">
-                        <label for="produkttyp">producttyp</label>,
-                        <input type="checkbox" checked="1" name="garantie">
-                        <label for="garantie">herstellergarantie</label>,
-                        <input type="checkbox" checked="1" name="oe">
-                        <label for="oe">oe referenznummer(n)</label>,
-                        <input type="checkbox" checked="1" name="nummer">
-                        <label for="nummer">herstellernummer</label>,
-                        <input type="checkbox" checked="1" name="ean">
-                        <label for="ean">EAN</label>,
-                        <input type="checkbox" checked="1" name="country">
-                        <label for="country">country</label>,
-                        <input type="checkbox" checked="1" name="length">
-                        <label for="length">length</label>,
-                        <input type="checkbox" checked="1" name="position">
-                        <label for="position">position</label>,
-                        <input type="checkbox" checked="1" name="keywords">
-                        <label for="keywords">keywords</label></br>
-                    </div>';
-        }
-        $html .= '<button class="btn btn-sm btn-primary" type="submit">Importuoti</button>
-                                </div>
-                            </div>
-                        </form>';
-
-        if($routeName == 'update') {
-            $html .= '<script src="' . \URL::to('/') . '/js/ebayUpdateImport.js' .'"></script>';
-        }
-
-        return $html;
-    }
-
     private function getAllCompatibilities() {
         $file = public_path() . '\ebay_models.xlsx';
 
@@ -184,9 +118,6 @@ class EbayData extends Ebay
                                 }
                             }
                         }
-                        if(strpos($oe_codes, ', ') === false) {
-                            dd($oe_codes, $oe_codes2);
-                        }
                         $oe_codes2 = explode(", ", $oe_codes);
                         $с = 0;
                         foreach ($oe_codes2 as $code) {
@@ -197,15 +128,10 @@ class EbayData extends Ebay
                         }
                         $oe_codes2 = implode(', ', $oe_codes2);
                         $oe_codes2 = explode(", ", $oe_codes2);
-                        foreach ($oe_codes2 as $code) {
-                            if(strlen($code) > 65) {
-                                dd("бля", $oe_codes2, $oe_codes);
-                            }
-                        }
+
                         $oe_codes = [];
                         $o = 0;
                         while (count($oe_codes2) > 0) {
-//                            var_dump(count($oe_codes2));
                             $oe_codes[$o][] = array_shift($oe_codes2);
                             $oe_codes[$o] = implode(', ', $oe_codes[$o]);
                             if (strlen($oe_codes[$o]) > 65) {
@@ -215,7 +141,6 @@ class EbayData extends Ebay
                                 }
                                 $oe_codes[$o] = implode(', ', $oe_codes[$o]);
                                 $o++;
-//                                break;
                             } else {
                                 $oe_codes[$o] = explode(", ", $oe_codes[$o]);
                             }
@@ -237,8 +162,6 @@ class EbayData extends Ebay
                     }
                 }
 
-//                dd($values->oe);
-
                 $XMLText = EbayData::getXMLSpecifications($values);
                 break;
             case 'compatibility':
@@ -253,27 +176,27 @@ class EbayData extends Ebay
                 <Compatibility>
                  <NameValueList/>
                  <NameValueList>
-                   <Name>DEM_Year</Name>
+                   <Name>Year</Name>
                    <Value>$compatibility[5]</Value>
                  </NameValueList>
                  <NameValueList>
-                   <Name>DEM_Make</Name>
+                   <Name>Make</Name>
                    <Value>$compatibility[1]</Value>
                  </NameValueList>
                  <NameValueList>
-                   <Name>DEM_Model</Name>
+                   <Name>Model</Name>
                    <Value>$compatibility[2]</Value>
                  </NameValueList>
                  <NameValueList>
-                   <Name>DEM_Platform</Name>
+                   <Name>Platform</Name>
                    <Value>$compatibility[4]</Value>
                  </NameValueList>
                  <NameValueList>
-                   <Name>DEM_Trim</Name>
+                   <Name>Trim</Name>
                    <Value>$compatibility[3]</Value>
                  </NameValueList>
                  <NameValueList>
-                   <Name>DEM_CCM</Name>
+                   <Name>CCM</Name>
                    <Value>$compatibility[6]</Value>
                  </NameValueList>
                </Compatibility>
@@ -318,7 +241,6 @@ class EbayData extends Ebay
         }
 
         $specificationsText = EbayData::addToXMLVariables($specificationsText, $variables, $specifications);
-//        dd($specificationsText);
 
         $specificationObject = json_decode(json_encode(simplexml_load_string($specificationsText, "SimpleXMLElement", LIBXML_NOCDATA)), true);
         foreach ($specificationObject['NameValueList'] as $key=>$spec) {
@@ -339,13 +261,9 @@ class EbayData extends Ebay
                         if(is_string($key3)) {
                             $specificationsText2 .= '<' . $key3 . '>';
                         }
-
-                        if(is_array($spec3)) {
-
-                        } else {
+                        if(!is_array($spec3)) {
                             $specificationsText2 .= $spec3;
                         }
-
                         if(is_string($key3)) {
                             $specificationsText2 .= '</' . $key3 . '>';
                         }
@@ -360,6 +278,7 @@ class EbayData extends Ebay
                 $specificationsText2 .= '</' . $key . '>';
             }
         }
+
         if(isset($specifications->oe)) {
             if(is_array($specifications->oe)) {
                 for($o=1; $o < sizeof($specifications->oe); $o++) {
@@ -386,7 +305,6 @@ class EbayData extends Ebay
             } else {
                 foreach ($variable as $let) {
                     $name = '$' . $key . '->' . $let;
-//                    var_dump([$name, $$key->{$let}]);
                     if(isset($$key->{$let})) {
                         $xml = str_replace($name, $$key->{$let}, $xml);
                     } else {
@@ -475,8 +393,6 @@ class EbayData extends Ebay
         $description = EbayData::prepareXML($description);
         $oes = str_replace('&', '&amp;', $oes);
 
-//        $description .= '</body></html>';
-
         $xml = simplexml_load_string($description, "SimpleXMLElement", LIBXML_NOCDATA);
 
         $newLiWithOe = '<li>OE/OEM Referenznummer(n): ' . $oes . '</li>';
@@ -519,7 +435,7 @@ class EbayData extends Ebay
             $dataForResult = json_decode($dataForResult, true);
             $result['result'] = $dataForResult;
 
-//            unlink($path . '\\' . $fileNameForResult . '.json');
+            unlink($path . '\\' . $fileNameForResult . '.json');
         }
 
         $dataForLogs = @file_get_contents($path . '\\' . $fileNameForLogs . '.json');
@@ -556,7 +472,7 @@ class EbayData extends Ebay
                 }
             }
 
-//            unlink($path . '\\' . $fileNameForLogs . '.json');
+            unlink($path . '\\' . $fileNameForLogs . '.json');
         }
 
         return json_encode($result);
