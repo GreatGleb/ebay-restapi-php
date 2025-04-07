@@ -1,4 +1,4 @@
-@extends('welcome')
+@extends('layouts.app')
 
 @section('title','Ebay - Example of using Ebay Rest Api')
 @section('content')
@@ -75,8 +75,6 @@
     </form>
 
     @include('ebay.ebayLoading')
-
-    <h3>© Sugak Gleb, gwelbts@gmail.com</h3>
 
     <script src="{{asset('js/ebayUpdateImport.js')}}"></script>
     <script src="{{asset('js/ebayLoading.js')}}"></script>
