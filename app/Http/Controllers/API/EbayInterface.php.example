@@ -1,0 +1,51 @@
+<?php
+
+namespace App\Http\Controllers\API;
+
+use App\Http\Controllers\API\ApiEbayController;
+use App\Helpers\EbayData;
+use App\Helpers\EbayCurl;
+
+class EbayInterface
+{
+    public function __construct() {
+        $e = new ApiEbayController();
+        $e->index();
+        $e->getLinkFirstAuth();
+        $e->getRefreshTokens();
+        $e->storeRefreshTokens();
+        $e->setRefreshToken();
+        $e->getAccessToken();
+        $e->getCategories();
+        $e->getItemAspectsForCategory();
+        $e->getRateLimits();
+        $e->getFulfillmentPolicies();
+        $e->getPaymentPolicies();
+        $e->getReturnPolicies();
+        $e->getSellerList();
+        $e->exportItems();
+        $e->reviseItem();
+        $e->reviseInventory();
+        $e->addItem();
+        $e->updatingItem();
+        $e->updatingInventory();
+        $e->addingItem();
+        $e->checkIfItemExists();
+        $e->updateStockAndPrice();
+        $e->checkImportLoading();
+        $e->importUpdate();
+        $e->importAdd();
+        $e->findProduct();
+
+        $e = new EbayCurl();
+        $e->sendCurl();
+        $e->getCurlHeaders();
+        $e->getCurlPostFields();
+
+        $e = new EbayData();
+        $e->renderImportForm();
+        $e->getXMLCompatibilities();
+        $e->getXMLSpecifications();
+        $e->addToXMLVariables();
+    }
+}

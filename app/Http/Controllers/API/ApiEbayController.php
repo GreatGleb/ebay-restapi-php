@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Helpers\EbayCurl;
 use App\Helpers\EbayData;
 use App\Http\Controllers\Controller;
 use App\Imports\EbayImport;
 use Illuminate\Http\Request;
-use App\Helpers\EbayCurl;
 use Illuminate\Support\Arr;
 
 class ApiEbayController extends Controller
