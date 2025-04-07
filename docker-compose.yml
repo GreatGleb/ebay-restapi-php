@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: laravel_supabase_app
+    container_name: ebay_restapi_app
     restart: unless-stopped
     working_dir: /var/www/docker-laravel-postgresql-supabase
     volumes:
@@ -11,11 +11,11 @@ services:
     depends_on:
       - db
     networks:
-      - laravel_supabase_network
+      - ebay_restapi_network
 
   web:
     image: nginx:latest
-    container_name: laravel_supabase_nginx
+    container_name: ebay_restapi_nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -25,11 +25,11 @@ services:
     depends_on:
       - app
     networks:
-      - laravel_supabase_network
+      - ebay_restapi_network
 
   db:
     image: supabase/postgres:15.1.0.117
-    container_name: laravel_supabase_postgres
+    container_name: ebay_restapi_postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
@@ -40,11 +40,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - laravel_supabase_network
+      - ebay_restapi_network
 
   meta:
     image: ghcr.io/supabase/postgres-meta:v0.75.0
-    container_name: laravel_supabase_meta
+    container_name: ebay_restapi_meta
     environment:
       PG_META_PORT: 8080
       PG_META_DB_HOST: db
@@ -56,11 +56,11 @@ services:
     depends_on:
       - db
     networks:
-      - laravel_supabase_network
+      - ebay_restapi_network
 
   studio:
     image: supabase/studio:latest
-    container_name: laravel_supabase_studio
+    container_name: ebay_restapi_studio
     restart: unless-stopped
     environment:
       STUDIO_PG_META_URL: http://meta:8080
@@ -74,11 +74,11 @@ services:
       - db
       - meta
     networks:
-      - laravel_supabase_network
+      - ebay_restapi_network
 
 volumes:
   postgres_data:
 
 networks:
-  laravel_supabase_network:
+  ebay_restapi_network:
     driver: bridge
