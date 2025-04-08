@@ -12,6 +12,7 @@ Route::post('/ebay/updateEbay', [ApiEbayController::class, 'updateStockAndPrice'
 Route::post('/ebay/exportEbay', [ApiEbayController::class, 'exportItems'])->name('ebay.export');
 
 Route::get('/ebay/getLinkFirstAuth', [ApiEbayController::class, 'getLinkFirstAuth'])->name('ebay.linkFirstAuth');
+Route::get('/ebay/setRefreshToken', [ApiEbayController::class, 'setRefreshToken'])->name('ebay.setRefreshToken');
 Route::get('/ebay/getCategories', [ApiEbayController::class, 'getCategories'])->name('ebay.getCategories');
 Route::post('/ebay/getItemAspectsForCategory', [ApiEbayController::class, 'getItemAspectsForCategory'])->name('ebay.getItemAspectsForCategory');
 Route::get('/ebay/getRateLimits', [ApiEbayController::class, 'getRateLimits'])->name('ebay.getRateLimits');

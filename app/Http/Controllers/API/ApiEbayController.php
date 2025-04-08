@@ -73,7 +73,7 @@ class ApiEbayController extends Controller
         return $result;
     }
 
-    private function setRefreshToken() {
+    public function setRefreshToken() {
         $response = $this->getRefreshTokens();
         if(isset($response["access_token"]) && isset($response["refresh_token"])) {
             $access_token = $response["access_token"];
@@ -82,7 +82,7 @@ class ApiEbayController extends Controller
             $this->refresh_token = $refresh_token;
             return $this->storeRefreshTokens($access_token, $refresh_token);
         }
-        return 1;
+        return $response;
     }
 
     private function getAccessToken() {
@@ -968,7 +968,9 @@ class ApiEbayController extends Controller
 
     public function index()
     {
-        var_dump($this->getLinkFirstAuth());
-
+//        var_dump($this->setRefreshToken());
+//        var_dump($this->getAccessToken());
+        var_dump($this->getCategories());
+        var_dump($this->getReturnPolicies());
     }
 }

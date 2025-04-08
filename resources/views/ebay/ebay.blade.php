@@ -6,6 +6,9 @@
 
     <h1>Ebay - Example of using Ebay Rest Api</h1>
 
+    <a href="{{ route('ebay.linkFirstAuth') }}">Auth Link</a>
+    <a href="{{ route('ebay.setRefreshToken') }}">setRefreshToken</a>
+
     <form data-action="{{ route('import.update') }}" method="post" enctype="multipart/form-data"  onsubmit="return false">
         <div>
             <h3>Importuoti Update</h3>
