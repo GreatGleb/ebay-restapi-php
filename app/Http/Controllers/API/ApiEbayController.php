@@ -965,4 +965,10 @@ class ApiEbayController extends Controller
             return $result;
         }
     }
+
+    public function index()
+    {
+        var_dump($this->getLinkFirstAuth());
+
+    }
 }

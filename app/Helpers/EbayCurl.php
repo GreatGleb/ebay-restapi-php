@@ -47,12 +47,12 @@ class EbayCurl extends Ebay
         $postFields = [
             "authorization"=> "grant_type=authorization_code&scope=".urlencode($ebay->scopes) . "&code=".$ebay->firstCodeAuth."&redirect_uri=" . $ebay->ruName,
             "refresh"=> "grant_type=refresh_token&refresh_token=".$ebay->refresh_token."&scope=" . urlencode($ebay->scopes),
-            "sellerList"=> file_get_contents(public_path() . '\xml\sellerList.xml'),
-            "reviseItem"=> file_get_contents(public_path() . '\xml\reviseItem_' . $ebay->marketplaceShortLocale . '.xml'),
-            "reviseInventory"=> file_get_contents(public_path() . '\xml\reviseInventoryStatus.xml'),
-            "addItem"=> file_get_contents(public_path() . '\xml\addItem_' . $ebay->marketplaceShortLocale . '.xml'),
-            "getItem"=> file_get_contents(public_path() . '\xml\getItem.xml'),
-            "getCategories"=> file_get_contents(public_path() . '\xml\categories.xml')
+            "sellerList"=> file_get_contents(public_path() . '/xml/sellerList.xml'),
+            "reviseItem"=> file_get_contents(public_path() . '/xml/reviseItem_' . $ebay->marketplaceShortLocale . '.xml'),
+            "reviseInventory"=> file_get_contents(public_path() . '/xml/reviseInventoryStatus.xml'),
+            "addItem"=> file_get_contents(public_path() . '/xml/addItem_' . $ebay->marketplaceShortLocale . '.xml'),
+            "getItem"=> file_get_contents(public_path() . '/xml/getItem.xml'),
+            "getCategories"=> file_get_contents(public_path() . '/xml/categories.xml')
         ];
         if($field == 'sellerList') {
             $variables = ['ebay'=>'access_token', 'item'=>['timeFrom', 'timeTo', 'pageNumber']];
