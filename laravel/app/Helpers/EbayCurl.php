@@ -54,6 +54,7 @@ class EbayCurl extends Ebay
             "getItem"=> file_get_contents(public_path() . '/xml/getItem.xml'),
             "getCategories"=> file_get_contents(public_path() . '/xml/categories.xml')
         ];
+
         if($field == 'sellerList') {
             $variables = ['ebay'=>'access_token', 'item'=>['timeFrom', 'timeTo', 'pageNumber']];
             $postFields[$field] = EbayData::addToXMLVariables($postFields[$field], $variables, $item, $ebay);

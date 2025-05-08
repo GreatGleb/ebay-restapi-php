@@ -971,6 +971,7 @@ class ApiEbayController extends Controller
 //        var_dump($this->setRefreshToken());
 //        var_dump($this->getAccessToken());
         var_dump($this->getCategories());
-        var_dump($this->getReturnPolicies());
+//        var_dump($this->getReturnPolicies());
+//        echo $this->getAccessToken();
     }
 }

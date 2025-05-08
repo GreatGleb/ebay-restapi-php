@@ -10,16 +10,16 @@ RUN apt-get update && apt-get install -y \
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Копируем исходный код в контейнер
-COPY . /var/www/docker-laravel-postgresql-supabase
+COPY ./laravel /var/www/laravel
 
 # Указываем рабочую директорию
-WORKDIR /var/www/docker-laravel-postgresql-supabase
+WORKDIR /var/www/laravel
 
 # Устанавливаем зависимости Composer
 RUN composer install --optimize-autoloader --no-dev
 
 # Настраиваем права на папки
-RUN chown -R www-data:www-data /var/www/docker-laravel-postgresql-supabase/storage /var/www/docker-laravel-postgresql-supabase/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/laravel/storage /var/www/laravel/bootstrap/cache
 
 # Открываем порт 9000 (для PHP-FPM)
 EXPOSE 9000
