@@ -83,9 +83,10 @@ services:
       working_dir: /python
       volumes:
           - ./python:/python
+          - ./.env:/.env
       expose:
         - "8000"
-      command: sh -c "pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000"
+      command: sh -c "cp /.env /python/.env 2>/dev/null && pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000"
       depends_on:
           - db
       networks:

@@ -9,6 +9,11 @@ use App\Imports\EbayImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 
+set_time_limit(300);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('memory_limit', '1024M');
+
 class ApiEbayController extends Controller
 {
     protected $siteID = [100, 77][1];
@@ -112,7 +117,94 @@ class ApiEbayController extends Controller
         $response = EbayCurl::sendCurl($this, $this->linkAPI, $headers, $postFields);
         $response = simplexml_load_string($response, "SimpleXMLElement", LIBXML_NOCDATA);
 
-        return $response;
+        $categories = [];
+        $categoriesArray = $response->CategoryArray->Category ?? [];
+
+        $buildPaths = function(array $categories) {
+            $resultsFile = tmpfile();
+            $stackFile = tmpfile();
+
+            $childrenLookup = [];
+            foreach ($categories as $cat) {
+                if ($cat['id'] !== $cat['parent_id']) {
+                    $childrenLookup[$cat['parent_id']][] = $cat['id'];
+                }
+            }
+
+            foreach ($categories as $cat) {
+                if ($cat['id'] === $cat['parent_id']) {
+                    fwrite($stackFile, serialize([$cat, []]) . "\n");
+                }
+            }
+            rewind($stackFile);
+
+            while (!feof($stackFile)) {
+                $line = fgets($stackFile);
+                if (!$line) continue;
+
+                [$category, $pathParts] = unserialize(trim($line));
+
+                $newPathParts = [...$pathParts, $category['name']];
+                $hasChildren = !empty($childrenLookup[$category['id']]);
+
+                if (!$hasChildren) {
+                    $newPathParts[] = $category['id'];
+                    fwrite($resultsFile, implode(' → ', $newPathParts) . "\n");
+                } else {
+                    $tempStack = tmpfile();
+                    foreach ($childrenLookup[$category['id']] as $childId) {
+                        $child = current(array_filter($categories, fn($c) => $c['id'] == $childId));
+                        if ($child) {
+                            fwrite($tempStack, serialize([$child, $newPathParts]) . "\n");
+                        }
+                    }
+
+                    while (!feof($stackFile)) {
+                        fwrite($tempStack, fgets($stackFile));
+                    }
+
+                    fclose($stackFile);
+                    $stackFile = $tempStack;
+                    rewind($stackFile);
+                }
+            }
+
+            rewind($resultsFile);
+            $results = [];
+            while (!feof($resultsFile)) {
+                $line = fgets($resultsFile);
+                if ($line !== false) {
+                    $results[] = trim($line);
+                }
+            }
+
+            fclose($resultsFile);
+            fclose($stackFile);
+
+            return $results;
+        };
+
+        foreach($categoriesArray as $category) {
+            if (!isset(
+                $category->CategoryID,
+                $category->CategoryLevel,
+                $category->CategoryName,
+                $category->CategoryParentID)
+            ) {
+                continue;
+            }
+
+            $categories[] = [
+                'id' => (string)$category->CategoryID,
+                'level' => (string)$category->CategoryLevel,
+                'name' => (string)$category->CategoryName,
+                'parent_id' => (string)$category->CategoryParentID,
+            ];
+        }
+
+        $categoryPaths = $buildPaths($categories);
+
+        return $categoryPaths;
     }
 
     public function getItemAspectsForCategory($id) {
@@ -970,7 +1062,12 @@ class ApiEbayController extends Controller
     {
 //        var_dump($this->setRefreshToken());
 //        var_dump($this->getAccessToken());
-        var_dump($this->getCategories());
+//        var_dump($this->getCategories());
+        $categs = $this->getCategories();
+        foreach ($categs as $categ) {
+            echo $categ;
+            echo "</br>";
+        }
 //        var_dump($this->getReturnPolicies());
 //        echo $this->getAccessToken();
     }

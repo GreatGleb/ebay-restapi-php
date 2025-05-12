@@ -22,3 +22,4 @@ yarn-error.log
 /.vscode
 /.zed
 laravel/app/Http/Controllers/API/tokens*.json
+laravel/app/Helpers/ebay_last_request_log.xml
