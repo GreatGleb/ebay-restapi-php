@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from .manager import GoogleSheetsManager
-from .helpers.save_to_db_from_google_sheets_categories import SaveToDbFromGoogleSheetsCategories
+from .services.save_to_db_from_google_sheets_categories import SaveToDbFromGoogleSheetsCategories
 import os
 
 class GoogleSheetsController:
