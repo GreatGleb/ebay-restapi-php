@@ -11,3 +11,5 @@ google-auth-httplib2>=0.1.0
 # Supporting packages (optional but recommended)
 python-dotenv>=0.19.0  # For environment variables
 pyOpenSSL>=20.0.0      # For secure connections
+psycopg2-binary>=2.9.9  # PostgreSQL database adapter
+SQLAlchemy>=2.0.0

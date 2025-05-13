@@ -22,8 +22,8 @@ class GoogleSheetsConnection:
         self.base_dir = Path(__file__).parent
 
         # Set default credential file paths
-        self.token_file = str(self.base_dir / 'token.json')
-        self.credentials_file = str(self.base_dir / 'credentials.json')
+        self.token_file = str(self.base_dir /  'tokens' /'token.json')
+        self.credentials_file = str(self.base_dir /  'tokens' /'credentials.json')
         self.sheets_service = self._authenticate_sheets()
         self.drive_service = self._authenticate_drive()
         self.creds = self._get_credentials()

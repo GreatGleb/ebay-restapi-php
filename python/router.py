@@ -27,3 +27,11 @@ router.add_api_route(
     tags=["Google Sheet"],
     summary="Get Google Sheet"
 )
+
+router.add_api_route(
+    "/save_to_db_from_google_sheets/categories",
+    sheets_controller.save_to_db_from_google_sheets_categories,
+    methods=["GET"],
+    tags=["Google Sheet"],
+    summary="Get Categories Google Sheet"
+)
