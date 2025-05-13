@@ -203,8 +203,18 @@ class ApiEbayController extends Controller
         }
 
         $categoryPaths = $buildPaths($categories);
+        $categoryPathsCarDetails = [];
 
-        return $categoryPaths;
+        foreach($categoryPaths as $categoryPath) {
+            $categoryPathArr = explode(' → ', $categoryPath);
+            if($categoryPathArr[1] == 'Autoteile & Zubehör') {
+                unset($categoryPathArr[0]);
+                unset($categoryPathArr[1]);
+                $categoryPathsCarDetails[] = implode(' → ', $categoryPathArr);
+            }
+        }
+
+        return $categoryPathsCarDetails;
     }
 
     public function getItemAspectsForCategory($id) {
