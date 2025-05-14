@@ -21,10 +21,12 @@ services:
       - "80:80"
     volumes:
       - ./laravel:/var/www/laravel
+      - ./tecdoc:/var/www/tecdoc
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - app
       - python-app
+      - tecdoc
     networks:
       - ebay_restapi_network
 
@@ -91,6 +93,21 @@ services:
           - db
       networks:
           - ebay_restapi_network
+  tecdoc:
+    build:
+      context: .
+      dockerfile: DockerfileTecdoc
+    container_name: ebay_restapi_tecdoc
+    restart: unless-stopped
+    working_dir: /var/www/tecdoc
+    volumes:
+      - ./tecdoc:/var/www/tecdoc
+    env_file:
+      - .env
+    expose:
+      - "9000"
+    networks:
+      - ebay_restapi_network
 
 volumes:
   postgres_data:

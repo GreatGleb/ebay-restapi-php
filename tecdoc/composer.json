@@ -1,0 +1,19 @@
+{
+    "name": "great/tecdoc",
+    "autoload": {
+        "psr-4": {
+            "Great\\Tecdoc\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "great",
+            "email": "gwelbts@gmail.com"
+        }
+    ],
+    "require": {
+        "myrzan/tecdoc-php-client": "^0.1.4",
+        "illuminate/routing": "^8.83",
+        "illuminate/events": "^8.83"
+    }
+}

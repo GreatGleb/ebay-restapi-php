@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ApiEbayController;
 
-Route::get('/ebay', [ApiEbayController::class, 'hashCallback']);
 Route::get('/ebay/run', [ApiEbayController::class, 'index']);
 Route::post('/ebay/revise', [ApiEbayController::class, 'importUpdate'])->name('import.update');
 Route::post('/ebay/add', [ApiEbayController::class, 'importAdd'])->name('import.add');
