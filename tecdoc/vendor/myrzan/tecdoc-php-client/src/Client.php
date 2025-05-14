@@ -31,14 +31,28 @@ use Myrzan\TecDocClient\Generated\GetLanguages;
 use Myrzan\TecDocClient\Generated\GetLanguagesResponse;
 use Myrzan\TecDocClient\Generated\GetVehicleByIds3;
 use Myrzan\TecDocClient\Generated\GetVehicleByIds3Response;
-use Myrzan\TecDocClient\Generated\GetDirectArticlesByIds6;
-use Myrzan\TecDocClient\Generated\GetDirectArticlesByIds6Response;
 use GuzzleHttp\Client as GuzzleClient;
 use JsonMapper;
 use ReflectionClass;
 use ReflectionObject;
 use RuntimeException;
 use stdClass;
+use Myrzan\TecDocClient\Generated\GetArticleIdsWithState;
+use Myrzan\TecDocClient\Generated\GetArticleIdsWithStateResponse;
+use Myrzan\TecDocClient\Generated\GetAssignedArticlesByIds6;
+use Myrzan\TecDocClient\Generated\GetAssignedArticlesByIds6Response;
+use Myrzan\TecDocClient\Generated\GetArticlePartList;
+use Myrzan\TecDocClient\Generated\GetArticlePartListResponse;
+use Myrzan\TecDocClient\Generated\GetArticleAccessoryList4;
+use Myrzan\TecDocClient\Generated\GetArticleAccessoryList4Response;
+use Myrzan\TecDocClient\Generated\GetArticleLinkedAllLinkingTargetManufacturer;
+use Myrzan\TecDocClient\Generated\GetArticleLinkedAllLinkingTargetManufacturerResponse;
+use Myrzan\TecDocClient\Generated\GetArticleLinkedAllLinkingTarget3;
+use Myrzan\TecDocClient\Generated\GetArticleLinkedAllLinkingTarget3Response;
+use Myrzan\TecDocClient\Generated\GetDirectArticlesByIds6;
+use Myrzan\TecDocClient\Generated\GetDirectArticlesByIds6Response;
+use Myrzan\TecDocClient\Generated\GetGenericArticlesByManufacturer6;
+use Myrzan\TecDocClient\Generated\GetGenericArticlesByManufacturer6Response;
 
 /**
  * TecDoc API Client.
@@ -67,6 +81,49 @@ class Client
         $this->url        = self::TECDOC_JSON_ENDPOINT . $apiKey;
         $this->jsonMapper = new JsonMapper();
         $this->apiKey     = $apiKey;
+    }
+
+    public function getDirectArticlesByIds6(GetDirectArticlesByIds6 $paramsObject): GetDirectArticlesByIds6Response
+    {
+        Client::addIntermediatePropNamedArray($paramsObject, 'articleId');
+        $json = $this->call('getDirectArticlesByIds6', $paramsObject);
+        return $this->mapJsonToObject($json, new GetDirectArticlesByIds6Response());
+    }
+
+    public function getGenericArticlesByManufacturer6(GetGenericArticlesByManufacturer6 $paramsObject): GetGenericArticlesByManufacturer6Response
+    {
+        $json = $this->call('getGenericArticlesByManufacturer6', $paramsObject);
+        return $this->mapJsonToObject($json, new GetGenericArticlesByManufacturer6Response());
+    }
+
+    public function getArticleLinkedAllLinkingTargetManufacturer(GetArticleLinkedAllLinkingTargetManufacturer $paramsObject): GetArticleLinkedAllLinkingTargetManufacturerResponse
+    {
+        $json = $this->call('getArticleLinkedAllLinkingTargetManufacturer', $paramsObject);
+        return $this->mapJsonToObject($json, new GetArticleLinkedAllLinkingTargetManufacturerResponse());
+    }
+
+    public function getArticleLinkedAllLinkingTarget3(GetArticleLinkedAllLinkingTarget3 $paramsObject): GetArticleLinkedAllLinkingTarget3Response
+    {
+        $json = $this->call('getArticleLinkedAllLinkingTarget3', $paramsObject);
+        return $this->mapJsonToObject($json, new GetArticleLinkedAllLinkingTarget3Response());
+    }
+
+    public function getAssignedArticlesByIds6(GetAssignedArticlesByIds6 $paramsObject): GetAssignedArticlesByIds6Response
+    {
+        $json = $this->call('getAssignedArticlesByIds6', $paramsObject);
+        return $this->mapJsonToObject($json, new GetAssignedArticlesByIds6Response());
+    }
+
+    public function getArticleAccessoryList4(GetArticleAccessoryList4 $paramsObject): GetArticleAccessoryList4Response
+    {
+        $json = $this->call('getArticleAccessoryList4', $paramsObject);
+        return $this->mapJsonToObject($json, new GetArticleAccessoryList4Response());
+    }
+
+    public function getArticlePartList(GetArticlePartList $paramsObject): GetArticlePartListResponse
+    {
+        $json = $this->call('getArticlePartList', $paramsObject);
+        return $this->mapJsonToObject($json, new GetArticlePartListResponse());
     }
 
     public function getLanguages(GetLanguages $paramsObject): GetLanguagesResponse
@@ -129,17 +186,15 @@ class Client
         return $this->mapJsonToObject($json, new GetVehicleByIds3Response());
     }
 
-    public function getDirectArticlesByIds6(GetDirectArticlesByIds6 $paramsObject): GetDirectArticlesByIds6Response
-    {
-        Client::addIntermediatePropNamedArray($paramsObject, 'articleId');
-        $json = $this->call('getDirectArticlesByIds6', $paramsObject);
-        return $this->mapJsonToObject($json, new GetDirectArticlesByIds6Response());
-    }
-
     public function getShortCuts2(GetShortCuts2 $paramsObject): GetShortCuts2Response
     {
         $json = $this->call('getShortCuts2', $paramsObject);
         return $this->mapJsonToObject($json, new GetShortCuts2Response());
+    }
+    public function getArticleIdsWithState(GetArticleIdsWithState $paramsObject): GetArticleIdsWithStateResponse
+    {
+        $json = $this->call('getArticleIdsWithState', $paramsObject);
+        return $this->mapJsonToObject($json, new GetArticleIdsWithStateResponse());
     }
 
     public function getChildNodesAllLinkingTarget2(GetChildNodesAllLinkingTarget2 $paramsObject): GetChildNodesAllLinkingTarget2Response
