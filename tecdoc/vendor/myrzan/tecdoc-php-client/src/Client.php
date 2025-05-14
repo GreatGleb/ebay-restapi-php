@@ -1,6 +1,22 @@
 <?php
 namespace Myrzan\TecDocClient;
 
+use Myrzan\TecDocClient\Generated\GetChildNodesAllLinkingTarget2;
+use Myrzan\TecDocClient\Generated\GetChildNodesAllLinkingTarget2Response;
+use Myrzan\TecDocClient\Generated\GetKeyValuesResponse;
+use Myrzan\TecDocClient\Generated\GetKeyValues;
+use Myrzan\TecDocClient\Generated\GetCountries;
+use Myrzan\TecDocClient\Generated\GetCountriesResponse;
+use Myrzan\TecDocClient\Generated\GetManufacturers;
+use Myrzan\TecDocClient\Generated\GetManufacturersResponse;
+use Myrzan\TecDocClient\Generated\GetManufacturers2;
+use Myrzan\TecDocClient\Generated\GetManufacturers2Response;
+use Myrzan\TecDocClient\Generated\GetShortCuts2;
+use Myrzan\TecDocClient\Generated\GetShortCuts2Response;
+use Myrzan\TecDocClient\Generated\GetModelSeries2;
+use Myrzan\TecDocClient\Generated\GetModelSeries2Response;
+use Myrzan\TecDocClient\Generated\GetVehicleIdsByCriteria;
+use Myrzan\TecDocClient\Generated\GetVehicleIdsByCriteriaResponse;
 use Myrzan\TecDocClient\Generated\GetAmBrands;
 use Myrzan\TecDocClient\Generated\GetAmBrandsResponse;
 use Myrzan\TecDocClient\Generated\GetArticleDirectSearchAllNumbersWithState;
@@ -15,6 +31,8 @@ use Myrzan\TecDocClient\Generated\GetLanguages;
 use Myrzan\TecDocClient\Generated\GetLanguagesResponse;
 use Myrzan\TecDocClient\Generated\GetVehicleByIds3;
 use Myrzan\TecDocClient\Generated\GetVehicleByIds3Response;
+use Myrzan\TecDocClient\Generated\GetDirectArticlesByIds6;
+use Myrzan\TecDocClient\Generated\GetDirectArticlesByIds6Response;
 use GuzzleHttp\Client as GuzzleClient;
 use JsonMapper;
 use ReflectionClass;
@@ -62,6 +80,41 @@ class Client
         $json = $this->call('getAmBrands', $paramsObject);
         return $this->mapJsonToObject($json, new GetAmBrandsResponse());
     }
+    public function getKeyValues(GetKeyValues $paramsObject): GetKeyValuesResponse
+    {
+        $json = $this->call('getKeyValues', $paramsObject);
+        return $this->mapJsonToObject($json, new GetKeyValuesResponse());
+    }
+
+    public function getManufacturers(GetManufacturers $paramsObject): GetManufacturersResponse
+    {
+        $json = $this->call('getManufacturers', $paramsObject);
+        return $this->mapJsonToObject($json, new GetManufacturersResponse());
+    }
+
+    public function getManufacturers2(GetManufacturers2 $paramsObject): GetManufacturers2Response
+    {
+        $json = $this->call('getManufacturers2', $paramsObject);
+        return $this->mapJsonToObject($json, new GetManufacturers2Response());
+    }
+
+    public function getModelSeries2(GetModelSeries2 $paramsObject): GetModelSeries2Response
+    {
+        $json = $this->call('getModelSeries2', $paramsObject);
+        return $this->mapJsonToObject($json, new GetModelSeries2Response());
+    }
+
+    public function getVehicleIdsByCriteria(GetVehicleIdsByCriteria $paramsObject): GetVehicleIdsByCriteriaResponse
+    {
+        $json = $this->call('getVehicleIdsByCriteria', $paramsObject);
+        return $this->mapJsonToObject($json, new GetVehicleIdsByCriteriaResponse());
+    }
+
+    public function getCountries(GetCountries $paramsObject): GetCountriesResponse
+    {
+        $json = $this->call('getCountries', $paramsObject);
+        return $this->mapJsonToObject($json, new GetCountriesResponse());
+    }
 
     public function getArticles(GetArticles $paramsObject): GetArticlesResponse
     {
@@ -74,6 +127,25 @@ class Client
         Client::addIntermediatePropNamedArray($paramsObject, 'carIds');
         $json = $this->call('getVehicleByIds3', $paramsObject);
         return $this->mapJsonToObject($json, new GetVehicleByIds3Response());
+    }
+
+    public function getDirectArticlesByIds6(GetDirectArticlesByIds6 $paramsObject): GetDirectArticlesByIds6Response
+    {
+        Client::addIntermediatePropNamedArray($paramsObject, 'articleId');
+        $json = $this->call('getDirectArticlesByIds6', $paramsObject);
+        return $this->mapJsonToObject($json, new GetDirectArticlesByIds6Response());
+    }
+
+    public function getShortCuts2(GetShortCuts2 $paramsObject): GetShortCuts2Response
+    {
+        $json = $this->call('getShortCuts2', $paramsObject);
+        return $this->mapJsonToObject($json, new GetShortCuts2Response());
+    }
+
+    public function getChildNodesAllLinkingTarget2(GetChildNodesAllLinkingTarget2 $paramsObject): GetChildNodesAllLinkingTarget2Response
+    {
+        $json = $this->call('getChildNodesAllLinkingTarget2', $paramsObject);
+        return $this->mapJsonToObject($json, new GetChildNodesAllLinkingTarget2Response());
     }
 
     public function getArticleLinkedAllLinkingTargetsByIds3(GetArticleLinkedAllLinkingTargetsByIds3 $paramsObject): GetArticleLinkedAllLinkingTargetsByIds3Response
