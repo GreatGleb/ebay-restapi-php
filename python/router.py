@@ -35,3 +35,11 @@ router.add_api_route(
     tags=["Google Sheet"],
     summary="Get Categories Google Sheet"
 )
+
+router.add_api_route(
+    "/update_categories_in_products_in_google_sheets",
+    sheets_controller.update_categories_in_products_in_google_sheets,
+    methods=["GET"],
+    tags=["Google Sheet"],
+    summary="Get Categories Google Sheet"
+)

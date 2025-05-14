@@ -15,6 +15,7 @@ Route::get('/ebay/getLinkFirstAuth', [ApiEbayController::class, 'getLinkFirstAut
 Route::get('/ebay/setRefreshToken', [ApiEbayController::class, 'setRefreshToken'])->name('ebay.setRefreshToken');
 Route::get('/ebay/getCategories', [ApiEbayController::class, 'getCategories'])->name('ebay.getCategories');
 Route::post('/ebay/getItemAspectsForCategory', [ApiEbayController::class, 'getItemAspectsForCategory'])->name('ebay.getItemAspectsForCategory');
+Route::get('/ebay/getCategoryByName/{name}', [ApiEbayController::class, 'getCategoryByName'])->name('ebay.getCategoryByName');
 Route::get('/ebay/getRateLimits', [ApiEbayController::class, 'getRateLimits'])->name('ebay.getRateLimits');
 Route::get('/ebay/getFulfillmentPolicies', [ApiEbayController::class, 'getFulfillmentPolicies'])->name('ebay.getFulfillmentPolicies');
 Route::get('/ebay/getPaymentPolicies', [ApiEbayController::class, 'getPaymentPolicies'])->name('ebay.getPaymentPolicies');

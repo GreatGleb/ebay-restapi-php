@@ -231,6 +231,16 @@ class ApiEbayController extends Controller
         return $aspects;
     }
 
+    public function getCategoryByName($name) {
+        $name = urlencode($name);
+
+        $url = 'https://api.ebay.com/commerce/taxonomy/v1/category_tree/' . $this->siteID . '/get_category_suggestions?q=' . $name;
+        $headers = EbayCurl::getCurlHeaders($this, 3);
+        $response = EbayCurl::sendCurl($this, $url, $headers, null, false);
+
+        return $response;
+    }
+
     public function getRateLimits() {
         $headers = EbayCurl::getCurlHeaders($this, 3);
         $url = 'https://api.ebay.com/developer/analytics/v1_beta/rate_limit?marketplace_id=' . $this->marketplaceID;

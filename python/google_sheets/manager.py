@@ -94,3 +94,35 @@ class GoogleSheetsManager:
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
+
+    def write_to_cell(self, spreadsheet_id: str, sheet_name: str, cell: str, value: Any) -> bool:
+        """
+        Записывает значение в указанную ячейку таблицы Google Sheets.
+
+        Args:
+            spreadsheet_id (str): ID таблицы Google Sheets
+            sheet_name (str): Имя листа (например, 'Sheet1')
+            cell (str): Excel-номер ячейки (например, 'B2')
+            value (Any): Значение для записи
+
+        Returns:
+            bool: True, если запись прошла успешно
+        """
+        try:
+            range_notation = f"{sheet_name}!{cell}"
+            body = {
+                'values': [[value]]
+            }
+
+            self.sheets_service.spreadsheets().values().update(
+                spreadsheetId=spreadsheet_id,
+                range=range_notation,
+                valueInputOption='USER_ENTERED',
+                body=body
+            ).execute()
+
+            return True
+
+        except Exception as e:
+            print(f"Ошибка при записи в ячейку {cell}: {e}")
+            return False

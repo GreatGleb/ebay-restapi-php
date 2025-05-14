@@ -1,5 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, func
+from typing import Dict, List, Union, Any
 from ..db import Base
+from ..db import Database
 
 class Category(Base):
     __tablename__ = 'categories'
@@ -27,3 +29,15 @@ class Category(Base):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
+
+    @classmethod
+    def get_all(cls) -> List[Dict]:
+        db = Database()
+        session = db.get_session()
+
+        try:
+            categories = session.query(cls).all()
+
+            return [category.to_dict() for category in categories]
+        finally:
+            session.close()

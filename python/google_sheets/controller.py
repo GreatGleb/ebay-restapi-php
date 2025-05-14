@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from .manager import GoogleSheetsManager
 from .services.save_to_db_from_google_sheets_categories import SaveToDbFromGoogleSheetsCategories
+from .services.update_categories_in_products_in_google_sheets import UpdateCategoriesInProductInGoogleSheets
 import os
 
 class GoogleSheetsController:
@@ -42,5 +43,12 @@ class GoogleSheetsController:
         """
 
         return await SaveToDbFromGoogleSheetsCategories.run()
+
+    async def update_categories_in_products_in_google_sheets(self):
+        """
+        Import categories from Google Sheets to DB
+        """
+
+        return await UpdateCategoriesInProductInGoogleSheets.run()
 
 sheets_controller = GoogleSheetsController()
