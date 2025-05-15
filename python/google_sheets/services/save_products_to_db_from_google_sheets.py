@@ -1,7 +1,9 @@
+from ..helpers.rename_product_from_sheet_to_db_style import RenameProductFromSheetToDbStyle
 from ..manager import GoogleSheetsManager
 from db.db import Database
 from db.models.category import Category
 import os
+import requests
 
 class SaveProductsToDbFromGoogleSheets:
     def __init__(self):
@@ -32,48 +34,24 @@ class SaveProductsToDbFromGoogleSheets:
 
         return result
 
-    async def get_products_from_sheet(self, sheet):
-        result = []
+    async def updateProductsInDB(self, products):
+        data = 'false'
 
-        return sheet
+        url = f"http://ebay_restapi_nginx/api/update/products"
+        response =  requests.post(url, json=products)
 
-    async def get_categories_from_api(self, data):
-        result = []
+        if response.status_code == 200:
+            data = response.json()
+        else:
+            print("Ошибка:", response.status_code, response.text)
 
-        for i, value in enumerate(data):
-            if value['eBay name German']:
-                name = value['eBay name German']
-                encoded_name = requests.utils.quote(name)
-
-                url = f"http://ebay_restapi_nginx/api/ebay/getCategoryByName/{encoded_name}"
-
-                response = requests.get(url)
-
-                if response.status_code == 200:
-                    data = response.json()
-
-                    categoriesId = []
-
-                    if data['categorySuggestions']:
-                        for categ in data['categorySuggestions']:
-                            if categ['category']['categoryId']:
-                                categoriesId.append(categ['category']['categoryId'])
-
-                    if categoriesId:
-                        productId = value['#']
-                        result.append({
-                            'product_id': productId,
-                            'categories_id': categoriesId,
-                        })
-                else:
-                    print("Ошибка:", response.status_code, response.text)
-
-        return result
+        return data
 
     async def run(self):
-        products = await self.parse_sheet()
-        products = await self.get_products_from_sheet(sheet)
+        list_of_dicts = await self.parse_sheet()
+        products = RenameProductFromSheetToDbStyle.run(list_of_dicts)
+        response = await self.updateProductsInDB(products)
 
-        return products
+        return response
 
 SaveProductsToDbFromGoogleSheets = SaveProductsToDbFromGoogleSheets()

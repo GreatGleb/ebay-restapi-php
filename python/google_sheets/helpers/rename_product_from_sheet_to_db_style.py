@@ -1,16 +1,13 @@
 
 class RenameProductFromSheetToDbStyle:
-    def run(self, old_dict):
-        result = self.index_finder.get_index(column_name, value_to_find)
-        if result is None:
-            return None
-        col_idx, row_idx = result
-        col_idx = col_idx + 1
-        row_idx = row_idx + 1
+    @staticmethod
+    def run(list_of_dicts):
+        data = [RenameProductFromSheetToDbStyle.rename_properties_in_dict(d) for d in list_of_dicts]
 
-        return ExcelCellConverter.index_to_cell(col_idx, row_idx)
+        return data
 
-    def run(self, old_dict):
+    @staticmethod
+    def rename_properties_in_dict(old_dict):
         mapping = {
             "#": "id",
             "Comment": "comment",
@@ -92,5 +89,3 @@ class RenameProductFromSheetToDbStyle:
             new_dict[new_key] = value
 
         return new_dict
-
-    new_data = [rename_keys(d) for d in old_data]

@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ApiEbayController;
+use App\Http\Controllers\API\UpdateProducts;
+
+Route::post('/update/products', [UpdateProducts::class, 'run']);
 
 Route::get('/ebay/run', [ApiEbayController::class, 'index']);
 Route::post('/ebay/revise', [ApiEbayController::class, 'importUpdate'])->name('import.update');
