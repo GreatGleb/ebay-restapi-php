@@ -21,8 +21,8 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained();
 
             $table->string('number', 250);
-            $table->unsignedInteger('car_manufacturer_id');
-            $table->string('car_manufacturer_name', 250);
+            $table->unsignedInteger('car_manufacturer_id')->nullable();
+            $table->string('car_manufacturer_name', 250)->nullable();
 
             // Timestamps
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
