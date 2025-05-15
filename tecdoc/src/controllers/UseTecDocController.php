@@ -2,15 +2,19 @@
 
 namespace Great\Tecdoc\Controllers;
 
-use Great\Tecdoc\Controllers\TecDocController;
-use Myrzan\TecDocClient\Generated\GetVehicleByIds3;
-
 class UseTecDocController
 {
     function getProductInfo($reference) {
         $tecdoc = new TecDocController();
-        $name = $tecdoc->getNameByProductSupplierReference($reference, 2);
+        $info = $tecdoc->getInfoByProductSupplierReference($reference, 403);
 
-        return $name;
+        return $info;
+    }
+
+    function getCarsAndOecodes($reference) {
+        $tecdoc = new TecDocController();
+        $f = $tecdoc->getCarsAndOecodes($reference, 403);
+
+        return $f;
     }
 }

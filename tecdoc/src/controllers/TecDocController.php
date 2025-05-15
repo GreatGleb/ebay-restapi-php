@@ -15,6 +15,7 @@ use Myrzan\TecDocClient\Generated\GetDirectArticlesByIds6;
 use Myrzan\TecDocClient\Generated\GetModelSeries2;
 use Myrzan\TecDocClient\Generated\GetVehicleByIds3;
 use Myrzan\TecDocClient\Generated\GetVehicleIdsByCriteria;
+use ReflectionClass;
 
 class TecDocController
 {
@@ -23,8 +24,7 @@ class TecDocController
 
     public function __construct()
     {
-        $this->apiKey = getenv('TECDOC_KEY_APNEXT');
-
+        $this->apiKey = getenv('TECDOC_KEY_RM');
     }
 
     public function ajaxRequest()
@@ -295,13 +295,9 @@ class TecDocController
             substr($model->getYearOfConstrTo(),0,4).')';
 
     }
-    public function getCarsAndOecodes(Request $request)
+    public function getCarsAndOecodes($reference, $brandId)
     {
-        $product = Product::where('reference', $request->reference)
-            ->orWhere('supplier_reference', $request->reference)
-            ->first();
-
-        if(isset($request->reference) and isset($product->supplier_reference)) {
+        if(isset($reference) and isset($brandId)) {
             $client = new Client($this->apiKey, $this->providerId);
             $oeCodes = [];
             $getAtributs = [];
@@ -310,8 +306,8 @@ class TecDocController
                 ->setArticleCountry('LT')
                 ->setLang('LT')
                 ->setSearchExact(true)
-                ->setBrandId($product->supplier_brand->tecdoc_id)
-                ->setArticleNumber($product->supplier_reference)
+                ->setBrandId($brandId)
+                ->setArticleNumber($reference)
                 ->setNumberType(0);
             $getArticleDirectSearchAllNumbersWithStateResponse = $client->getArticleDirectSearchAllNumbersWithState($getArticleDirectSearchAllNumbersWithState)->getData();
 
@@ -341,77 +337,108 @@ class TecDocController
                     ]);
                 }
 
-                return response()->json([
+                return [
                     'oe' => $oeCodes,
                     'article' => $getArticleId,
                     'info' => $getAtributs,
-                    'supplier_reference' => $product->supplier_reference
-                ]);
+                    'supplier_reference' => $reference
+                ];
             }
         }
+
         return null;
     }
-    public function getArticleManufacturer(Request $request)
+    public function getArticleModels($articleId)
     {
         $client = new Client($this->apiKey, $this->providerId);
-        $manuArray = [];
+//        $manuArray = [];
+        $data = [];
 
         $getArticleLinkedAllLinkingTargetManufacturer = (new GetArticleLinkedAllLinkingTargetManufacturer())
             ->setArticleCountry('LT')
-            ->setArticleId($request->article)
+            ->setArticleId($articleId)
             ->setLinkingTargetType('P');
 
         $getArticleLinkedAllLinkingTargetManufacturerResponse = $client->getArticleLinkedAllLinkingTargetManufacturer($getArticleLinkedAllLinkingTargetManufacturer)->getData();
-        foreach ($getArticleLinkedAllLinkingTargetManufacturerResponse as $key => $manu) {
 
+        foreach ($getArticleLinkedAllLinkingTargetManufacturerResponse as $key => $manu) {
             $getArticleLinkedAllLinkingTarget3  = (new GetArticleLinkedAllLinkingTarget3())
                 ->setLang('LT')
                 ->setArticleCountry('LT')
-                ->setArticleId($request->article)
+                ->setArticleId($articleId)
                 ->setLinkingTargetManuId($manu->getManuId())
                 ->setLinkingTargetType('P');
 
             $getArticleLinkedAllLinkingTarget3Response = $client->getArticleLinkedAllLinkingTarget3($getArticleLinkedAllLinkingTarget3)->getData()[0]->getArticleLinkages();
-            if(!isset($request->getArray)) {
-                $manuArray[$key] = [
-                    'name' => $manu->getManuName(),
-                    'children' => []
-                ];
-            }
-            /* array_push($manuArray, [
-                 'name' => $manu->getManuName() => '']);*/
+
+//            $manuArray[$key] = [
+//                'name' => $manu->getManuName(),
+//                'children' => []
+//            ];
 
             foreach ($getArticleLinkedAllLinkingTarget3Response as $kerCarInfo => $carInfo) {
-
                 $getVehicleByIds3 = (new GetVehicleByIds3())
                     ->setCountriesCarSelection('LT')
                     ->setArticleCountry('LT')
-                    ->setLang('LT')
+                    ->setLang('RU')
                     ->setCountry('LT')
                     ->setCarIds([$carInfo->getLinkingTargetId()]);
 
                 $getVehicleByIds3Response = $client->getVehicleByIds3($getVehicleByIds3)->getData();
 
+                $vehicleDetails = $getVehicleByIds3Response[0]->getVehicleDetails();
 
-                $mod = $getVehicleByIds3Response[0]->getVehicleDetails();
-                //$manuArray[$key]['children'] += [$getCarInfo->getModelDesc() => []];
-                if(isset($request->getArray)) {
-                    $manuArray[] = $mod->getCarId();
-                } else {
-                    array_push($manuArray[$key]['children'], [
-                        'name' => $mod->getManuName() . ' ' . $mod->getModelName() . ' ' . $mod->getTypeName() . ', ' . $this->data($mod) . ', ' .
-                            $mod->getCylinderCapacityCcm() . ' ccm, ' . $mod->getPowerHpTo() . ' AG, ' . $mod->getPowerKwTo() . ' kW, ' . $mod->getFuelType(),
-                        'carId' => '/vehicle/' . $mod->getCarId()
-                    ]);
+//                if(!empty($vehicleDetails)) {
+//                    $data[] = $this->extractObjectProperties($vehicleDetails);
+//                }
+
+                $data[] = $vehicleDetails->getCarId();
+//                array_push($manuArray[$key]['children'], [
+//                    'name' => $mod->getManuName() . ' ' . $mod->getModelName() . ' ' . $mod->getTypeName() . ', ' . $this->data($mod) . ', ' .
+//                        $mod->getCylinderCapacityCcm() . ' ccm, ' . $mod->getPowerHpTo() . ' AG, ' . $mod->getPowerKwTo() . ' kW, ' . $mod->getFuelType(),
+//                    'carId' => '/vehicle/' . $mod->getCarId()
+//                ]);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * @throws \ReflectionException
+     */
+    function extractObjectProperties($object): array {
+        $reflection = new ReflectionClass($object);
+        $properties = $reflection->getProperties();
+        $result = [];
+
+        foreach ($properties as $property) {
+            $property->setAccessible(true);
+            $result[$property->getName()] = $property->getValue($object);
+        }
+
+        return $result;
+    }
+    function extractArrayOfObjectProperties($arr) {
+        if (is_array($arr)) {
+            foreach ($arr as $property => $value) {
+                if(is_object($value)) {
+                    $arr[$property] = $this->extractObjectProperties($value);
                 }
             }
         }
 
-        if(isset($request->getArray)) {
-            return $manuArray;
-        } else {
-            return response()->json($manuArray);
+        return $arr;
+    }
+
+    function deepExtractObjectProperties($object): array {
+        $arr = $this->extractObjectProperties($object);
+
+        foreach ($arr as $property => $value) {
+            $arr[$property] = $this->extractArrayOfObjectProperties($value);
         }
+
+        return $arr;
     }
 
     public function getCarsWithoutOecodes(Request $request)
@@ -692,6 +719,38 @@ class TecDocController
         }
 
         return $name;
+    }
+
+    public function getInfoByProductSupplierReference($reference, $brandId) {
+        $client = new Client($this->apiKey, $this->providerId);
+        $articleId = $this->getArticleIdByProductSupplierReference($reference, $brandId);
+
+        $request = (new GetArticles())
+            ->setLang('RU')
+            ->setArticleCountry('LT')
+            ->setLegacyArticleIds([$articleId])
+            ->setIncludeArticleText(true)
+            ->setIncludeImages(true)
+            ->setIncludeOEMNumbers(true)
+            ->setIncludeReplacedByArticles(true)
+            ->setIncludeReplacesArticles(true)
+            ->setIncludeArticleCriteria(true)
+            ->setIncludeComparableNumbers(true)
+            ->setIncludeTradeNumbers(true)
+            ->setIncludeGenericArticles(true)
+            ->setIncludeLinkages(true)
+            ->setIncludePrices(true);;
+
+        $response = $client->getArticles($request);
+        $details = $response->getArticles();
+        $data = [];
+        if(isset($details[0])) {
+            $data = $this->deepExtractObjectProperties($details[0]);
+        }
+
+        $data['compatibilities'] = $this->getArticleModels($articleId);
+
+        return $data;
     }
 
     public function getImagesBySupplierReference($supplier_reference)

@@ -19,6 +19,7 @@ $router = new Router($dispatcher, $container);
 $router->group(['prefix' => 'tecdoc'], function ($router) {
     $router->get('/', [TecDocController::class, 'index']);
     $router->get('/product-info/{reference}', [UseTecDocController::class, 'getProductInfo']);
+    $router->get('/f/{reference}', [UseTecDocController::class, 'getCarsAndOecodes']);
 });
 
 $request = Request::createFromGlobals();
