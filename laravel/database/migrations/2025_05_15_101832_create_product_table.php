@@ -38,8 +38,8 @@ return new class extends Migration
             $table->decimal('retail_price_gross', 10, 2)->nullable()->comment('Цена с НДС');
 
             // Availability
-            $table->boolean('availability_pl')->default(false)->comment('Наличие в PL');
-            $table->boolean('availability_pruszkow')->default(false)->comment('Наличие в Mag. Oddział Pruszków');
+            $table->unsignedInteger('stock_quantity_pl')->default(0)->comment('Наличие в PL');
+            $table->unsignedInteger('stock_quantity_pruszkow')->default(0)->comment('Наличие в Mag. Oddział Pruszków');
 
             // Product details
             $table->string('installation_position', 255)->nullable()->comment('Позиция установки');
@@ -47,17 +47,15 @@ return new class extends Migration
 
             // eBay information
             $table->string('part_of_ebay_name', 255)->nullable()->comment('Часть названия для eBay');
-            $table->string('ebay_name_ru', 255)->nullable()->comment('Название eBay на русском');
-            $table->string('ebay_name_en', 255)->nullable()->comment('Название eBay на английском');
-            $table->string('ebay_name_de', 255)->nullable()->comment('Название eBay на немецком');
-            $table->string('ebay_name_full', 255)->nullable()->comment('Полное название для ebay.de');
+            $table->string('ebay_name_ru', 255)->nullable()->comment('Название для eBay на русском');
+            $table->string('ebay_name_en', 255)->nullable()->comment('Название для eBay на английском');
+            $table->string('ebay_name_de', 255)->nullable()->comment('Название для eBay на немецком');
             $table->boolean('published_ebay_de')->default(false)->comment('Опубликовано на ebay.de');
             $table->dateTime('last_update_ebay')->nullable()->comment('Последнее обновление');
 
             // Product features
             $table->boolean('has_hologram')->default(false)->comment('С голограммой');
             $table->boolean('no_photo')->default(false)->comment('Без фото');
-            $table->boolean('sold_general')->default(false)->comment('Продан в общем');
 
             // Supplier information
             $table->string('supplier', 255)->nullable()->comment('Поставщик');
@@ -69,6 +67,8 @@ return new class extends Migration
             $table->integer('box_length_cm')->nullable()->comment('Длина коробки');
             $table->integer('box_width_cm')->nullable()->comment('Ширина коробки');
             $table->integer('box_height_cm')->nullable()->comment('Высота коробки');
+
+            $table->integer('sold_in_general')->default(0)->comment('Продано в общем');
 
             // Indexes
             $table->index('reference');
