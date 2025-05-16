@@ -23,6 +23,8 @@ return new class extends Migration
             // Timestamps
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP'));
+
+            $table->index('brand_name');
         });
 
         DB::unprepared(UpdatedAtTrigger::create($this->tableName));
