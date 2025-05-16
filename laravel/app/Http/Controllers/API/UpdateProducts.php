@@ -4,8 +4,9 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Product;
 use Illuminate\Support\Facades\Schema;
+use App\Models\Product;
+use App\Models\SupplierBrand;
 
 class UpdateProducts extends Controller
 {
@@ -26,5 +27,13 @@ class UpdateProducts extends Controller
 //            $car_compatibilities = $product['cars_compatibilities'];
 
         return [$resultOfUpdating];
+    }
+
+    public function brands(): void
+    {
+        SupplierBrand::insert([
+            "brand_name" => "MAXGEAR",
+            "tecdoc_id" => 403
+        ]);
     }
 }

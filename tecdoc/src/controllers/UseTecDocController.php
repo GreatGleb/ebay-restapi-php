@@ -4,16 +4,16 @@ namespace Great\Tecdoc\Controllers;
 
 class UseTecDocController
 {
-    function getProductInfo($reference) {
+    function getProductInfo($reference, $brandId) {
         $tecdoc = new TecDocController();
-        $info = $tecdoc->getInfoByProductSupplierReference($reference, 403);
+        $info = $tecdoc->getInfoByProductSupplierReference($reference, $brandId);
 
         return $info;
     }
 
-    function getCarsAndOecodes($reference) {
+    function getCarsAndOecodes($reference, $brandId) {
         $tecdoc = new TecDocController();
-        $f = $tecdoc->getCarsAndOecodes($reference, 403);
+        $f = $tecdoc->getCarsAndOecodes($reference, $brandId);
 
         return $f;
     }
