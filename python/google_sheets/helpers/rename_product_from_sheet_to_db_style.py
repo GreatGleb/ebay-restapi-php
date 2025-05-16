@@ -1,3 +1,4 @@
+import math
 
 class RenameProductFromSheetToDbStyle:
     @staticmethod
@@ -29,7 +30,6 @@ class RenameProductFromSheetToDbStyle:
             "eBay name Russian": "ebay_name_ru",
             "eBay name English": "ebay_name_en",
             "eBay name German": "ebay_name_de",
-            "Name Ebay.de": "ebay_name_full",
             "Photos": "photos",
             "С голограммой": "has_hologram",
             "Без фото": "no_photo",
@@ -74,17 +74,30 @@ class RenameProductFromSheetToDbStyle:
                         value = float(value)
                     except ValueError:
                         value = None
+            elif new_key in ("sold_in_general"):
+                if isinstance(value, str):
+                    try:
+                        value = int(math.ceil(float(value)))
+                    except ValueError:
+                        continue
                 elif value is None:
-                    value = None
+                    value = 0
             elif new_key in ("has_hologram", "no_photo", "published_ebay_de"):
                 if isinstance(value, str):
                     val_low = value.lower()
-                    if val_low in ("1", "yes", "true"):
+                    if val_low in ("1", "yes", "true", '+'):
                         value = True
                     else:
                         value = False
                 else:
                     value = bool(value)
+            if new_key in ("photos"):
+                product_id = old_dict.get('#')
+                if isinstance(value, str):
+                    try:
+                        value = [{"product_id": product_id, "original_photo_url": url.strip()} for url in value.split(",") if url.strip()]
+                    except ValueError:
+                        value = []
 
             new_dict[new_key] = value
 

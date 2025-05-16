@@ -52,6 +52,6 @@ class SaveProductsToDbFromGoogleSheets:
         products = RenameProductFromSheetToDbStyle.run(list_of_dicts)
         response = await self.updateProductsInDB(products)
 
-        return response
+        return products[0]
 
 SaveProductsToDbFromGoogleSheets = SaveProductsToDbFromGoogleSheets()
