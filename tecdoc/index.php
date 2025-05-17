@@ -4,25 +4,33 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use Illuminate\Routing\Router;
 use Illuminate\Container\Container;
-use Illuminate\Events\Dispatcher;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Facade;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Http\Response;
+use Illuminate\Http\Request;
 use Great\Tecdoc\Controllers\TecDocController;
 use Great\Tecdoc\Controllers\UseTecDocController;
 
-$container = new Container();
-$dispatcher = new Dispatcher();
+$app = new Container;
+Facade::setFacadeApplication($app);
 
-$router = new Router($dispatcher, $container);
+$app->singleton('request', function() {
+    return Request::capture();
+});
+
+$app->singleton('router', function($app) {
+    return new Router(new Illuminate\Events\Dispatcher, $app);
+});
+
+$router = $app->make('router');
 
 $router->group(['prefix' => 'tecdoc'], function ($router) {
     $router->get('/', [TecDocController::class, 'index']);
-    $router->get('/product-info/{reference}', [UseTecDocController::class, 'getProductInfo']);
+    $router->post('/products-info', [UseTecDocController::class, 'getProductsInfo']);
     $router->get('/f/{reference}', [UseTecDocController::class, 'getCarsAndOecodes']);
 });
 
-$request = Request::createFromGlobals();
+$request = $app->make('request');
 
 try {
     $response = $router->dispatch($request);
@@ -30,4 +38,4 @@ try {
     $response = new Response('Страница не найдена (кастомная 404)', 404);
 }
 
-echo $response->getContent();
+echo $response->send();

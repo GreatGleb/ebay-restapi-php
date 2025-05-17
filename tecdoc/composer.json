@@ -14,6 +14,7 @@
     "require": {
         "myrzan/tecdoc-php-client": "^0.1.4",
         "illuminate/routing": "^8.83",
-        "illuminate/events": "^8.83"
+        "illuminate/events": "^8.83",
+        "illuminate/http": "^8.83"
     }
 }
