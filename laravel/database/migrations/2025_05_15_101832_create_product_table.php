@@ -56,7 +56,7 @@ return new class extends Migration
             $table->text('description_to_ebay_de')->nullable()->comment('Description to eBay.de');
             $table->text('specifics_to_ebay_de')->nullable()->comment('Specifics to eBay.de');
 
-            // Product features
+            // Product photos
             $table->boolean('has_hologram')->default(false)->comment('Has hologram');
             $table->boolean('no_photo')->default(false)->comment('No photo');
 
