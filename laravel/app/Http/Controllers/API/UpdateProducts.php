@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Product;
-use App\Models\SupplierBrand;
+use App\Models\ProducerBrand;
 use Illuminate\Support\Facades\Http;
 use JetBrains\PhpStorm\NoReturn;
 
@@ -30,26 +30,25 @@ class UpdateProducts extends Controller
 //            $oe_codes = $product['oe_codes'];
 //            $car_compatibilities = $product['cars_compatibilities'];
 
-        return [$resultOfUpdating];
+        return [$resultOfUpdating, $updateFields];
     }
 
     #[NoReturn] public function fromTecDoc(): array
     {
         $products = Product::query()
-            ->select('products.*', 'supplier_brands.tecdoc_id as producer_tecdoc_id')
-            ->leftJoin('supplier_brands', function ($join) {
+            ->select('products.*', 'producer_brands.tecdoc_id as producer_tecdoc_id')
+            ->leftJoin('producer_brands', function ($join) {
                 $join->on(
                     DB::raw('LOWER(products.producer_brand)'),
                     '=',
-                    DB::raw('LOWER(supplier_brands.brand_name)')
+                    DB::raw('LOWER(producer_brands.name)')
                 );
             })
-            ->where('products.published_ebay_de', false)
+            ->where('products.published_to_ebay_de', false)
             ->orderBy('products.id')
             ->get();
 
         $requestForTecDoc = [];
-
         foreach ($products as $product) {
             $brandId = $product->producer_tecdoc_id;
             $reference = $product->tecdoc_number;
@@ -71,9 +70,11 @@ class UpdateProducts extends Controller
         // Получить ответ
         $data = $response->json();
 
+        dd($data);
+
         $productUpdateData = [];
         $productUpdateFields = [
-            'specifics',
+            'specifics_ru',
         ];
 
         foreach ($data as $tecDocProduct) {
@@ -81,7 +82,7 @@ class UpdateProducts extends Controller
 
             $productUpdateData[] = [
                 'id' => $tecDocProduct['id'],
-                'specifics' => $specifics,
+                'specifics_ru' => $specifics,
             ];
         }
 
@@ -99,8 +100,8 @@ class UpdateProducts extends Controller
 
     public function brands(): void
     {
-        SupplierBrand::insert([
-            "brand_name" => "MAXGEAR",
+        ProducerBrand::insert([
+            "name" => "MAXGEAR",
             "tecdoc_id" => 403
         ]);
     }
@@ -116,19 +117,12 @@ class UpdateProducts extends Controller
         $result = [];
 
         foreach ($articleCriteria as $criteria) {
-            if (empty($criteria['rawValue']) || empty($criteria['criteriaDescription'])) {
+            if ((empty($criteria['formattedValue']) && empty($criteria['rawValue'])) || empty($criteria['criteriaDescription'])) {
                 continue;
             }
 
             $description = $criteria['criteriaDescription'];
             $value = $criteria['formattedValue'] ?? $criteria['rawValue'];
-
-            // Специальная обработка для некоторых случаев
-            if ($description === "парные номера артикулов") {
-                $description = "Paired article number";
-            } elseif ($description === "Сторона установки") {
-                $description = "Fitting side";
-            }
 
             $result[] = sprintf('%s - %s', $description, $value);
         }

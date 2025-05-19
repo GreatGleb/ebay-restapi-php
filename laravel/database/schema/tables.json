@@ -1,0 +1,400 @@
+{
+    "tables": [
+        {
+            "table_name": "products",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigIncrements",
+                    "nullable": false,
+                    "default": null,
+                    "comment": "#",
+                    "sheet_column_name": "#"
+                },
+                {
+                    "name": "reference",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Reference",
+                    "sheet_column_name": "Reference"
+                },
+                {
+                    "name": "tecdoc_number",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "TecDoc number",
+                    "sheet_column_name": "TecDoc number"
+                },
+                {
+                    "name": "retail_price_net",
+                    "type": "decimal",
+                    "precision": 10,
+                    "scale": 2,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Retail price without VAT",
+                    "sheet_column_name": "Retail price without VAT"
+                },
+                {
+                    "name": "retail_price_gross",
+                    "type": "decimal",
+                    "precision": 10,
+                    "scale": 2,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Retail price with VAT",
+                    "sheet_column_name": "Retail price with VAT"
+                },
+                {
+                    "name": "stock_quantity_pl",
+                    "type": "unsignedInteger",
+                    "nullable": false,
+                    "default": 0,
+                    "comment": "Quantity PL",
+                    "sheet_column_name": "Quantity PL"
+                },
+                {
+                    "name": "stock_quantity_pruszkow",
+                    "type": "unsignedInteger",
+                    "nullable": false,
+                    "default": 0,
+                    "comment": "Quantity Pruszkow",
+                    "sheet_column_name": "Quantity Pruszkow"
+                },
+                {
+                    "name": "name_original_pl",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Name original pl",
+                    "sheet_column_name": "Name original pl"
+                },
+                {
+                    "name": "internal_description",
+                    "type": "text",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Internal description",
+                    "sheet_column_name": "Internal description"
+                },
+                {
+                    "name": "ru_category_from_ebay_de",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Category eBay.de Russian",
+                    "sheet_column_name": "Category eBay.de Russian"
+                },
+                {
+                    "name": "category_id_ebay_de",
+                    "type": "string",
+                    "length": 50,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Category id eBay.de",
+                    "sheet_column_name": "Category id eBay.de"
+                },
+                {
+                    "name": "installation_position_en",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Installation position English",
+                    "sheet_column_name": "Installation position English"
+                },
+                {
+                    "name": "specifics_ru",
+                    "type": "text",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Specifics Russian",
+                    "sheet_column_name": "Specifics Russian"
+                },
+                {
+                    "name": "specifics_en",
+                    "type": "text",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Specifics English",
+                    "sheet_column_name": "Specifics English"
+                },
+                {
+                    "name": "specifics_de",
+                    "type": "text",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Specifics German",
+                    "sheet_column_name": "Specifics German"
+                },
+                {
+                    "name": "product_type_ru",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Product type Russian",
+                    "sheet_column_name": "Product type Russian"
+                },
+                {
+                    "name": "product_type_en",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Product type English",
+                    "sheet_column_name": "Product type English"
+                },
+                {
+                    "name": "product_type_de",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Product type German",
+                    "sheet_column_name": "Product type German"
+                },
+                {
+                    "name": "part_of_ebay_de_name_product_type",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Part of eBay.de name - product type",
+                    "sheet_column_name": "Part of eBay.de name - product type"
+                },
+                {
+                    "name": "part_of_ebay_name_for_cars",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Part of eBay name - for cars",
+                    "sheet_column_name": "Part of eBay name - for cars"
+                },
+                {
+                    "name": "ebay_name_ru",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "eBay name Russian",
+                    "sheet_column_name": "eBay name Russian"
+                },
+                {
+                    "name": "ebay_name_en",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "eBay name English",
+                    "sheet_column_name": "eBay name English"
+                },
+                {
+                    "name": "ebay_name_de",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "eBay name German",
+                    "sheet_column_name": "eBay name German"
+                },
+                {
+                    "name": "description_to_ebay_de",
+                    "type": "text",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Description to eBay.de",
+                    "sheet_column_name": "Description to eBay.de"
+                },
+                {
+                    "name": "specifics_to_ebay_de",
+                    "type": "text",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Specifics to eBay.de",
+                    "sheet_column_name": "Specifics to eBay.de"
+                },
+                {
+                    "name": "photos",
+                    "type": "text",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Photo links",
+                    "sheet_column_name": "Photo links"
+                },
+                {
+                    "name": "has_hologram",
+                    "type": "boolean",
+                    "nullable": false,
+                    "default": false,
+                    "comment": "Has hologram",
+                    "sheet_column_name": "Has hologram"
+                },
+                {
+                    "name": "no_photo",
+                    "type": "boolean",
+                    "nullable": false,
+                    "default": false,
+                    "comment": "No photo",
+                    "sheet_column_name": "No photo"
+                },
+                {
+                    "name": "supplier",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Supplier",
+                    "sheet_column_name": "Supplier"
+                },
+                {
+                    "name": "producer_brand",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Producer brand",
+                    "sheet_column_name": "Producer brand"
+                },
+                {
+                    "name": "ean",
+                    "type": "string",
+                    "length": 50,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "EAN",
+                    "sheet_column_name": "EAN"
+                },
+                {
+                    "name": "weight_gram",
+                    "type": "integer",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "weight gram",
+                    "sheet_column_name": "weight gram"
+                },
+                {
+                    "name": "box_length_cm",
+                    "type": "integer",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "box length cm",
+                    "sheet_column_name": "box length cm"
+                },
+                {
+                    "name": "box_width_cm",
+                    "type": "integer",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "box width cm",
+                    "sheet_column_name": "box width cm"
+                },
+                {
+                    "name": "box_height_cm",
+                    "type": "integer",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "box height cm",
+                    "sheet_column_name": "box height cm"
+                },
+                {
+                    "name": "oe_codes",
+                    "type": "text",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Oe codes",
+                    "sheet_column_name": "Oe codes"
+                },
+                {
+                    "name": "car_compatibilities",
+                    "type": "text",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Car compatibilities",
+                    "sheet_column_name": "Car compatibilities"
+                },
+                {
+                    "name": "link",
+                    "type": "text",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Link",
+                    "sheet_column_name": "Link"
+                },
+                {
+                    "name": "comment",
+                    "type": "text",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Comment",
+                    "sheet_column_name": "Comment"
+                },
+                {
+                    "name": "published_to_ebay_de",
+                    "type": "boolean",
+                    "nullable": false,
+                    "default": false,
+                    "comment": "Published to eBay.de?",
+                    "sheet_column_name": "Published to eBay.de?"
+                },
+                {
+                    "name": "last_update_to_ebay_de",
+                    "type": "dateTime",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Last update to eBay.de",
+                    "sheet_column_name": "Last update to eBay.de"
+                },
+                {
+                    "name": "order_creation_to_ebay_de",
+                    "type": "unsignedInteger",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Order creation to eBay.de",
+                    "sheet_column_name": "Order creation to eBay.de"
+                },
+                {
+                    "name": "sold_in_general",
+                    "type": "integer",
+                    "nullable": false,
+                    "default": 0,
+                    "comment": "Sold in general",
+                    "sheet_column_name": "Sold in general"
+                }
+            ],
+            "indexes": [
+                {
+                    "columns": ["reference"],
+                    "name": "products_reference_index"
+                },
+                {
+                    "columns": ["tecdoc_number"],
+                    "name": "products_tecdoc_number_index"
+                },
+                {
+                    "columns": ["ean"],
+                    "name": "products_ean_index"
+                },
+                {
+                    "columns": ["supplier"],
+                    "name": "products_supplier_index"
+                },
+                {
+                    "columns": ["producer_brand"],
+                    "name": "products_producer_brand_index"
+                },
+                {
+                    "columns": ["published_to_ebay_de"],
+                    "name": "products_published_to_ebay_de_index"
+                }
+            ]
+        }
+    ]
+}

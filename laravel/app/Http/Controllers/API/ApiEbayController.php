@@ -217,6 +217,19 @@ class ApiEbayController extends Controller
         return $categoryPathsCarDetails;
     }
 
+    public function getCategoriesText() {
+        $categoryPathsCarDetails = $this->getCategories();
+
+        $categoriesText = "";
+
+        foreach ($categoryPathsCarDetails as $categ) {
+            $categoriesText .= $categ;
+            $categoriesText .= "</br>";
+        }
+
+        return $categoriesText;
+    }
+
     public function getItemAspectsForCategory($id) {
         $url = 'https://api.ebay.com/commerce/taxonomy/v1/category_tree/77/get_item_aspects_for_category?category_id=' . $id;
         $headers = EbayCurl::getCurlHeaders($this, 3);
@@ -1083,11 +1096,6 @@ class ApiEbayController extends Controller
 //        var_dump($this->setRefreshToken());
 //        var_dump($this->getAccessToken());
 //        var_dump($this->getCategories());
-        $categs = $this->getCategories();
-        foreach ($categs as $categ) {
-            echo $categ;
-            echo "</br>";
-        }
 //        var_dump($this->getReturnPolicies());
 //        echo $this->getAccessToken();
     }

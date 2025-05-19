@@ -16,65 +16,76 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create($this->tableName, function (Blueprint $table) {
-            $table->id();
+            $table->id()->comment('#');
 
             // Product identification
-            $table->text('comment')->nullable()->comment('Комментарий');
-            $table->text('link')->nullable()->comment('Ссылка');
-            $table->string('reference', 255)->nullable()->comment('Внутренний артикул');
-            $table->string('tecdoc_number', 255)->nullable()->comment('TecDoc номер');
-            $table->text('specifics')->nullable()->comment('Особенности');
-
-            // Category information
-            $table->string('category', 255)->nullable()->comment('Категория');
-            $table->string('category_ebay_id', 50)->nullable()->comment('ID категории на eBay.de');
-
-            // Descriptions
-            $table->text('internal_description')->nullable()->comment('Внутреннее описание');
-            $table->text('name_original_pl')->nullable()->comment('Оригинальное название на польском');
+            $table->string('reference', 255)->nullable()->comment('Reference');
+            $table->string('tecdoc_number', 255)->nullable()->comment('TecDoc number');
 
             // Pricing
-            $table->decimal('retail_price_net', 10, 2)->nullable()->comment('Цена без НДС');
-            $table->decimal('retail_price_gross', 10, 2)->nullable()->comment('Цена с НДС');
+            $table->decimal('retail_price_net', 10, 2)->nullable()->comment('Retail price without VAT');
+            $table->decimal('retail_price_gross', 10, 2)->nullable()->comment('Retail price with VAT');
 
             // Availability
-            $table->unsignedInteger('stock_quantity_pl')->default(0)->comment('Наличие в PL');
-            $table->unsignedInteger('stock_quantity_pruszkow')->default(0)->comment('Наличие в Mag. Oddział Pruszków');
+            $table->unsignedInteger('stock_quantity_pl')->default(0)->comment('Quantity PL');
+            $table->unsignedInteger('stock_quantity_pruszkow')->default(0)->comment('Quantity Pruszkow');
+
+            // Descriptions
+            $table->string('name_original_pl', 255)->nullable()->comment('Name original pl');
+            $table->text('internal_description')->nullable()->comment('Internal description');
+
+            // Category information
+            $table->string('ru_category_from_ebay_de', 255)->nullable()->comment('Category eBay.de Russian');
+            $table->string('category_id_ebay_de', 50)->nullable()->comment('Category id eBay.de');
 
             // Product details
-            $table->string('installation_position', 255)->nullable()->comment('Позиция установки');
-            $table->string('product_type', 255)->nullable()->comment('Тип продукта');
+            $table->string('installation_position_en', 255)->nullable()->comment('Installation position English');
+            $table->text('specifics_ru')->nullable()->comment('Specifics Russian');
+            $table->text('specifics_en')->nullable()->comment('Specifics English');
+            $table->text('specifics_de')->nullable()->comment('Specifics German');
+            $table->string('product_type_ru', 255)->nullable()->comment('Product type Russian');
+            $table->string('product_type_en', 255)->nullable()->comment('Product type English');
+            $table->string('product_type_de', 255)->nullable()->comment('Product type German');
+            $table->string('part_of_ebay_de_name_product_type', 255)->nullable()->comment('Part of eBay.de name - product type');
+            $table->string('part_of_ebay_name_for_cars', 255)->nullable()->comment('Part of eBay name - for cars');
 
             // eBay information
-            $table->string('part_of_ebay_name', 255)->nullable()->comment('Часть названия для eBay');
-            $table->string('ebay_name_ru', 255)->nullable()->comment('Название для eBay на русском');
-            $table->string('ebay_name_en', 255)->nullable()->comment('Название для eBay на английском');
-            $table->string('ebay_name_de', 255)->nullable()->comment('Название для eBay на немецком');
-            $table->boolean('published_ebay_de')->default(false)->comment('Опубликовано на ebay.de');
-            $table->dateTime('last_update_ebay')->nullable()->comment('Последнее обновление');
+            $table->string('ebay_name_ru', 255)->nullable()->comment('eBay name Russian');
+            $table->string('ebay_name_en', 255)->nullable()->comment('eBay name English');
+            $table->string('ebay_name_de', 255)->nullable()->comment('eBay name German');
+            $table->text('description_to_ebay_de')->nullable()->comment('Description to eBay.de');
+            $table->text('specifics_to_ebay_de')->nullable()->comment('Specifics to eBay.de');
 
             // Product features
-            $table->boolean('has_hologram')->default(false)->comment('С голограммой');
-            $table->boolean('no_photo')->default(false)->comment('Без фото');
+            $table->boolean('has_hologram')->default(false)->comment('Has hologram');
+            $table->boolean('no_photo')->default(false)->comment('No photo');
 
             // Supplier information
-            $table->string('supplier', 255)->nullable()->comment('Поставщик');
-            $table->string('producer_brand', 255)->nullable()->comment('Бренд производителя');
+            $table->string('supplier', 255)->nullable()->comment('Supplier');
+            $table->string('producer_brand', 255)->nullable()->comment('Producer brand');
 
             // Product codes and dimensions
-            $table->string('ean', 50)->nullable()->comment('EAN код');
-            $table->decimal('weight', 6, 3)->nullable()->comment('Вес');
-            $table->integer('box_length_cm')->nullable()->comment('Длина коробки');
-            $table->integer('box_width_cm')->nullable()->comment('Ширина коробки');
-            $table->integer('box_height_cm')->nullable()->comment('Высота коробки');
+            $table->string('ean', 50)->nullable()->comment('EAN');
+            $table->integer('weight_gram')->nullable()->comment('weight gram');
+            $table->integer('box_length_cm')->nullable()->comment('box length cm');
+            $table->integer('box_width_cm')->nullable()->comment('box width cm');
+            $table->integer('box_height_cm')->nullable()->comment('box height cm');
 
-            $table->integer('sold_in_general')->default(0)->comment('Продано в общем');
+            // Additional info
+            $table->text('link')->nullable()->comment('Link');
+            $table->text('comment')->nullable()->comment('Comment');
+
+            // eBay status
+            $table->boolean('published_to_ebay_de')->default(false)->comment('Published to eBay.de?');
+            $table->dateTime('last_update_to_ebay_de')->nullable()->comment('Last update to eBay.de');
+            $table->unsignedInteger('order_creation_to_ebay_de')->nullable()->comment('Order creation to eBay.de');
+
+            // Sales
+            $table->integer('sold_in_general')->default(0)->comment('Sold in general');
 
             // Indexes
             $table->index('reference');
             $table->index('tecdoc_number');
-            $table->index('category');
-            $table->index('ean');
             $table->index('supplier');
             $table->index('producer_brand');
 

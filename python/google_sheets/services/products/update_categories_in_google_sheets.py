@@ -1,11 +1,12 @@
-from ..manager import GoogleSheetsManager
 from db.db import Database
 from db.models.category import Category
-from ..helpers.find_table_cell import TableCellFinder
 import os
 import requests
+from ...manager import GoogleSheetsManager
+from ...helpers.find_table_cell import TableCellFinder
+from ...helpers.get_table_schema import TableSchema
 
-class UpdateCategoriesInProductInGoogleSheets:
+class UpdateProductCategoriesInGoogleSheets:
     def __init__(self):
         self.manager = GoogleSheetsManager()
         self.db = Database()
@@ -31,19 +32,27 @@ class UpdateCategoriesInProductInGoogleSheets:
 
         return result
 
+    async def get_products_table_columns(self):
+        TableSchemaInitiatedClass = TableSchema()
+        result = await TableSchemaInitiatedClass.get_products_table_columns()
+
+        return result
+
     async def save_to_sheets(self, categories):
         sheet = await self.get_sheet()
-
         finder = TableCellFinder(sheet)
 
+        id_column_name = self.products_table_columns['id']
+        category_column_name = self.products_table_columns['ru_category_from_ebay_de']
+        category_id_column_name = self.products_table_columns['category_id_ebay_de']
+
         for item in categories:
-            if item['category']:
-                column = '#'
+            if 'category' in item and item['category']:
                 value = item['product_id']
 
-                productCellIndexes = finder.get_cell_by_column_and_value(column, value)
-                categoryColumnIndex = finder.get_cell_by_column_and_value('Category')[0]
-                categoryIdColumnIndex = finder.get_cell_by_column_and_value('Category id eBay.de')[0]
+                productCellIndexes = finder.get_cell_by_column_and_value(id_column_name, value)
+                categoryColumnIndex = finder.get_cell_by_column_and_value(category_column_name)[0]
+                categoryIdColumnIndex = finder.get_cell_by_column_and_value(category_id_column_name)[0]
 
                 categoryCellIndex = categoryColumnIndex + str(productCellIndexes[1])
                 categoryIdCellIndex = categoryIdColumnIndex + str(productCellIndexes[1])
@@ -62,16 +71,16 @@ class UpdateCategoriesInProductInGoogleSheets:
                     value=item['category']['ebay_de_id']
                 )
 
-        result = []
-
-        return result
+        return True
 
     async def get_categories_from_api(self, data):
         result = []
 
+        ebay_name_german_column_name = self.products_table_columns['ebay_name_de']
+
         for i, value in enumerate(data):
-            if value['eBay name German']:
-                name = value['eBay name German']
+            if value[ebay_name_german_column_name]:
+                name = value[ebay_name_german_column_name]
                 encoded_name = requests.utils.quote(name)
 
                 url = f"http://ebay_restapi_nginx/api/ebay/getCategoryByName/{encoded_name}"
@@ -95,7 +104,7 @@ class UpdateCategoriesInProductInGoogleSheets:
                             'categories_id': categoriesId,
                         })
                 else:
-                    print("Ошибка:", response.status_code, response.text)
+                    print("Error:", response.status_code, response.text)
 
         return result
 
@@ -105,19 +114,21 @@ class UpdateCategoriesInProductInGoogleSheets:
         for i, value in enumerate(categoriesId):
             ids = value['categories_id']
 
-            valid_ids = set(map(int, ids))
-            filtered_categories = [cat for cat in all_categories if cat['ebay_de_id'] in valid_ids]
-            categoryId = filtered_categories[0] if filtered_categories[0] else null
-            categoriesId[i]['category'] = categoryId
+            checking_ids = set(map(int, ids))
+            filtered_categories = [cat for cat in all_categories if cat['ebay_de_id'] in checking_ids]
+            if filtered_categories:
+                filtered_category = filtered_categories[0] if filtered_categories[0] else null
+                categoriesId[i]['category'] = filtered_category
 
         return categoriesId
 
     async def run(self):
         sheet = await self.parse_sheet()
-        categories = await self.get_categories_from_api(sheet)
-        categories = await self.filter_categories_from_db(categories)
+        self.products_table_columns = await self.get_products_table_columns()
+        categoriesId = await self.get_categories_from_api(sheet)
+        categories = await self.filter_categories_from_db(categoriesId)
         result = await self.save_to_sheets(categories)
 
         return result
 
-UpdateCategoriesInProductInGoogleSheets = UpdateCategoriesInProductInGoogleSheets()
+UpdateProductCategoriesInGoogleSheets = UpdateProductCategoriesInGoogleSheets()

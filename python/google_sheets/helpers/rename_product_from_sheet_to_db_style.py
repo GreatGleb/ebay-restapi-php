@@ -2,53 +2,15 @@ import math
 
 class RenameProductFromSheetToDbStyle:
     @staticmethod
-    def run(list_of_dicts):
-        data = [RenameProductFromSheetToDbStyle.rename_properties_in_dict(d) for d in list_of_dicts]
+    async def run(list_of_dicts, columns):
+        data = [await RenameProductFromSheetToDbStyle.rename_properties_in_dict(d, columns) for d in list_of_dicts]
 
         return data
 
     @staticmethod
-    def rename_properties_in_dict(old_dict):
-        mapping = {
-            "#": "id",
-            "Comment": "comment",
-            "Link": "link",
-            "Reference": "reference",
-            "TecDoc number": "tecdoc_number",
-            "Specifics": "specifics",
-            "Category": "category",
-            "Category id eBay.de": "category_ebay_id",
-            "Internal description": "internal_description",
-            "Name original pl": "name_original_pl",
-            "Retail price without VAT": "retail_price_net",
-            "Retail price with VAT": "retail_price_gross",
-            "Наличие PL": "stock_quantity_pl",
-            "Наличие Mag. ODDZIAŁ PRUSZKÓW": "stock_quantity_pruszkow",
-            "Installation position": "installation_position",
-            "Product type": "product_type",
-            "Part of eBay name - for cars": "part_of_ebay_name",
-            "eBay name Russian": "ebay_name_ru",
-            "eBay name English": "ebay_name_en",
-            "eBay name German": "ebay_name_de",
-            "Photos": "photos",
-            "С голограммой": "has_hologram",
-            "Без фото": "no_photo",
-            "Supplier": "supplier",
-            "Producer brand": "producer_brand",
-            "EAN": "ean",
-            "weight": "weight",
-            "box length cm": "box_length_cm",
-            "box width cm": "box_width_cm",
-            "box height cm": "box_height_cm",
-            "Oe codes": "oe_codes",
-            "Cars compatibilities": "cars_compatibilities",
-            "Published to ebay.de?": "published_ebay_de",
-            "Last update in ebay.de": "last_update_ebay",
-            "Sold in general": "sold_in_general",
-        }
-
+    async def rename_properties_in_dict(old_dict, columns):
         new_dict = {}
-        for old_key, new_key in mapping.items():
+        for new_key, old_key in columns.items():
             value = old_dict.get(old_key)
 
             if new_key in ("stock_quantity_pl", "stock_quantity_pruszkow"):

@@ -29,24 +29,24 @@ router.add_api_route(
 )
 
 router.add_api_route(
-    "/save_to_db_from_google_sheets/categories",
-    sheets_controller.save_to_db_from_google_sheets_categories,
+    "/categories/save_to_db_from_google_sheets",
+    sheets_controller.categories_save_to_db_from_google_sheets,
     methods=["GET"],
     tags=["Google Sheet"],
     summary="Get Categories Google Sheet"
 )
 
 router.add_api_route(
-    "/update_categories_in_products_in_google_sheets",
-    sheets_controller.update_categories_in_products_in_google_sheets,
+    "/products/update_categories_in_google_sheets",
+    sheets_controller.products_update_categories_in_google_sheets,
     methods=["GET"],
     tags=["Google Sheet"],
     summary="Get Categories Google Sheet"
 )
 
 router.add_api_route(
-    "/save_to_db_products_from_google_sheets",
-    sheets_controller.save_products_to_db_from_google_sheets,
+    "/products/save_to_db_from_google_sheets",
+    sheets_controller.products_save_to_db_from_google_sheets,
     methods=["GET"],
     tags=["Google Sheet"],
     summary="Update DB products from Google Sheet"

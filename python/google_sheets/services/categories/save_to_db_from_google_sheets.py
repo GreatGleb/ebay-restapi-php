@@ -1,9 +1,9 @@
-from ..manager import GoogleSheetsManager
 from db.db import Database
 from db.models.category import Category
 import os
+from ...manager import GoogleSheetsManager
 
-class SaveToDbFromGoogleSheetsCategories:
+class SaveCategoriesToDbFromGoogleSheets:
     def __init__(self):
         self.manager = GoogleSheetsManager()
         self.db = Database()
@@ -63,7 +63,7 @@ class SaveToDbFromGoogleSheetsCategories:
 
     async def save_categories(self, categories):
         """Save categories to database using SQLAlchemy"""
-        session = self.db.get_session()
+        db_session = self.db.get_session()
         try:
             
             db_categories = []
@@ -77,10 +77,18 @@ class SaveToDbFromGoogleSheetsCategories:
                 )
 
                 db_categories.append(db_category)
-            
+
+            if not db_categories:
+                print("Hasn't new categories")
+                return
+
+            db_session.query(Category).delete()
+            db_session.commit()
+
             self.db.bulk_save_objects(db_categories)
+            db_session.commit()
             
-            total_categories = session.query(Category).count()
+            total_categories = db_session.query(Category).count()
             return {
                 "status": "success",
                 "message": f"Successfully imported {len(db_categories)} categories",
@@ -89,21 +97,19 @@ class SaveToDbFromGoogleSheetsCategories:
                     "total_count": total_categories
                 }
             }
-
         except Exception as e:
-            session.rollback()
+            db_session.rollback()
             return {
                 "status": "error",
                 "message": str(e)
             }
         finally:
-            session.close()
+            db_session.close()
 
     async def run(self):
         categories = await self.parse_categories()
-        
         result = await self.save_categories(categories)
 
         return result
 
-SaveToDbFromGoogleSheetsCategories = SaveToDbFromGoogleSheetsCategories()
+SaveCategoriesToDbFromGoogleSheets = SaveCategoriesToDbFromGoogleSheets()

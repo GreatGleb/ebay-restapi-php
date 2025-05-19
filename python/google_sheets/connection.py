@@ -55,7 +55,7 @@ class GoogleSheetsConnection:
                         scopes=self.SCOPES
                     )
             except Exception as e:
-                print(f"Error loading token: {e}")
+                print(f"Error loading Google Sheets token: {e}")
 
         flow = InstalledAppFlow.from_client_secrets_file(
             self.credentials_file,

@@ -124,5 +124,5 @@ class GoogleSheetsManager:
             return True
 
         except Exception as e:
-            print(f"Ошибка при записи в ячейку {cell}: {e}")
+            print(f"Error while Google Sheets recording to cell  {cell}: {e}")
             return False

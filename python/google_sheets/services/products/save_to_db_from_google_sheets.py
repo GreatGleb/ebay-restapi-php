@@ -1,9 +1,10 @@
-from ..helpers.rename_product_from_sheet_to_db_style import RenameProductFromSheetToDbStyle
-from ..manager import GoogleSheetsManager
 from db.db import Database
 from db.models.category import Category
 import os
 import requests
+from ...helpers.get_table_schema import TableSchema
+from ...helpers.rename_product_from_sheet_to_db_style import RenameProductFromSheetToDbStyle
+from ...manager import GoogleSheetsManager
 
 class SaveProductsToDbFromGoogleSheets:
     def __init__(self):
@@ -43,15 +44,18 @@ class SaveProductsToDbFromGoogleSheets:
         if response.status_code == 200:
             data = response.json()
         else:
-            print("Ошибка:", response.status_code, response.text)
+            print("Error:", response.status_code, response.text)
 
         return data
 
     async def run(self):
+        TableSchemaInitiatedClass = TableSchema()
+        product_columns = await TableSchemaInitiatedClass.get_products_table_columns()
+
         list_of_dicts = await self.parse_sheet()
-        products = RenameProductFromSheetToDbStyle.run(list_of_dicts)
+        products = await RenameProductFromSheetToDbStyle.run(list_of_dicts, product_columns)
         response = await self.updateProductsInDB(products)
 
-        return response
+        return products
 
 SaveProductsToDbFromGoogleSheets = SaveProductsToDbFromGoogleSheets()

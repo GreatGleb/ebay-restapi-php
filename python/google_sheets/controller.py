@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 from .manager import GoogleSheetsManager
-from .services.save_to_db_from_google_sheets_categories import SaveToDbFromGoogleSheetsCategories
-from .services.update_categories_in_products_in_google_sheets import UpdateCategoriesInProductInGoogleSheets
-from .services.save_products_to_db_from_google_sheets import SaveProductsToDbFromGoogleSheets
+from .services.categories.save_to_db_from_google_sheets import SaveCategoriesToDbFromGoogleSheets
+from .services.products.update_categories_in_google_sheets import UpdateProductCategoriesInGoogleSheets
+from .services.products.save_to_db_from_google_sheets import SaveProductsToDbFromGoogleSheets
 import os
 
 class GoogleSheetsController:
@@ -38,21 +38,21 @@ class GoogleSheetsController:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-    async def save_to_db_from_google_sheets_categories(self):
+    async def categories_save_to_db_from_google_sheets(self):
         """
         Import categories from Google Sheets to DB
         """
 
-        return await SaveToDbFromGoogleSheetsCategories.run()
+        return await SaveCategoriesToDbFromGoogleSheets.run()
 
-    async def update_categories_in_products_in_google_sheets(self):
+    async def products_update_categories_in_google_sheets(self):
         """
         Import categories from Google Sheets to DB
         """
 
-        return await UpdateCategoriesInProductInGoogleSheets.run()
+        return await UpdateProductCategoriesInGoogleSheets.run()
 
-    async def save_products_to_db_from_google_sheets(self):
+    async def products_save_to_db_from_google_sheets(self):
         """
         Import categories from Google Sheets to DB
         """
