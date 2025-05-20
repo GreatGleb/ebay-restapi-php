@@ -8,7 +8,7 @@ use Database\Triggers\UpdatedAtTrigger;
 
 return new class extends Migration
 {
-    public $tableName = 'tecdoc_product_data';
+    public $tableName = 'product_tecdoc_data';
 
     /**
      * Run the migrations.
