@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers\API;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Http;
+use JetBrains\PhpStorm\NoReturn;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductOeCode;
@@ -9,12 +14,6 @@ use App\Models\ProductCompatibility;
 use App\Models\ProductPhoto;
 use App\Models\ProducerBrand;
 use App\Models\ProductTecdocData;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Http;
-use JetBrains\PhpStorm\NoReturn;
-
 
 class UpdateProducts extends Controller
 {
