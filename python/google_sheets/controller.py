@@ -3,6 +3,7 @@ from .manager import GoogleSheetsManager
 from .services.categories.save_to_db_from_google_sheets import SaveCategoriesToDbFromGoogleSheets
 from .services.products.update_categories_in_google_sheets import UpdateProductCategoriesInGoogleSheets
 from .services.products.save_to_db_from_google_sheets import SaveProductsToDbFromGoogleSheets
+from .services.products.update_from_db_to_google_sheets import UpdateProductsFromDbToGoogleSheets
 import os
 
 class GoogleSheetsController:
@@ -58,5 +59,12 @@ class GoogleSheetsController:
         """
 
         return await SaveProductsToDbFromGoogleSheets.run()
+
+    async def products_update_from_db_to_google_sheets(self):
+        """
+        Import categories from Google Sheets to DB
+        """
+
+        return await UpdateProductsFromDbToGoogleSheets.run()
 
 sheets_controller = GoogleSheetsController()

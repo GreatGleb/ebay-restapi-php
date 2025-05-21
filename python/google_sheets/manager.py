@@ -87,10 +87,6 @@ class GoogleSheetsManager:
                 **file_metadata,
                 "sheets": sheets_with_data
             }
-
-        except HttpError as e:
-            print(f"Error getting spreadsheet {spreadsheet_id}: {e}")
-            raise
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
