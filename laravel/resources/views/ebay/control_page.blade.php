@@ -24,4 +24,9 @@
     <p>
         <a href="http://localhost/python/categories/save_to_db_from_google_sheets" target="_blank">Update DB categories from Google sheets</a>
     </p>
+
+    <h2>Producer brands</h2>
+    <p>
+        <a href="{{ route('updateBrands') }}" target="_blank">Update DB producer brands</a>
+    </p>
 @endsection

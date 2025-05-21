@@ -19,12 +19,17 @@ use ReflectionClass;
 
 class TecDocController
 {
-    public $apiKey;
-    public $providerId = 22930;
+    private $apiKey;
+    private $providerId;
+    private $client;
 
     public function __construct()
     {
-        $this->apiKey = getenv('TECDOC_KEY_RM');
+//        $this->apiKey = getenv('TECDOC_KEY_RM');
+//        $this->providerId = getenv('TECDOC_PROVIDER_ID_RM');
+        $this->apiKey = getenv('TECDOC_KEY_APNEXT');
+        $this->providerId = getenv('TECDOC_PROVIDER_ID_APNEXT');
+        $this->client = new Client($this->apiKey, $this->providerId);
     }
 
     public function ajaxRequest()
@@ -41,15 +46,13 @@ class TecDocController
 
     public function ajaxGetModelSeries2Post(Request $request)
     {
-        $client = new Client($this->apiKey, $this->providerId);
-
         $params = (new GetModelSeries2())
             ->setCountry('LT')
             ->setLang('LT')
             ->setLinkingTargetType('P')
 //            ->setFavouredList(1)
             ->setManuId($request->manuId);
-        $response = $client->getModelSeries2($params);
+        $response = $this->client->getModelSeries2($params);
         $models = [];
         //$model = $response->getData();
         foreach ($response->getData() as $key => $model)
@@ -64,7 +67,6 @@ class TecDocController
 
     public function ajaxGetVehicleIdsByCriteriaPost(Request $request)
     {
-        $client = new Client($this->apiKey, $this->providerId);
         $vehicleIdsByCriteria = (new GetVehicleIdsByCriteria())
             ->setCountriesCarSelection('LT')
             ->setLang('LT')
@@ -72,7 +74,7 @@ class TecDocController
             ->setManuId($request->manuId)
             ->setModId($request->modId);
 
-        $vehicleIdsByCriteriaResponse = $client->getVehicleIdsByCriteria($vehicleIdsByCriteria);
+        $vehicleIdsByCriteriaResponse = $this->client->getVehicleIdsByCriteria($vehicleIdsByCriteria);
 
         $arrayVehicleIdsByCriteria = array_chunk($vehicleIdsByCriteriaResponse->getData(),25);
 
@@ -93,7 +95,7 @@ class TecDocController
                 ->setLang('LT')
                 ->setCountry('LT')
                 ->setCarIds($arrayCarId);
-            $getVehicleByIds3Response = $client->getVehicleByIds3($getVehicleByIds3)->getData();
+            $getVehicleByIds3Response = $this->client->getVehicleByIds3($getVehicleByIds3)->getData();
 
             foreach ($getVehicleByIds3Response as $itemModification) {
 
@@ -119,10 +121,15 @@ class TecDocController
         ]);
     }
 
+    public function getMethods(string $class): array {
+        if (!class_exists($class)) {
+            return [];
+        }
+        return get_class_methods($class);
+    }
+
     public function getVehicleByIds3($arrayCarId)
     {
-        $client = new Client($this->apiKey, $this->providerId);
-
         $modification = [];
 
         $getVehicleByIds3 = (new GetVehicleByIds3())
@@ -132,7 +139,7 @@ class TecDocController
             ->setCountry('LT')
             ->setCarIds($arrayCarId);
 
-        $getVehicleByIds3Response = $client->getVehicleByIds3($getVehicleByIds3)->getData();
+        $getVehicleByIds3Response = $this->client->getVehicleByIds3($getVehicleByIds3)->getData();
 
 
         $mod = $getVehicleByIds3Response[0]->getVehicleDetails();
@@ -156,8 +163,6 @@ class TecDocController
 
     public function products(Request $request)
     {
-
-        $client = new Client($this->apiKey, $this->providerId);
         $articles = [];
         $carId = isset(request()->carId) ? request()->carId : $request->carId;
         $category = isset(request()->category) ? request()->category : $request->category;
@@ -169,7 +174,7 @@ class TecDocController
             ->setLinkingTargetType('P')
             ->setAssemblyGroupNodeId($category);
 
-        $getVehicleByIds3Response = $client->getArticleIdsWithState($getArticleIdsWithState)->getData();
+        $getVehicleByIds3Response = $this->client->getArticleIdsWithState($getArticleIdsWithState)->getData();
 
         foreach ($getVehicleByIds3Response as $getItem) {
             array_push($articles, $getItem->getArticleNo());
@@ -225,15 +230,13 @@ class TecDocController
             $modification = $this->getVehicleByIds3([$request->modification]);
         }
 
-        $client = new Client($this->apiKey, $this->providerId);
-
         $categories = (new GetChildNodesAllLinkingTarget2())
             ->setArticleCountry('LT')
             ->setLang('LT')
             ->setLinkingTargetType('P')
             ->setLinkingTargetId(isset($request->modification) ? $request->modification: null);
 
-        $getCategories = $client->getChildNodesAllLinkingTarget2($categories)->getData();
+        $getCategories = $this->client->getChildNodesAllLinkingTarget2($categories)->getData();
 
         return view('catalog.tecdoc.catalog', [
             'categories' => $getCategories,
@@ -242,7 +245,6 @@ class TecDocController
     }
     public function countProduct($parentId, $carId)
     {
-        $client = new Client($this->apiKey, $this->providerId);
         $productsCat = (new getArticleIdsWithState())
             ->setArticleCountry('LT')
             ->setLang('LT')
@@ -250,7 +252,7 @@ class TecDocController
             ->setAssemblyGroupNodeId($parentId)
             ->setLinkingTargetId($carId);
 
-        $productsCatResponse = $client->getArticleIdsWithState($productsCat)->getData();
+        $productsCatResponse = $this->client->getArticleIdsWithState($productsCat)->getData();
         $articles = [];
 
         foreach ($productsCatResponse as $productCat) {
@@ -262,8 +264,6 @@ class TecDocController
     }
     public function getParentCategory(Request $request)
     {
-        $client = new Client($this->apiKey, $this->providerId);
-
         $categories = (new GetChildNodesAllLinkingTarget2())
             ->setArticleCountry('LT')
             ->setLang('LT')
@@ -271,7 +271,7 @@ class TecDocController
             ->setParentNodeId($request->parentId)
             ->setLinkingTargetId($request->carId);
 
-        $getCategories = $client->getChildNodesAllLinkingTarget2($categories)->getData();
+        $getCategories = $this->client->getChildNodesAllLinkingTarget2($categories)->getData();
         $childs = [];
 
         foreach ($getCategories as $category) {
@@ -298,7 +298,6 @@ class TecDocController
     public function getCarsAndOecodes($reference, $brandId)
     {
         if(isset($reference) and isset($brandId)) {
-            $client = new Client($this->apiKey, $this->providerId);
             $oeCodes = [];
             $getAtributs = [];
 
@@ -309,7 +308,7 @@ class TecDocController
                 ->setBrandId($brandId)
                 ->setArticleNumber($reference)
                 ->setNumberType(0);
-            $getArticleDirectSearchAllNumbersWithStateResponse = $client->getArticleDirectSearchAllNumbersWithState($getArticleDirectSearchAllNumbersWithState)->getData();
+            $getArticleDirectSearchAllNumbersWithStateResponse = $this->client->getArticleDirectSearchAllNumbersWithState($getArticleDirectSearchAllNumbersWithState)->getData();
 
             if(!empty($getArticleDirectSearchAllNumbersWithStateResponse)) {
 
@@ -322,7 +321,7 @@ class TecDocController
                     ->setAttributs(true)
                     ->setArticleId([$getArticleId]);
 
-                $getDirectArticlesByIds6Response = $client->getDirectArticlesByIds6($getDirectArticlesByIds6)->getData();
+                $getDirectArticlesByIds6Response = $this->client->getDirectArticlesByIds6($getDirectArticlesByIds6)->getData();
 
                 foreach ($getDirectArticlesByIds6Response[0]->getOenNumbers() as $getOe) {
                     array_push($oeCodes, [
@@ -350,7 +349,6 @@ class TecDocController
     }
     public function getArticleModels($articleId)
     {
-        $client = new Client($this->apiKey, $this->providerId);
 //        $manuArray = [];
         $data = [];
 
@@ -359,7 +357,7 @@ class TecDocController
             ->setArticleId($articleId)
             ->setLinkingTargetType('P');
 
-        $getArticleLinkedAllLinkingTargetManufacturerResponse = $client->getArticleLinkedAllLinkingTargetManufacturer($getArticleLinkedAllLinkingTargetManufacturer)->getData();
+        $getArticleLinkedAllLinkingTargetManufacturerResponse = $this->client->getArticleLinkedAllLinkingTargetManufacturer($getArticleLinkedAllLinkingTargetManufacturer)->getData();
 
         foreach ($getArticleLinkedAllLinkingTargetManufacturerResponse as $key => $manu) {
             $getArticleLinkedAllLinkingTarget3  = (new GetArticleLinkedAllLinkingTarget3())
@@ -369,7 +367,7 @@ class TecDocController
                 ->setLinkingTargetManuId($manu->getManuId())
                 ->setLinkingTargetType('P');
 
-            $getArticleLinkedAllLinkingTarget3Response = $client->getArticleLinkedAllLinkingTarget3($getArticleLinkedAllLinkingTarget3)->getData()[0]->getArticleLinkages();
+            $getArticleLinkedAllLinkingTarget3Response = $this->client->getArticleLinkedAllLinkingTarget3($getArticleLinkedAllLinkingTarget3)->getData()[0]->getArticleLinkages();
 
 //            $manuArray[$key] = [
 //                'name' => $manu->getManuName(),
@@ -384,8 +382,7 @@ class TecDocController
                     ->setCountry('LT')
                     ->setCarIds([$carInfo->getLinkingTargetId()]);
 
-                $getVehicleByIds3Response = $client->getVehicleByIds3($getVehicleByIds3)->getData();
-
+                $getVehicleByIds3Response = $this->client->getVehicleByIds3($getVehicleByIds3)->getData();
                 $vehicleDetails = $getVehicleByIds3Response[0]->getVehicleDetails();
 
 //                if(!empty($vehicleDetails)) {
@@ -426,6 +423,8 @@ class TecDocController
                     $arr[$property] = $this->extractObjectProperties($value);
                 }
             }
+        } else if(is_object($arr)) {
+            $arr = $this->extractObjectProperties($arr);
         }
 
         return $arr;
@@ -448,16 +447,14 @@ class TecDocController
             ->first();
 
         if(isset($request->reference) and isset($product->supplier_reference)) {
-            $client = new Client($this->apiKey, $this->providerId);
-
             $getArticleDirectSearchAllNumbersWithState = (new getArticleDirectSearchAllNumbersWithState())
                 ->setArticleCountry('LT')
                 ->setLang('LT')
-                ->setSearchExact(true)   // setNumberType
+                ->setSearchExact(true)
                 ->setBrandId($product->supplier_brand->tecdoc_id)
                 ->setArticleNumber($product->supplier_reference)
                 ->setNumberType(0);
-            $getArticleDirectSearchAllNumbersWithStateResponse = $client->getArticleDirectSearchAllNumbersWithState($getArticleDirectSearchAllNumbersWithState)->getData();
+            $getArticleDirectSearchAllNumbersWithStateResponse = $this->client->getArticleDirectSearchAllNumbersWithState($getArticleDirectSearchAllNumbersWithState)->getData();
 
             if(!empty($getArticleDirectSearchAllNumbersWithStateResponse)) {
 
@@ -477,7 +474,6 @@ class TecDocController
 
     public function getArticleManufacturerWithModels(Request $request)
     {
-        $client = new Client($this->apiKey, $this->providerId);
         $manuArray = [];
 
         $getArticleLinkedAllLinkingTargetManufacturer = (new GetArticleLinkedAllLinkingTargetManufacturer())
@@ -485,7 +481,7 @@ class TecDocController
             ->setArticleId($request->article)
             ->setLinkingTargetType('P');
 
-        $getArticleLinkedAllLinkingTargetManufacturerResponse = $client->getArticleLinkedAllLinkingTargetManufacturer($getArticleLinkedAllLinkingTargetManufacturer)->getData();
+        $getArticleLinkedAllLinkingTargetManufacturerResponse = $this->client->getArticleLinkedAllLinkingTargetManufacturer($getArticleLinkedAllLinkingTargetManufacturer)->getData();
         foreach ($getArticleLinkedAllLinkingTargetManufacturerResponse as $key => $manu) {
 
             $getArticleLinkedAllLinkingTarget3  = (new GetArticleLinkedAllLinkingTarget3())
@@ -495,7 +491,7 @@ class TecDocController
                 ->setLinkingTargetManuId($manu->getManuId())
                 ->setLinkingTargetType('P');
 
-            $getArticleLinkedAllLinkingTarget3Response = $client->getArticleLinkedAllLinkingTarget3($getArticleLinkedAllLinkingTarget3)->getData()[0]->getArticleLinkages();
+            $getArticleLinkedAllLinkingTarget3Response = $this->client->getArticleLinkedAllLinkingTarget3($getArticleLinkedAllLinkingTarget3)->getData()[0]->getArticleLinkages();
             $manuArray[$key] = [
                 'name' => $manu->getManuId(),
                 'models' => []
@@ -512,7 +508,7 @@ class TecDocController
                     ->setCountry('LT')
                     ->setCarIds([$carInfo->getLinkingTargetId()]);
 
-                $getVehicleByIds3Response = $client->getVehicleByIds3($getVehicleByIds3)->getData();
+                $getVehicleByIds3Response = $this->client->getVehicleByIds3($getVehicleByIds3)->getData();
 
 
                 $mod = $getVehicleByIds3Response[0]->getVehicleDetails();
@@ -536,7 +532,6 @@ class TecDocController
     public function getCars(Request $request)
     {
         if(isset($request->article)) {
-            $client = new Client($this->apiKey, $this->providerId);
             $cars = [];
             $carsCombine = [];
 
@@ -546,7 +541,7 @@ class TecDocController
                 ->setLinkingTargetType('P')
                 ->setLinkingTargetManuId(183)
                 ->setArticleId($request->article);
-            $getArticleLinkedAllLinkingTarget3Response = $client->getArticleLinkedAllLinkingTarget3($getArticleLinkedAllLinkingTarget3)->getData()[0]->getArticleLinkages();
+            $getArticleLinkedAllLinkingTarget3Response = $this->client->getArticleLinkedAllLinkingTarget3($getArticleLinkedAllLinkingTarget3)->getData()[0]->getArticleLinkages();
 
             foreach ($getArticleLinkedAllLinkingTarget3Response as $getCar) {
 
@@ -591,8 +586,6 @@ class TecDocController
 
     public function getArticleDirectSearchAllNumbersWithState($string, $numberType)
     {
-        $client = new Client($this->apiKey, $this->providerId);
-
         $getArticleDirectSearchAllNumbersWithState = (new getArticleDirectSearchAllNumbersWithState())
             ->setArticleCountry('LT')
             ->setLang('LT')
@@ -601,7 +594,7 @@ class TecDocController
             ->setSortType(2)
             ->setNumberType($numberType);
 
-        $getArticleDirectSearchAllNumbersWithStateResponse = $client->getArticleDirectSearchAllNumbersWithState($getArticleDirectSearchAllNumbersWithState)->getData();
+        $getArticleDirectSearchAllNumbersWithStateResponse = $this->client->getArticleDirectSearchAllNumbersWithState($getArticleDirectSearchAllNumbersWithState)->getData();
 
         return $getArticleDirectSearchAllNumbersWithStateResponse;
     }
@@ -611,19 +604,17 @@ class TecDocController
         $articleId = null;
 
         if(isset($supplier_reference)) {
-            $client = new Client($this->apiKey, $this->providerId);
-
-            $getArticleDirectSearchAllNumbersWithState = (new getArticleDirectSearchAllNumbersWithState())
-                ->setArticleCountry('LT')
-                ->setLang('LT')
+            $request = (new getArticleDirectSearchAllNumbersWithState())
+                ->setArticleCountry('PL')
+                ->setLang('en')
                 ->setSearchExact(true)
                 ->setBrandId($brand)
                 ->setArticleNumber($supplier_reference)
                 ->setNumberType(0);
-            $getArticleDirectSearchAllNumbersWithStateResponse = $client->getArticleDirectSearchAllNumbersWithState($getArticleDirectSearchAllNumbersWithState)->getData();
+            $response = $this->client->getArticleDirectSearchAllNumbersWithState($request)->getData();
 
-            if (!empty($getArticleDirectSearchAllNumbersWithStateResponse)) {
-                $articleId = $getArticleDirectSearchAllNumbersWithStateResponse[0]->getArticleId();
+            if (!empty($response)) {
+                $articleId = $response[0]->getArticleId();
             }
         }
 
@@ -633,8 +624,6 @@ class TecDocController
     public function getPhotosByProductSupplierReference($supplier_reference, $brand) {
         $images = [];
 
-        $client = new Client($this->apiKey, $this->providerId);
-
         $getArticleDirectSearchAllNumbersWithState = (new GetArticleDirectSearchAllNumbersWithState())
             ->setArticleCountry('LT')
             ->setLang('LT')
@@ -642,7 +631,7 @@ class TecDocController
             ->setBrandId($brand)
             ->setArticleNumber($supplier_reference)
             ->setNumberType(0);
-        $getArticleDirectSearchAllNumbersWithStateResponse = $client->getArticleDirectSearchAllNumbersWithState($getArticleDirectSearchAllNumbersWithState)->getData();
+        $getArticleDirectSearchAllNumbersWithStateResponse = $this->client->getArticleDirectSearchAllNumbersWithState($getArticleDirectSearchAllNumbersWithState)->getData();
 
         $articleId = count($getArticleDirectSearchAllNumbersWithStateResponse) ? $getArticleDirectSearchAllNumbersWithStateResponse[0]->getArticleId() : null;
 
@@ -655,8 +644,7 @@ class TecDocController
                 ->setArticleId([$articleId]);
 
 
-            $getDirectArticlesByIds6Response = $client->getDirectArticlesByIds6($getDirectArticlesByIds6)->getData();
-
+            $getDirectArticlesByIds6Response = $this->client->getDirectArticlesByIds6($getDirectArticlesByIds6)->getData();
             $thumbnails = count($getDirectArticlesByIds6Response) ? $getDirectArticlesByIds6Response[0]->getArticleThumbnails() : [];
 
             foreach ($getDirectArticlesByIds6Response[0]->getArticleThumbnails() as $thumb) {
@@ -672,7 +660,6 @@ class TecDocController
 
     public function getPhotosDocIdByProductSupplierReference($supplier_reference, $brand) {
         $images = [];
-        $client = new Client($this->apiKey, $this->providerId);
         $articleId = $this->getArticleIdByProductSupplierReference($supplier_reference, $brand);
 
         $getDirectArticlesByIds6 = (new getDirectArticlesByIds6())
@@ -683,8 +670,7 @@ class TecDocController
             ->setArticleId([$articleId]);
 
 
-        $getDirectArticlesByIds6Response = $client->getDirectArticlesByIds6($getDirectArticlesByIds6)->getData();
-
+        $getDirectArticlesByIds6Response = $this->client->getDirectArticlesByIds6($getDirectArticlesByIds6)->getData();
         if ($getDirectArticlesByIds6Response) {
             foreach ($getDirectArticlesByIds6Response[0]->getArticleThumbnails() as $thumb) {
                 $img = $thumb->getThumbDocId();
@@ -695,79 +681,19 @@ class TecDocController
         return $images;
     }
 
-    public function getPhotoLinkByDocId($docId) {
-        return 'http://webservice.tecalliance.services/pegasus-3-0/documents/' . $this->providerId . '/' .
-            $docId . '/0?api_key=' . $this->apiKey;
-    }
-
-    public function getNameByProductSupplierReference($supplier_reference, $brand) {
-        $name = null;
-
-        $client = new Client($this->apiKey, $this->providerId);
-        $articleId = $this->getArticleIdByProductSupplierReference($supplier_reference, $brand);
-
-        $getDirectArticlesByIds6 = (new getDirectArticlesByIds6())
-            ->setArticleCountry('LT')
-            ->setLang('EN')
-            ->setBasicData(true)
-            ->setArticleId([$articleId]);
-
-        $getDirectArticlesByIds6Response = $client->getDirectArticlesByIds6($getDirectArticlesByIds6)->getData();
-
-        if (!empty($getDirectArticlesByIds6Response)) {
-            $name = $getDirectArticlesByIds6Response[0]->getDirectArticle()->getArticleName();
-        }
-
-        return $name;
-    }
-
-    public function getInfoByProductSupplierReference($reference, $brandId) {
-        $client = new Client($this->apiKey, $this->providerId);
-        $articleId = $this->getArticleIdByProductSupplierReference($reference, $brandId);
-
-        $request = (new GetArticles())
-            ->setLang('RU')
-            ->setArticleCountry('LT')
-            ->setLegacyArticleIds([$articleId])
-            ->setIncludeArticleText(true)
-            ->setIncludeImages(true)
-            ->setIncludeOEMNumbers(true)
-            ->setIncludeReplacedByArticles(true)
-            ->setIncludeReplacesArticles(true)
-            ->setIncludeArticleCriteria(true)
-            ->setIncludeComparableNumbers(true)
-            ->setIncludeTradeNumbers(true)
-            ->setIncludeGenericArticles(true)
-            ->setIncludeLinkages(true)
-            ->setIncludePrices(true);;
-
-        $response = $client->getArticles($request);
-        $details = $response->getArticles();
-        $data = [];
-        if(isset($details[0])) {
-            $data = $this->deepExtractObjectProperties($details[0]);
-        }
-
-        $data['compatibilities'] = $this->getArticleModels($articleId);
-
-        return $data;
-    }
-
     public function getImagesBySupplierReference($supplier_reference)
     {
         $getArticlesResponse = null;
         $imagesArr = [];
 
         if(isset($supplier_reference)) {
-            $client = new Client($this->apiKey, $this->providerId);
-
             $getArticles = (new GetArticles())
                 ->setArticleCountry('LT')
                 ->setLang('LT')
                 ->setSearchQuery($supplier_reference)
                 ->setIncludeAll(true);
 
-            $getArticlesResponse = $client->getArticles($getArticles);
+            $getArticlesResponse = $this->client->getArticles($getArticles);
             $getArticlesResponse = $getArticlesResponse->getArticles();
 
             if(isset($getArticlesResponse[0])) {
@@ -799,5 +725,99 @@ class TecDocController
         }
 
         return $imagesArr;
+    }
+
+    public function getPhotoLinkByDocId($docId) {
+        return 'http://webservice.tecalliance.services/pegasus-3-0/documents/' . $this->providerId . '/' .
+            $docId . '/0?api_key=' . $this->apiKey;
+    }
+
+    private function getEanFromArray(array $array): string
+    {
+        $ean = '';
+        if ($array && is_array($array)) {
+            foreach ($array as $key => $value) {
+                $value = trim((string) $value);
+                if(strlen($value) == 13) {
+                    $ean = $value;
+                }
+            }
+        }
+
+        return $ean;
+    }
+
+    private function getArticleData(int $articleId, string $lang, bool $includeAll = false, bool $includeProductName = false, bool $includeParams = false)
+    {
+        $request = (new GetArticles())
+            ->setArticleCountry('DE')
+            ->setLang($lang)
+            ->setLegacyArticleIds([$articleId])
+            ->setIncludeGenericArticles($includeProductName)
+            ->setIncludeArticleCriteria($includeParams)
+            ->setIncludeAll($includeAll);
+
+        $response = $this->client->getArticles($request)->getArticles();
+        $response = isset($response[0])
+            ? $this->deepExtractObjectProperties($response[0])
+            : [];
+
+        if(isset($response["genericArticles"][0]["genericArticleDescription"])) {
+            $response["productTypes"] = $response["genericArticles"][0]["genericArticleDescription"];
+        }
+
+        if(isset($response["articleCriteria"][0])) {
+            $response["specifics"] = $this->getSpecifics($response["articleCriteria"]);
+        }
+
+        return $response;
+    }
+
+    public function getInfoByProductSupplierReference($reference, $brandId) {
+        $articleId = $this->getArticleIdByProductSupplierReference($reference, $brandId);
+
+        $data = [];
+
+        if($articleId) {
+            $ruData = $this->getArticleData($articleId, 'ru', false, true, true);
+            $enData = $this->getArticleData($articleId, 'en', false, true, true);
+            $deDataFull = $this->getArticleData($articleId, 'de', true);
+
+            $data = $deDataFull;
+            $data["productTypes"] = [
+                "ru" => $ruData["productTypes"] ?? "",
+                "en" => $enData["productTypes"] ?? "",
+                "de" => $deDataFull["productTypes"] ?? "",
+            ];
+            $data["specifics"] = [
+                "ru" => $ruData["specifics"] ?? "",
+                "en" => $enData["specifics"] ?? "",
+                "de" => $deDataFull["specifics"] ?? "",
+            ];
+            $data['ean'] = $this->getEanFromArray($deDataFull['gtins']);
+            $data['compatibilities'] = $this->getArticleModels($articleId);
+        } else {
+            $data['error'] = 'Article Not Found';
+        }
+
+        return $data;
+    }
+
+    protected function getSpecifics(array $articleCriteria): string
+    {
+        $result = [];
+
+        foreach ($articleCriteria as $criteria) {
+            if ((empty($criteria['formattedValue']) && empty($criteria['rawValue'])) || empty($criteria['criteriaDescription'])) {
+                continue;
+            }
+
+            $description = $criteria['criteriaDescription'];
+            $value = $criteria['formattedValue'] ?? $criteria['rawValue'];
+
+            $result[] = sprintf('%s - %s', $description, $value);
+        }
+
+        return implode(",\n", $result);
     }
 }

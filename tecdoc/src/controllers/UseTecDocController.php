@@ -18,13 +18,11 @@ class UseTecDocController
         $products = $request->getContent();
         $products = json_decode($products, true);
 
-        $products = [$products[0]];
-
         $data = [];
 
         foreach ($products as $product) {
             $item = $this->getProductInfo($product['reference'], $product['brand_id']);
-            $item["id"] = $product["id"];
+            $item["product-id"] = $product["id"];
 
             $data[] = $item;
         }

@@ -27,37 +27,37 @@ return new class extends Migration
             $table->string('mfr_name', 250);
 
             // Article content
-            $table->text('misc')->nullable();
-            $table->json('article_text')->default('[]');
+            $table->json('misc')->nullable();
+            $table->json('article_text')->nullable();
 
             // Identification numbers
-            $table->json('gtins')->default('[]');
-            $table->json('trade_numbers')->default('[]');
+            $table->json('gtins')->nullable();
+            $table->json('trade_numbers')->nullable();
 
             // Article relationships
-            $table->json('replaces_articles')->default('[]');
-            $table->json('replaced_by_articles')->default('[]');
-            $table->json('generic_articles')->default('[]');
+            $table->json('replaces_articles')->nullable();
+            $table->json('replaced_by_articles')->nullable();
+            $table->json('generic_articles')->nullable();
 
             // Classification and criteria
-            $table->json('article_criteria')->default('[]');
+            $table->json('article_criteria')->nullable();
 
             // Product linkages
-            $table->json('linkages')->default('[]');
+            $table->json('linkages')->nullable();
             $table->unsignedInteger('total_linkages')->default(0);
 
             // Media and documents
-            $table->json('pdfs')->default('[]');
+            $table->json('pdfs')->nullable();
 
             // Comparable data
-            $table->json('comparable_numbers')->default('[]');
-            $table->json('search_query_matches')->default('[]');
+            $table->json('comparable_numbers')->nullable();
+            $table->json('search_query_matches')->nullable();
 
             // External references
-            $table->json('links')->default('[]');
+            $table->json('links')->nullable();
 
             // Pricing information
-            $table->json('prices')->default('[]');
+            $table->json('prices')->nullable();
 
             // Indexes
             $table->index('data_supplier_id');
