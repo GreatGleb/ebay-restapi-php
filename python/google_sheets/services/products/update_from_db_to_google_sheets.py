@@ -57,6 +57,8 @@ class UpdateProductsFromDbToGoogleSheets:
 
     def prepare_data_before_save_to_sheets(self, products_table_columns, products_db_data):
         id_column_name = products_table_columns['id']['sheet_column_name']
+        photo_column_name = products_table_columns['photo']['sheet_column_name']
+        photos_column_name = products_table_columns['photos']['sheet_column_name']
         no_photo_column_name = products_table_columns['no_photo']['sheet_column_name']
         oe_codes_column_name = products_table_columns['oe_codes']['sheet_column_name']
         car_compatibilities_column_name = products_table_columns['car_compatibilities']['sheet_column_name']
@@ -74,7 +76,6 @@ class UpdateProductsFromDbToGoogleSheets:
                     value = value.strip()
                     if not value:
                         continue
-
                 if key == no_photo_column_name:
                     if value:
                         value = '+'
@@ -92,8 +93,14 @@ class UpdateProductsFromDbToGoogleSheets:
                         continue
 
                 prepared_item[key] = value
+
+            if photos_column_name in prepared_item:
+                photos = prepared_item[photos_column_name]
+                photos = [x for x in photos.split(', ') if x]
+                photo = photos[0]
+                prepared_item[photo_column_name] = f'=IMAGE("{photo}")'
+
             if len(prepared_item) > 1 and id_column_name in prepared_item:
-                print(prepared_item)
                 prepared_data.append(prepared_item)
 
         return prepared_data

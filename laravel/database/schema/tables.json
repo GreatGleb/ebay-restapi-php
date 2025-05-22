@@ -230,6 +230,14 @@
                     "sheet_column_name": "Photo links"
                 },
                 {
+                    "name": "photo",
+                    "type": "text",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Photo",
+                    "sheet_column_name": "Photo"
+                },
+                {
                     "name": "has_hologram",
                     "type": "boolean",
                     "nullable": false,
