@@ -357,8 +357,8 @@
                     "type": "unsignedInteger",
                     "nullable": true,
                     "default": null,
-                    "comment": "Order creation to eBay.de",
-                    "sheet_column_name": "Order creation to eBay.de"
+                    "comment": "Upload order to eBay.de",
+                    "sheet_column_name": "Upload order to eBay.de"
                 },
                 {
                     "name": "sold_in_general",
