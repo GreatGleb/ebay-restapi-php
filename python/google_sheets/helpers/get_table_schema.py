@@ -23,6 +23,9 @@ class TableSchema:
             columns = columns["columns"]
 
             for item in columns:
-                data[item["name"]] = item["sheet_column_name"]
+                data[item['name']] = {
+                    'db_column_name': item['name'],
+                    'sheet_column_name': item['sheet_column_name']
+                }
 
         return data

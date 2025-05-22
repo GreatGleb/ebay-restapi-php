@@ -1,19 +1,26 @@
 import math
 
-class RenameProductFromSheetToDbStyle:
+class RenameProductColumns:
     @staticmethod
-    async def run(list_of_dicts, columns):
-        data = [await RenameProductFromSheetToDbStyle.rename_properties_in_dict(d, columns) for d in list_of_dicts]
+    async def run(list_of_dicts, columns, type):
+        data = [await RenameProductColumns.rename_properties_in_dict(d, columns, type) for d in list_of_dicts]
 
         return data
 
     @staticmethod
-    async def rename_properties_in_dict(old_dict, columns):
+    async def rename_properties_in_dict(old_dict, columns, type):
         new_dict = {}
-        for new_key, old_key in columns.items():
+        for key, value in columns.items():
+            if type == 'fromDbToSheets':
+                old_key = value['db_column_name']
+                new_key = value['sheet_column_name']
+            elif type == 'fromSheetsToDb':
+                old_key = value['sheet_column_name']
+                new_key = value['db_column_name']
+
             value = old_dict.get(old_key)
 
-            if new_key in ("stock_quantity_pl", "stock_quantity_pruszkow"):
+            if key in ("stock_quantity_pl", "stock_quantity_pruszkow"):
                 # Преобразовать '>10 ' и т.п. в int, иначе 0
                 if isinstance(value, str):
                     value = value.strip()
@@ -29,14 +36,14 @@ class RenameProductFromSheetToDbStyle:
                             value = 0
                 elif value is None:
                     value = 0
-            elif new_key in ("retail_price_net", "retail_price_gross", "weight"):
+            elif key in ("retail_price_net", "retail_price_gross", "weight"):
                 if isinstance(value, str):
                     value = value.replace(",", ".").strip()
                     try:
                         value = float(value)
                     except ValueError:
                         value = None
-            elif new_key in ("sold_in_general"):
+            elif key in ("sold_in_general"):
                 if isinstance(value, str):
                     try:
                         value = int(math.ceil(float(value)))
@@ -44,7 +51,7 @@ class RenameProductFromSheetToDbStyle:
                         continue
                 elif value is None:
                     value = 0
-            elif new_key in ("has_hologram", "no_photo", "published_ebay_de"):
+            elif key in ("has_hologram", "no_photo", "published_ebay_de"):
                 if isinstance(value, str):
                     val_low = value.lower()
                     if val_low in ("1", "yes", "true", '+'):
@@ -53,7 +60,7 @@ class RenameProductFromSheetToDbStyle:
                         value = False
                 else:
                     value = bool(value)
-            if new_key in ("photos"):
+            if key in ("photos"):
                 product_id = old_dict.get('#')
                 if isinstance(value, str):
                     try:

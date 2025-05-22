@@ -3,7 +3,7 @@ from db.models.category import Category
 import os
 import requests
 from ...helpers.get_table_schema import TableSchema
-from ...helpers.rename_product_from_sheet_to_db_style import RenameProductFromSheetToDbStyle
+from ...helpers.rename_product_columns import RenameProductColumns
 from ...manager import GoogleSheetsManager
 
 class SaveProductsToDbFromGoogleSheets:
@@ -53,7 +53,7 @@ class SaveProductsToDbFromGoogleSheets:
         product_columns = await TableSchemaInitiatedClass.get_products_table_columns()
 
         list_of_dicts = await self.parse_sheet()
-        products = await RenameProductFromSheetToDbStyle.run(list_of_dicts, product_columns)
+        products = await RenameProductColumns.run(list_of_dicts, product_columns, 'fromSheetsToDb')
         response = await self.updateProductsInDB(products)
 
         return products

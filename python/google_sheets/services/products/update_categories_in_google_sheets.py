@@ -38,13 +38,13 @@ class UpdateProductCategoriesInGoogleSheets:
 
         return result
 
-    async def save_to_sheets(self, categories):
+    async def save_to_sheets(self, categories, products_table_columns):
         sheet = await self.get_sheet()
         finder = TableCellFinder(sheet)
 
-        id_column_name = self.products_table_columns['id']
-        category_column_name = self.products_table_columns['ru_category_from_ebay_de']
-        category_id_column_name = self.products_table_columns['category_id_ebay_de']
+        id_column_name = products_table_columns['id']['sheet_column_name']
+        category_column_name = products_table_columns['ru_category_from_ebay_de']['sheet_column_name']
+        category_id_column_name = products_table_columns['category_id_ebay_de']['sheet_column_name']
 
         for item in categories:
             if 'category' in item and item['category']:
@@ -73,10 +73,10 @@ class UpdateProductCategoriesInGoogleSheets:
 
         return True
 
-    async def get_categories_from_api(self, data):
+    async def get_categories_from_api(self, data, products_table_columns):
         result = []
 
-        ebay_name_german_column_name = self.products_table_columns['ebay_name_de']
+        ebay_name_german_column_name = products_table_columns['ebay_name_de']['sheet_column_name']
 
         for i, value in enumerate(data):
             if value[ebay_name_german_column_name]:
@@ -84,7 +84,6 @@ class UpdateProductCategoriesInGoogleSheets:
                 encoded_name = requests.utils.quote(name)
 
                 url = f"http://ebay_restapi_nginx/api/ebay/getCategoryByName/{encoded_name}"
-
                 response = requests.get(url)
 
                 if response.status_code == 200:
@@ -124,10 +123,10 @@ class UpdateProductCategoriesInGoogleSheets:
 
     async def run(self):
         sheet = await self.parse_sheet()
-        self.products_table_columns = await self.get_products_table_columns()
-        categoriesId = await self.get_categories_from_api(sheet)
+        products_table_columns = await self.get_products_table_columns()
+        categoriesId = await self.get_categories_from_api(sheet, products_table_columns)
         categories = await self.filter_categories_from_db(categoriesId)
-        result = await self.save_to_sheets(categories)
+        result = await self.save_to_sheets(categories, products_table_columns)
 
         return result
 
