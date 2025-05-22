@@ -92,18 +92,6 @@ class GoogleSheetsManager:
             raise
 
     def write_to_cell(self, spreadsheet_id: str, sheet_name: str, cell: str, value: Any) -> bool:
-        """
-        Записывает значение в указанную ячейку таблицы Google Sheets.
-
-        Args:
-            spreadsheet_id (str): ID таблицы Google Sheets
-            sheet_name (str): Имя листа (например, 'Sheet1')
-            cell (str): Excel-номер ячейки (например, 'B2')
-            value (Any): Значение для записи
-
-        Returns:
-            bool: True, если запись прошла успешно
-        """
         try:
             range_notation = f"{sheet_name}!{cell}"
             body = {
@@ -121,4 +109,19 @@ class GoogleSheetsManager:
 
         except Exception as e:
             print(f"Error while Google Sheets recording to cell  {cell}: {e}")
+            return False
+
+    def write_to_cells(self, spreadsheet_id: str, body: Dict) -> bool:
+        try:
+            body['valueInputOption'] = 'USER_ENTERED'
+
+            self.sheets_service.spreadsheets().values().batchUpdate(
+                spreadsheetId=spreadsheet_id,
+                body=body
+            ).execute()
+
+            return True
+
+        except Exception as e:
+            print(f"Error while Google Sheets recording data: {e}")
             return False

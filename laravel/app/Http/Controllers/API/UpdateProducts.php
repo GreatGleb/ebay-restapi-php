@@ -63,7 +63,7 @@ class UpdateProducts extends Controller
             ];
         }
 
-        $requestForTecDoc = [$requestForTecDoc[1]];
+        $requestForTecDoc = array_slice($requestForTecDoc, 0, 5);
 //        $requestForTecDoc = [
 //            [
 //                'id' => 1,
@@ -180,7 +180,9 @@ class UpdateProducts extends Controller
             ];
 
             if(isset($tecDocProduct['totalLinkages']) && $tecDocProduct['totalLinkages'])
-                $tecdocUpdateDataItem['total_linkages'] = json_encode($tecDocProduct['totalLinkages']);
+                $tecdocUpdateDataItem['total_linkages'] = $tecDocProduct['totalLinkages'];
+            else
+                $tecdocUpdateDataItem['total_linkages'] = 0;
 
             $tecDocJsonFields = [
                 ['db_name' => 'misc', 'tecdoc_name' => 'misc'],
@@ -204,6 +206,8 @@ class UpdateProducts extends Controller
                 $dbField = $field['db_name'];
                 if(isset($tecDocProduct[$tField]) && $tecDocProduct[$tField])
                     $tecdocUpdateDataItem[$dbField] = json_encode($tecDocProduct[$tField]);
+                else
+                    $tecdocUpdateDataItem[$dbField] = '[]';
             }
 
             $tecdocUpdateData[] = $tecdocUpdateDataItem;

@@ -43,9 +43,9 @@ class GetProducts extends Controller
             $product->producer_tecdoc_id = $brands[$brandKey]->tecdoc_id ?? null;
 
             if(isset($compatibilities[$product->id])) {
-                $product->car_tecdoc_ids = $compatibilities[$product->id]->pluck('car_tecdoc_id')->toArray() ?? [];
+                $product->car_compatibilities = $compatibilities[$product->id]->pluck('car_tecdoc_id')->toArray() ?? [];
             } else {
-                $product->car_tecdoc_ids = [];
+                $product->car_compatibilities = [];
             }
 
             if(isset($oeCodes[$product->id])) {

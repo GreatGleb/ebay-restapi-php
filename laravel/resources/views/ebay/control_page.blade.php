@@ -8,7 +8,10 @@
 
     <h2>Products</h2>
     <p>
-        <a href="http://localhost/python/products/save_to_db_from_google_sheets" target="_blank">Update DB products from Google sheets</a>
+        <a href="http://localhost/python/products/update_from_db_to_google_sheets" target="_blank">Update products from DB to Google sheets</a>
+    </p>
+    <p>
+        <a href="http://localhost/python/products/save_to_db_from_google_sheets" target="_blank">Add/Update DB products from Google sheets</a>
     </p>
     <p>
         <a href="{{ route('updateProducts.fromTecDoc') }}" target="_blank">Update DB products from TecDoc</a>
