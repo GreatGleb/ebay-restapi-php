@@ -50,6 +50,26 @@
                     "sheet_column_name": "Retail price with VAT"
                 },
                 {
+                    "name": "supplier_price_net",
+                    "type": "decimal",
+                    "precision": 10,
+                    "scale": 2,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Supplier price without VAT",
+                    "sheet_column_name": "Supplier price without VAT"
+                },
+                {
+                    "name": "supplier_price_gross",
+                    "type": "decimal",
+                    "precision": 10,
+                    "scale": 2,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Supplier price with VAT",
+                    "sheet_column_name": "Supplier price with VAT"
+                },
+                {
                     "name": "stock_quantity_pl",
                     "type": "unsignedInteger",
                     "nullable": false,
