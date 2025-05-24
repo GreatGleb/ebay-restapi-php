@@ -7,8 +7,8 @@ Route::get('/updateEbay', [ApiEbayController::class, 'updateStockAndPrice'])->na
 Route::get('/exportEbay', [ApiEbayController::class, 'exportItems'])->name('ebay.export');
 
 Route::get('', function () {
-    return view('ebay.control_page');
-})->name('ebay.controlPage');
+    return view('control_page');
+});
 
 Route::get('main/', function () {
     return view('ebay.ebay');
