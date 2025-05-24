@@ -101,6 +101,7 @@ class UpdateProducts extends Controller
             'specifics_en',
             'specifics_de',
             'ean',
+            'producer_brand'
         ];
 
         $oeCodesUpdateData = [];
@@ -127,6 +128,7 @@ class UpdateProducts extends Controller
                 'specifics_en' => $specifics['en'],
                 'specifics_de' => $specifics['de'],
                 'ean' => $tecDocProduct['ean'],
+                'producer_brand' => $tecDocProduct['mfrName'] ?? '',
             ];
 
             if(isset($tecDocProduct['oemNumbers']) && is_array($tecDocProduct['oemNumbers'])) {
