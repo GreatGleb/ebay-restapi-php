@@ -11,7 +11,7 @@
         <a href="{{ route('updateProductStockAndPrice.supplier.autoPartner') }}" target="_blank">Update DB products - stock and price from AutoPartner</a>
     </p>
     <p>
-        <a href="{{ route('updateProductStockAndPrice.calculate', 30) }}" target="_blank">Update DB products - stock and price - calculate VAT taxes and retail price</a>
+        <a href="{{ route('updateProductStockAndPrice.calculate', ['profitPercentage' => 30]) }}" target="_blank">Update DB products - stock and price - calculate VAT taxes and retail price</a>
     </p>
 
     <h2>Products - DB</h2>

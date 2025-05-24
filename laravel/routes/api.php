@@ -18,7 +18,7 @@ Route::get('/get/products', [GetProducts::class, 'run']);
 Route::get('/getTableSchema', [GetJsonFiles::class, 'getTableSchema']);
 
 Route::get('/update/supplierStockAndPrice/autopartner', [UpdateAutoPartnerStockAndPrice::class, 'run'])->name('updateProductStockAndPrice.supplier.autoPartner');
-Route::get('/update/stockAndPrice/calculate/profit={profit}', [UpdateStockAndPrice::class, 'run'])->name('updateProductStockAndPrice.calculate');
+Route::get('/update/stockAndPrice/calculate', [UpdateStockAndPrice::class, 'run'])->name('updateProductStockAndPrice.calculate');
 
 Route::get('/ebay/run', [ApiEbayController::class, 'index']);
 Route::post('/ebay/revise', [ApiEbayController::class, 'importUpdate'])->name('import.update');

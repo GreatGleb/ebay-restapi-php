@@ -1,16 +1,19 @@
 <?php
 
 namespace App\Http\Controllers\API;
+
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 
 class UpdateStockAndPrice extends Controller
 {
     public float $vatRate = 1.21;
-    public function run($profitPercent = 30) {
-        $profitExecuteNumber = (float) $profitPercent;
-        $profitExecuteNumber = $profitExecuteNumber/100;
-        $profitExecuteNumber = 1 + $profitExecuteNumber;
+    public function run(Request $request) {
+        $profitPercentage = $request->profitPercentage ?? 30;
+        $profitMultiplier = (float) $profitPercentage;
+        $profitMultiplier = $profitMultiplier/100;
+        $profitMultiplier = 1 + $profitMultiplier;
 
         $products = Product::query()
             ->whereNot('supplier_price_net', null)
@@ -24,9 +27,9 @@ class UpdateStockAndPrice extends Controller
             $basePrice = (float) $product['supplier_price_net'];
             $data = [
                 'id' => $product['id'],
-                'supplier_price_gross' => $basePrice * $this->vatRate,
-                'retail_price_net' => $basePrice * $profitExecuteNumber,
-                'retail_price_gross' => ($basePrice * $profitExecuteNumber) * $this->vatRate,
+                'supplier_price_gross' => round($basePrice * $this->vatRate, 2),
+                'retail_price_net' => round($basePrice * $profitMultiplier, 2),
+                'retail_price_gross' => round(($basePrice * $profitMultiplier) * $this->vatRate, 2),
             ];
             $productUpdateData[] = $data;
         }
