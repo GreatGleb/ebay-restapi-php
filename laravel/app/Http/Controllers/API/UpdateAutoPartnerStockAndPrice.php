@@ -5,7 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 
-class UpdateMaxGearStockAndPrice extends Controller
+class UpdateAutoPartnerStockAndPrice extends Controller
 {
     public function run() {
         // to do: use chunks

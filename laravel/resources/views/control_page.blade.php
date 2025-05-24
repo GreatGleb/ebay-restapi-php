@@ -8,7 +8,10 @@
 
     <h2>Products - stock and price</h2>
     <p>
-        <a href="{{ route('updateSupplierProductStockAndPrice.autoPartner') }}" target="_blank">Update DB products - stock and price from AutoPartner</a>
+        <a href="{{ route('updateProductStockAndPrice.supplier.autoPartner') }}" target="_blank">Update DB products - stock and price from AutoPartner</a>
+    </p>
+    <p>
+        <a href="{{ route('updateProductStockAndPrice.calculate', 30) }}" target="_blank">Update DB products - stock and price - calculate VAT taxes and retail price</a>
     </p>
 
     <h2>Products - DB</h2>
