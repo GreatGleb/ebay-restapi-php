@@ -60,6 +60,14 @@ return [
             'report' => false,
         ],
 
+        'ftp-autopartner' =>
+            array (
+                'driver' => 'ftp',
+                'host' => env('FTP_AUTOPARTNER_HOST'),
+                'username' => env('FTP_AUTOPARTNER_USER'),
+                'password' => env('FTP_AUTOPARTNER_PASSWORD'),
+                'port' => 21,
+            ),
     ],
 
     /*

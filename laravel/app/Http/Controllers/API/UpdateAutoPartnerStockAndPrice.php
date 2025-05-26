@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 
@@ -9,6 +10,17 @@ class UpdateAutoPartnerStockAndPrice extends Controller
 {
     public function run() {
         // to do: use chunks
+
+        $dirPath = storage_path('app/private/suppliers');
+        $stockFilename = $dirPath . '/autopartner_stock.csv';
+        $priceFilename = $dirPath . '/autopartner_price.csv';
+
+        $ftp = Storage::disk('ftp-autopartner');
+        $file = $ftp->get('STANY.csv');
+        Storage::disk('local')->put('suppliers/autopartner_stock.csv', $file);
+
+        $file2 = $ftp->get('3130836.csv');
+        Storage::disk('local')->put('suppliers/autopartner_price.csv', $file2);
 
         // get all products from autopartner
         $products = Product::query()
@@ -32,10 +44,6 @@ class UpdateAutoPartnerStockAndPrice extends Controller
         }
 
         // for autopartner_stock and autopartner_price, save all to array [reference]
-
-        // to do: path from storage
-        $stockFilename = realpath(__DIR__.'/../../../../storage/app/public/suppliers') . '/autopartner_stock.csv';
-        $priceFilename = realpath(__DIR__.'/../../../../storage/app/public/suppliers') . '/autopartner_price.csv';
 
         $stockFile = fopen($stockFilename, "rb");
         $priceFile = fopen($priceFilename, "rb");

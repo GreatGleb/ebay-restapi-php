@@ -25,7 +25,8 @@ class TableSchema:
             for item in columns:
                 data[item['name']] = {
                     'db_column_name': item['name'],
-                    'sheet_column_name': item['sheet_column_name']
+                    'db_column_type': item['type'],
+                    'sheet_column_name': item['sheet_column_name'],
                 }
 
         return data

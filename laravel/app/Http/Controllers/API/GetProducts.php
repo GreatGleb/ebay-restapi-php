@@ -34,7 +34,6 @@ class GetProducts extends Controller
 
         $photos = DB::table('product_photos')
             ->whereIn('product_id', $products->pluck('id'))
-            ->select('product_id', 'original_photo_url')
             ->get()
             ->groupBy('product_id');
 
@@ -55,7 +54,16 @@ class GetProducts extends Controller
             }
 
             if(isset($photos[$product->id])) {
-                $product->photos = $photos[$product->id]->pluck('original_photo_url')->toArray() ?? [];
+                $productPhotos = [];
+                $productPhotos['links'] = $photos[$product->id]->pluck('original_photo_url')->toArray() ?? [];
+
+                $withLogo = $photos[$product->id][0]->cortexparts_photo_url ?? false;
+                if ($withLogo) {
+                    $withLogo = true;
+                }
+                $productPhotos['withLogo'] = $withLogo;
+
+                $product->photos = $productPhotos;
             } else {
                 $product->photos = [];
             }

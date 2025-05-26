@@ -18,6 +18,8 @@ class RenameProductColumns:
                 old_key = value['sheet_column_name']
                 new_key = value['db_column_name']
 
+            column_type = value['db_column_type']
+
             value = old_dict.get(old_key)
 
             if key in ("stock_quantity_pl", "stock_quantity_pruszkow"):
@@ -36,14 +38,16 @@ class RenameProductColumns:
                             value = 0
                 elif value is None:
                     value = 0
-            elif key in ("retail_price_net", "retail_price_gross", "weight"):
-                if isinstance(value, str):
-                    value = value.replace(",", ".").strip()
+            elif column_type == 'decimal':
+                if type == 'fromSheetsToDb':
+                    if isinstance(value, str):
+                        value = value.replace(",", ".").strip()
+                if value:
                     try:
                         value = float(value)
                     except ValueError:
                         value = None
-            elif key in ("sold_in_general"):
+            elif column_type == 'integer':
                 if isinstance(value, str):
                     try:
                         value = int(math.ceil(float(value)))
@@ -51,23 +55,30 @@ class RenameProductColumns:
                         continue
                 elif value is None:
                     value = 0
-            elif key in ("has_hologram", "no_photo", "published_ebay_de"):
-                if isinstance(value, str):
-                    val_low = value.lower()
-                    if val_low in ("1", "yes", "true", '+'):
-                        value = True
+            elif column_type == 'boolean':
+                if type == 'fromSheetsToDb':
+                    if isinstance(value, str):
+                        val_low = value.lower()
+                        if val_low in ("1", "yes", "true", '+'):
+                            value = True
+                        else:
+                            value = False
                     else:
-                        value = False
-                else:
-                    value = bool(value)
-            if key in ("photos"):
-                product_id = old_dict.get('#')
-                if isinstance(value, str):
-                    try:
-                        value = [{"product_id": product_id, "original_photo_url": url.strip()} for url in value.split(",") if url.strip()]
-                    except ValueError:
-                        value = []
-
+                        value = bool(value)
+                elif type == 'fromDbToSheets':
+                    if value == True:
+                        value = 'yes'
+                    else:
+                        value = 'no'
+            if key in ('photos'):
+                if type == 'fromSheetsToDb':
+                    product_id = old_dict.get('#')
+                    if isinstance(value, str):
+                        try:
+                            value = [{"product_id": product_id, "original_photo_url": url.strip()} for url in value.split(",") if url.strip()]
+                        except ValueError:
+                            value = []
+            
             new_dict[new_key] = value
 
         return new_dict

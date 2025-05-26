@@ -42,7 +42,7 @@ class UpdateProductsFromDbToGoogleSheets:
         return data
 
     def filter_updating_columns(self, products_db_data):
-        allowed_props = {'#', 'Reference', 'TecDoc number', 'Retail price without VAT', 'Retail price with VAT', 'Quantity PL', 'Quantity Pruszkow', 'Category eBay.de Russian', 'Installation position English', 'Specifics Russian', 'Specifics English', 'Specifics German', 'Product type Russian', 'Product type English', 'Product type German', 'Part of eBay.de name - product type', 'Part of eBay name - for cars', 'eBay name Russian', 'eBay name English', 'eBay name German', 'Description to eBay.de', 'Specifics to eBay.de', 'Category id eBay.de', 'Photo links', 'No photo', 'EAN', 'weight gram', 'Oe codes', 'Car compatibilities', 'Published to eBay.de?', 'Last update to eBay.de'}
+        allowed_props = {'#', 'Reference', 'TecDoc number', 'Supplier price without VAT', 'Supplier price with VAT', 'Retail price without VAT', 'Retail price with VAT', 'Quantity PL', 'Quantity Pruszkow', 'Category eBay.de Russian', 'Installation position English', 'Specifics Russian', 'Specifics English', 'Specifics German', 'Product type Russian', 'Product type English', 'Product type German', 'Part of eBay.de name - product type', 'Part of eBay name - for cars', 'eBay name Russian', 'eBay name English', 'eBay name German', 'Description to eBay.de', 'Specifics to eBay.de', 'Category id eBay.de', 'Photo links', 'No photo', 'EAN', 'weight gram', 'Oe codes', 'Car compatibilities', 'Published to eBay.de?', 'Last update to eBay.de'}
 
         filtered_data = []
 
@@ -71,8 +71,7 @@ class UpdateProductsFromDbToGoogleSheets:
                     continue
                 if isinstance(value, list):
                     value = ", ".join(map(str, value))
-                if not isinstance(value, (int, float)):
-                    value = str(value)
+                if isinstance(value, str):
                     value = value.strip()
                     if not value:
                         continue
@@ -91,14 +90,23 @@ class UpdateProductsFromDbToGoogleSheets:
                         value = 'saved to db from tecdoc'
                     else:
                         continue
+                if key == photos_column_name:
+                    if not value or not value.get('links'):
+                        continue
+
+                    withLogo = value['withLogo']
+                    photos = value['links']
+                    photo = photos[0]
+
+                    if photo:
+                        prepared_item[photo_column_name] = f'=IMAGE("{photo}")'
+
+                    if withLogo:
+                        value = 'saved to github with logo'
+                    else:
+                        value = 'saved to db from tecdoc'
 
                 prepared_item[key] = value
-
-            if photos_column_name in prepared_item:
-                photos = prepared_item[photos_column_name]
-                photos = [x for x in photos.split(', ') if x]
-                photo = photos[0]
-                prepared_item[photo_column_name] = f'=IMAGE("{photo}")'
 
             if len(prepared_item) > 1 and id_column_name in prepared_item:
                 prepared_data.append(prepared_item)
@@ -152,6 +160,7 @@ class UpdateProductsFromDbToGoogleSheets:
         products_db_data = await RenameProductColumns.run(products_db_data, products_table_columns, 'fromDbToSheets')
         products_db_data = self.filter_updating_columns(products_db_data)
         products_db_data = self.prepare_data_before_save_to_sheets(products_table_columns, products_db_data)
+
         result = await self.save_to_sheets(sheet, products_table_columns, products_db_data)
 
         return result
