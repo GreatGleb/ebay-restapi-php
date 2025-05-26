@@ -54,7 +54,7 @@ class RenameProductColumns:
                     except ValueError:
                         continue
                 elif value is None:
-                    value = 0
+                    continue
             elif column_type == 'boolean':
                 if type == 'fromSheetsToDb':
                     if isinstance(value, str):

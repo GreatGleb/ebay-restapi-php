@@ -36,7 +36,7 @@ class UpdateProducts extends Controller
         return [$resultOfUpdating, $updateFields];
     }
 
-    #[NoReturn] public function fromTecDoc(): array
+    public function fromTecDoc(): array
     {
         $products = Product::query()
             ->select('products.*', 'producer_brands.tecdoc_id as producer_tecdoc_id')
@@ -63,14 +63,7 @@ class UpdateProducts extends Controller
             ];
         }
 
-        $requestForTecDoc = array_slice($requestForTecDoc, 0, 5);
-//        $requestForTecDoc = [
-//            [
-//                'id' => 1,
-//                'reference' => '82-1127',
-//                'brand_id' => 403,
-//            ]
-//        ];
+        $requestForTecDoc = array_slice($requestForTecDoc, 0, 1);
 
         $url = "http://ebay_restapi_nginx/tecdoc/products-info";
         $response = Http::timeout(300)
@@ -79,12 +72,10 @@ class UpdateProducts extends Controller
                 'Accept' => 'application/json'
             ])->post($url, $requestForTecDoc);
         $data = $response->json();
-        $resultOfUpdatingProducts = $this->updateDbProductTablesFromTecDoc($data);
-//        $data = $response->body();
-//        echo $data;
-//        dd(null);
 
-        dd($resultOfUpdatingProducts);
+//        dd($data);
+
+        $results = $this->updateDbProductTablesFromTecDoc($data);
 
         return $results;
     }
@@ -101,7 +92,8 @@ class UpdateProducts extends Controller
             'specifics_en',
             'specifics_de',
             'ean',
-            'producer_brand'
+            'producer_brand',
+            'no_photo',
         ];
 
         $oeCodesUpdateData = [];
@@ -117,6 +109,7 @@ class UpdateProducts extends Controller
 
             $productTypes = $tecDocProduct['productTypes'];
             $specifics = $tecDocProduct['specifics'];
+            $noPhoto = (!isset($tecDocProduct['images']) or !is_array($tecDocProduct['images']) or empty($tecDocProduct['images']));
 
             $productUpdateData[] = [
                 'id' => $tecDocProduct['product-id'],
@@ -128,6 +121,7 @@ class UpdateProducts extends Controller
                 'specifics_en' => $specifics['en'],
                 'specifics_de' => $specifics['de'],
                 'ean' => $tecDocProduct['ean'],
+                'no_photo' => $noPhoto,
                 'producer_brand' => $tecDocProduct['mfrName'] ?? '',
             ];
 
@@ -155,11 +149,7 @@ class UpdateProducts extends Controller
                 }
             }
 
-            if(
-                isset($tecDocProduct['images'])
-                && is_array($tecDocProduct['images'])
-                && !empty($tecDocProduct['images'])
-            ) {
+            if(!$noPhoto) {
                 foreach ($tecDocProduct['images'] as $value) {
                     uksort($value, function($a, $b) {
                         return intval(preg_replace('/[^0-9]/', '', $b)) - intval(preg_replace('/[^0-9]/', '', $a));

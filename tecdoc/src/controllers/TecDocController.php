@@ -25,10 +25,10 @@ class TecDocController
 
     public function __construct()
     {
-//        $this->apiKey = getenv('TECDOC_KEY_RM');
-//        $this->providerId = getenv('TECDOC_PROVIDER_ID_RM');
-        $this->apiKey = getenv('TECDOC_KEY_APNEXT');
-        $this->providerId = getenv('TECDOC_PROVIDER_ID_APNEXT');
+        $this->apiKey = getenv('TECDOC_KEY_RM');
+        $this->providerId = getenv('TECDOC_PROVIDER_ID_RM');
+//        $this->apiKey = getenv('TECDOC_KEY_APNEXT');
+//        $this->providerId = getenv('TECDOC_PROVIDER_ID_APNEXT');
         $this->client = new Client($this->apiKey, $this->providerId);
     }
 
@@ -605,7 +605,7 @@ class TecDocController
 
         if(isset($supplier_reference)) {
             $request = (new getArticleDirectSearchAllNumbersWithState())
-                ->setArticleCountry('PL')
+                ->setArticleCountry('LT')//PL
                 ->setLang('en')
                 ->setSearchExact(true)
                 ->setBrandId($brand)
@@ -750,7 +750,7 @@ class TecDocController
     private function getArticleData(int $articleId, string $lang, bool $includeAll = false, bool $includeProductName = false, bool $includeParams = false)
     {
         $request = (new GetArticles())
-            ->setArticleCountry('DE')
+            ->setArticleCountry('LT')//DE
             ->setLang($lang)
             ->setLegacyArticleIds([$articleId])
             ->setIncludeGenericArticles($includeProductName)
@@ -779,22 +779,26 @@ class TecDocController
         $data = [];
 
         if($articleId) {
-            $ruData = $this->getArticleData($articleId, 'ru', false, true, true);
-            $enData = $this->getArticleData($articleId, 'en', false, true, true);
-            $deDataFull = $this->getArticleData($articleId, 'de', true);
+//            $ruData = $this->getArticleData($articleId, 'ru', false, true, true);
+//            $enData = $this->getArticleData($articleId, 'en', false, true, true);
+//            $deDataFull = $this->getArticleData($articleId, 'de', true);
+            $ruDataFull = $this->getArticleData($articleId, 'ru', true);
+//            $enData = $this->getArticleData($articleId, 'en', false, true, true);
+//            $deData = $this->getArticleData($articleId, 'de', false, true, true);
 
-            $data = $deDataFull;
+//            $data = $deDataFull;
+            $data = $ruDataFull;
             $data["productTypes"] = [
-                "ru" => $ruData["productTypes"] ?? "",
+                "ru" => $ruDataFull["productTypes"] ?? "",
                 "en" => $enData["productTypes"] ?? "",
-                "de" => $deDataFull["productTypes"] ?? "",
+                "de" => $deData["productTypes"] ?? "",
             ];
             $data["specifics"] = [
-                "ru" => $ruData["specifics"] ?? "",
+                "ru" => $ruDataFull["specifics"] ?? "",
                 "en" => $enData["specifics"] ?? "",
-                "de" => $deDataFull["specifics"] ?? "",
+                "de" => $deData["specifics"] ?? "",
             ];
-            $data['ean'] = $this->getEanFromArray($deDataFull['gtins']);
+            $data['ean'] = $this->getEanFromArray($ruDataFull['gtins']);
             $data['compatibilities'] = $this->getArticleModels($articleId);
         } else {
             $data['error'] = 'Article Not Found';
