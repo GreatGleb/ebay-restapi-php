@@ -88,6 +88,9 @@ class UpdateProducts extends Controller
             'product_type_ru',
             'product_type_en',
             'product_type_de',
+            'installation_position_ru',
+            'installation_position_en',
+            'installation_position_de',
             'specifics_ru',
             'specifics_en',
             'specifics_de',
@@ -109,6 +112,8 @@ class UpdateProducts extends Controller
 
             $productTypes = $tecDocProduct['productTypes'];
             $specifics = $tecDocProduct['specifics'];
+            $installationPosition = $this->getInstallationPositionFromSpecifics($specifics);
+
             $noPhoto = (!isset($tecDocProduct['images']) or !is_array($tecDocProduct['images']) or empty($tecDocProduct['images']));
 
             $productUpdateData[] = [
@@ -117,6 +122,9 @@ class UpdateProducts extends Controller
                 'product_type_ru' => $productTypes['ru'],
                 'product_type_en' => $productTypes['en'],
                 'product_type_de' => $productTypes['de'],
+                'installation_position_ru' => $installationPosition['ru'],
+                'installation_position_en' => $installationPosition['en'],
+                'installation_position_de' => $installationPosition['de'],
                 'specifics_ru' => $specifics['ru'],
                 'specifics_en' => $specifics['en'],
                 'specifics_de' => $specifics['de'],
@@ -261,6 +269,39 @@ class UpdateProducts extends Controller
         ];
 
         return $results;
+    }
+
+    private function getInstallationPositionFromSpecifics($specifics)
+    {
+        $searchedParameter = [
+            'ru' => 'Сторона установки',
+            'en' => 'Fitting Position',
+            'de' => 'Einbauposition',
+        ];
+
+        $result = [];
+        foreach ($specifics as $lang => $specific) {
+            $result[$lang] = '';
+            if($specific) {
+                $lines = preg_split("/\r\n|\n|\r/", $specific);
+                $lines = array_map(function($line) {
+                    return rtrim($line, ",");
+                }, $lines);
+
+                foreach ($lines as $line) {
+                    $param = explode(" - ", $line);
+                    $paramName = $param[0];
+                    $paramValue = $param[1];
+
+                    if($paramName == $searchedParameter[$lang]) {
+                        $result[$lang] = $paramValue;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $result;
     }
 
     public function brands(): void

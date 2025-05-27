@@ -783,7 +783,7 @@ class TecDocController
 //            $enData = $this->getArticleData($articleId, 'en', false, true, true);
 //            $deDataFull = $this->getArticleData($articleId, 'de', true);
             $ruDataFull = $this->getArticleData($articleId, 'ru', true);
-//            $enData = $this->getArticleData($articleId, 'en', false, true, true);
+            $enData = $this->getArticleData($articleId, 'en', false, true, true);
 //            $deData = $this->getArticleData($articleId, 'de', false, true, true);
 
 //            $data = $deDataFull;
