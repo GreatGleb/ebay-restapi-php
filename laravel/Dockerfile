@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Копируем исходный код в контейнер
-COPY ./laravel /var/www/laravel
+COPY . /var/www/laravel
 
 # Указываем рабочую директорию
 WORKDIR /var/www/laravel

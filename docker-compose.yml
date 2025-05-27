@@ -1,8 +1,6 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: ./laravel
     container_name: ebay_restapi_app
     restart: unless-stopped
     working_dir: /var/www/laravel
@@ -84,7 +82,7 @@ services:
       - ebay_restapi_network
 
   python-app:
-    image: python:3.9
+    build: ./python
     container_name: ebay_restapi_python
     working_dir: /python
     volumes:
@@ -94,16 +92,13 @@ services:
       - .env
     expose:
       - "8000"
-    command: sh -c "pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
-#    command: sh -c "cp /.env /python/.env 2>/dev/null && pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     depends_on:
         - db
     networks:
         - ebay_restapi_network
+
   tecdoc:
-    build:
-      context: .
-      dockerfile: DockerfileTecdoc
+    build: ./tecdoc
     container_name: ebay_restapi_tecdoc
     restart: unless-stopped
     working_dir: /var/www/tecdoc
