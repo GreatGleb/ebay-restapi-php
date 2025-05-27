@@ -121,13 +121,31 @@
                     "sheet_column_name": "Category id eBay.de"
                 },
                 {
-                    "name": "installation_position_en",
+                    "name": "installation_position_ru",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Installation position Russian",
+                    "sheet_column_name": "Installation position Russian"
+                },
+                {
+                    "name": "installation_position_de",
                     "type": "string",
                     "length": 255,
                     "nullable": true,
                     "default": null,
                     "comment": "Installation position English",
                     "sheet_column_name": "Installation position English"
+                },
+                {
+                    "name": "installation_position_de",
+                    "type": "string",
+                    "length": 255,
+                    "nullable": true,
+                    "default": null,
+                    "comment": "Installation position German",
+                    "sheet_column_name": "Installation position German"
                 },
                 {
                     "name": "specifics_ru",
