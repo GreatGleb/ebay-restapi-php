@@ -10,6 +10,10 @@ Route::get('', function () {
     return view('control_page');
 });
 
+Route::get('/update/products/fromTecDoc', function () {
+    return view('updateDbFromTecDoc');
+})->name('updateProducts.fromTecDoc');
+
 Route::get('main/', function () {
     return view('ebay.ebay');
 });

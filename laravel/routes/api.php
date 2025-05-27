@@ -9,7 +9,7 @@ use App\Http\Controllers\API\GetProducts;
 use App\Http\Controllers\API\GetJsonFiles;
 
 Route::post('/update/products', [UpdateProducts::class, 'run']);
-Route::get('/update/products/fromTecDoc', [UpdateProducts::class, 'fromTecDoc'])->name('updateProducts.fromTecDoc');
+Route::get('/update/products/fromTecDoc', [UpdateProducts::class, 'fromTecDoc']);
 Route::get('/update/brands', [UpdateProducts::class, 'brands'])->name('updateBrands');
 Route::get('/ebay/getCategoriesText', [ApiEbayController::class, 'getCategoriesText'])->name('ebay.getCategoriesText');
 
