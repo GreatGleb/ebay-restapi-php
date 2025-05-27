@@ -8,6 +8,7 @@ services:
     working_dir: /var/www/laravel
     volumes:
       - ./laravel:/var/www/laravel
+      - shared-logs:/var/log/shared
     env_file:
       - .env
     depends_on:
@@ -29,6 +30,7 @@ services:
       - app
       - python-app
       - tecdoc
+      - log-service
     networks:
       - ebay_restapi_network
 
@@ -82,19 +84,22 @@ services:
       - ebay_restapi_network
 
   python-app:
-      image: python:3.9
-      container_name: ebay_restapi_python
-      working_dir: /python
-      volumes:
-          - ./python:/python
-          - ./.env:/.env
-      expose:
-        - "8000"
-      command: sh -c "cp /.env /python/.env 2>/dev/null && pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
-      depends_on:
-          - db
-      networks:
-          - ebay_restapi_network
+    image: python:3.9
+    container_name: ebay_restapi_python
+    working_dir: /python
+    volumes:
+        - ./python:/python
+        - shared-logs:/var/log/shared
+    env_file:
+      - .env
+    expose:
+      - "8000"
+    command: sh -c "pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+#    command: sh -c "cp /.env /python/.env 2>/dev/null && pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    depends_on:
+        - db
+    networks:
+        - ebay_restapi_network
   tecdoc:
     build:
       context: .
@@ -104,6 +109,7 @@ services:
     working_dir: /var/www/tecdoc
     volumes:
       - ./tecdoc:/var/www/tecdoc
+      - shared-logs:/var/log/shared
     env_file:
       - .env
     expose:
@@ -111,8 +117,23 @@ services:
     networks:
       - ebay_restapi_network
 
+  log-service:
+    build: ./log-service
+    container_name: ebay_restapi_log
+    volumes:
+      - ./log-service:/log-service
+      - shared-logs:/var/log/shared
+    working_dir: /log-service
+    env_file:
+      - .env
+    expose:
+      - "8000"
+    networks:
+      - ebay_restapi_network
+
 volumes:
   postgres_data:
+  shared-logs:
 
 networks:
   ebay_restapi_network:
