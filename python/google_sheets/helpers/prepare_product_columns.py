@@ -32,6 +32,9 @@ class PrepareProductColumns:
                     if column_type == 'unsignedInteger' or column_type == 'integer' or column_type == 'decimal':
                         d.setdefault(key, 0)
                         continue
+                    elif column_type == 'boolean':
+                        d.setdefault(key, 0)
+                        continue
 
                 d.setdefault(key, None)
 
