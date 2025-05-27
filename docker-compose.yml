@@ -6,10 +6,24 @@ services:
     working_dir: /var/www/laravel
     volumes:
       - ./laravel:/var/www/laravel
-      - shared-logs:/var/log/shared
     env_file:
       - .env
     depends_on:
+      - db
+    networks:
+      - ebay_restapi_network
+
+  laravel-worker:
+    container_name: ebay_restapi_laravel_worker
+    build: ./laravel
+    working_dir: /var/www/laravel
+    volumes:
+      - ./laravel:/var/www/laravel
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
+    env_file:
+      - .env
+    depends_on:
+      - app
       - db
     networks:
       - ebay_restapi_network
@@ -87,7 +101,6 @@ services:
     working_dir: /python
     volumes:
         - ./python:/python
-        - shared-logs:/var/log/shared
     env_file:
       - .env
     expose:
@@ -104,7 +117,6 @@ services:
     working_dir: /var/www/tecdoc
     volumes:
       - ./tecdoc:/var/www/tecdoc
-      - shared-logs:/var/log/shared
     env_file:
       - .env
     expose:
@@ -117,7 +129,6 @@ services:
     container_name: ebay_restapi_log
     volumes:
       - ./log-service:/log-service
-      - shared-logs:/var/log/shared
     working_dir: /log-service
     env_file:
       - .env
@@ -128,7 +139,6 @@ services:
 
 volumes:
   postgres_data:
-  shared-logs:
 
 networks:
   ebay_restapi_network:

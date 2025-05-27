@@ -1,12 +1,20 @@
 from fastapi import APIRouter
-from controllers import test_controller
+from controllers import logs_controller
 
 router = APIRouter()
 
 router.add_api_route(
-    "/test",
-    test_controller.get_test_data,
+    "/get",
+    logs_controller.get_new_logs,
     methods=["GET"],
-    tags=["Test"],
-    summary="Тестовый маршрут"
+    tags=["Google Sheets"],
+    summary="Get all available Google Sheets"
+)
+
+router.add_api_route(
+    "/add",
+    logs_controller.log_data,
+    methods=["POST"],
+    tags=["Logging"],
+    summary="Log custom data from JSON POST"
 )

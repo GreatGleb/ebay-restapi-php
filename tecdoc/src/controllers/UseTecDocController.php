@@ -4,24 +4,33 @@ namespace Great\Tecdoc\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Great\Tecdoc\Helpers\Log;
 
 class UseTecDocController
 {
-    function getProductInfo($reference, $brandId) {
-        $tecdoc = new TecDocController();
+    function getProductInfo($logTraceId, $reference, $brandId) {
+        $tecdoc = new TecDocController($logTraceId);
         $info = $tecdoc->getInfoByProductSupplierReference($reference, $brandId);
 
         return $info;
     }
 
     function getProductsInfo(Request $request) {
+        $logTraceId = getallheaders()['Log-Trace-Id'];
+
+        Log::add($logTraceId, 'start work', 4);
+        Log::add($logTraceId, 'get request products', 5);
+
         $products = $request->getContent();
         $products = json_decode($products, true);
 
         $data = [];
 
-        foreach ($products as $product) {
-            $item = $this->getProductInfo($product['reference'], $product['brand_id']);
+        Log::add($logTraceId, 'start foreach send requests to tecdoc', 5);
+
+        foreach ($products as $key => $product) {
+            Log::add($logTraceId, 'foreach product ' . $key, 6);
+            $item = $this->getProductInfo($logTraceId, $product['reference'], $product['brand_id']);
             $item["product-id"] = $product["id"];
 
             $data[] = $item;

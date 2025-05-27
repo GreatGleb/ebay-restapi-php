@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Http;
-use JetBrains\PhpStorm\NoReturn;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductOeCode;
@@ -14,6 +13,7 @@ use App\Models\ProductCompatibility;
 use App\Models\ProductPhoto;
 use App\Models\ProducerBrand;
 use App\Models\ProductTecdocData;
+use App\Helpers\Log;
 
 class UpdateProducts extends Controller
 {
@@ -36,9 +36,12 @@ class UpdateProducts extends Controller
         return [$resultOfUpdating, $updateFields];
     }
 
-    public function fromTecDoc(): array
+    public function fromTecDoc($logTraceId): array
     {
-        $products = Product::query()
+        Log::add($logTraceId, 'start work', 1);
+        Log::add($logTraceId, 'get products what not published to ebay', 2);
+
+        $queryProducts = Product::query()
             ->select('products.*', 'producer_brands.tecdoc_id as producer_tecdoc_id')
             ->leftJoin('producer_brands', function ($join) {
                 $join->on(
@@ -48,39 +51,53 @@ class UpdateProducts extends Controller
                 );
             })
             ->where('products.published_to_ebay_de', false)
-            ->orderBy('products.id')
-            ->get();
+            ->orderBy('products.id');
 
-        $requestForTecDoc = [];
-        foreach ($products as $product) {
-            $brandId = $product->producer_tecdoc_id;
-            $reference = $product->tecdoc_number;
+        $chunkKey = 1;
+        $queryProducts->chunk(10, function ($products) use (&$requestForTecDoc, $logTraceId, &$chunkKey) {
+            Log::add($logTraceId, 'start chunk ' . $chunkKey . ' by 10 products', 2);
+            Log::add($logTraceId, 'prepare request for tecdoc', 3);
 
-            $requestForTecDoc[] = [
-                'id' => $product->id,
-                'reference' => $reference,
-                'brand_id' => $brandId,
-            ];
-        }
+            $requestForTecDoc = [];
 
-        $requestForTecDoc = array_slice($requestForTecDoc, 0, 1);
+            foreach ($products as $product) {
+                $brandId = $product->producer_tecdoc_id;
+                $reference = $product->tecdoc_number;
 
-        $url = "http://ebay_restapi_nginx/tecdoc/products-info";
-        $response = Http::timeout(300)
-            ->withHeaders([
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json'
-            ])->post($url, $requestForTecDoc);
-        $data = $response->json();
+                $requestForTecDoc[] = [
+                    'id' => $product->id,
+                    'reference' => $reference,
+                    'brand_id' => $brandId,
+                ];
+            }
 
-//        dd($data);
+//            $requestForTecDoc = array_slice($requestForTecDoc, 0, 1);
 
-        $results = $this->updateDbProductTablesFromTecDoc($data);
+            Log::add($logTraceId, 'send request to tecdoc', 3);
 
-        return $results;
+            $url = "http://ebay_restapi_nginx/tecdoc/products-info";
+            $response = Http::timeout(300)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                    'log-trace-id' => $logTraceId,
+                ])->post($url, $requestForTecDoc);
+
+            $data = $response->json();
+
+            Log::add($logTraceId, 'update db by tecdoc data', 3);
+
+            $this->updateDbProductTablesFromTecDoc($data, $logTraceId);
+
+            $chunkKey = $chunkKey + 1;
+
+            Log::add($logTraceId, 'finish', 3);
+        });
+
+        return 1;
     }
 
-    private function updateDbProductTablesFromTecDoc($data): array
+    private function updateDbProductTablesFromTecDoc($data, $logTraceId): array
     {
         $productUpdateData = [];
         $productUpdateFields = [
@@ -104,9 +121,14 @@ class UpdateProducts extends Controller
         $photoUpdateData = [];
         $tecdocUpdateData = [];
 
-        foreach ($data as $tecDocProduct) {
+        Log::add($logTraceId, 'start preparing foreach', 3);
+
+        foreach ($data as $key => $tecDocProduct) {
+            Log::add($logTraceId, 'foreach ' . $key, 4);
+
             if(isset($tecDocProduct['error']) && $tecDocProduct['error']) {
                 echo "error</br>";
+                Log::add($logTraceId, 'foreach error ' . $key, 4);
                 continue;
             }
 
@@ -213,9 +235,11 @@ class UpdateProducts extends Controller
             $tecdocUpdateData[] = $tecdocUpdateDataItem;
         }
 
+        Log::add($logTraceId, 'update db products', 3);
         $resultOfUpdatingProducts = Product::upsert($productUpdateData, ['id'], $productUpdateFields);
 
         if ($oeCodesUpdateData) {
+            Log::add($logTraceId, 'update db oecodes', 3);
             $productIds = collect($oeCodesUpdateData)
                 ->pluck('product_id')
                 ->unique()
@@ -226,6 +250,7 @@ class UpdateProducts extends Controller
             $resultOfInsertingOeCodes = ProductOeCode::insert($oeCodesUpdateData);
         }
         if ($compatibilitiesUpdateData) {
+            Log::add($logTraceId, 'update db compatibilities', 3);
             $productIds = collect($compatibilitiesUpdateData)
                 ->pluck('product_id')
                 ->unique()
@@ -236,6 +261,7 @@ class UpdateProducts extends Controller
             $resultOfInsertingCompatibility = ProductCompatibility::insert($compatibilitiesUpdateData);
         }
         if ($photoUpdateData) {
+            Log::add($logTraceId, 'update db photos', 3);
             $productIds = collect($photoUpdateData)
                 ->pluck('product_id')
                 ->unique()
@@ -246,6 +272,7 @@ class UpdateProducts extends Controller
             $resultOfInsertingPhotos = ProductPhoto::insert($photoUpdateData);
         }
         if ($tecdocUpdateData) {
+            Log::add($logTraceId, 'update db tecdoc data', 3);
             $productIds = collect($tecdocUpdateData)
                 ->pluck('product_id')
                 ->unique()

@@ -16,6 +16,7 @@ use Myrzan\TecDocClient\Generated\GetModelSeries2;
 use Myrzan\TecDocClient\Generated\GetVehicleByIds3;
 use Myrzan\TecDocClient\Generated\GetVehicleIdsByCriteria;
 use ReflectionClass;
+use Great\Tecdoc\Helpers\Log;
 
 class TecDocController
 {
@@ -23,8 +24,9 @@ class TecDocController
     private $providerId;
     private $client;
 
-    public function __construct()
+    public function __construct($logTraceId)
     {
+        $this->logTraceId = $logTraceId;
         $this->apiKey = getenv('TECDOC_KEY_RM');
         $this->providerId = getenv('TECDOC_PROVIDER_ID_RM');
 //        $this->apiKey = getenv('TECDOC_KEY_APNEXT');
@@ -774,6 +776,8 @@ class TecDocController
     }
 
     public function getInfoByProductSupplierReference($reference, $brandId) {
+        Log::add($this->logTraceId, 'get article id', 7);
+
         $articleId = $this->getArticleIdByProductSupplierReference($reference, $brandId);
 
         $data = [];
@@ -782,7 +786,10 @@ class TecDocController
 //            $ruData = $this->getArticleData($articleId, 'ru', false, true, true);
 //            $enData = $this->getArticleData($articleId, 'en', false, true, true);
 //            $deDataFull = $this->getArticleData($articleId, 'de', true);
+            Log::add($this->logTraceId, 'get article data ru', 7);
             $ruDataFull = $this->getArticleData($articleId, 'ru', true);
+
+            Log::add($this->logTraceId, 'get article data en', 7);
             $enData = $this->getArticleData($articleId, 'en', false, true, true);
 //            $deData = $this->getArticleData($articleId, 'de', false, true, true);
 
@@ -799,8 +806,11 @@ class TecDocController
                 "de" => $deData["specifics"] ?? "",
             ];
             $data['ean'] = $this->getEanFromArray($ruDataFull['gtins']);
+
+            Log::add($this->logTraceId, 'get compatibilities', 7);
             $data['compatibilities'] = $this->getArticleModels($articleId);
         } else {
+            Log::add($this->logTraceId, 'Article Not Found', 7);
             $data['error'] = 'Article Not Found';
         }
 
