@@ -19,7 +19,7 @@ services:
     working_dir: /var/www/laravel
     volumes:
       - ./laravel:/var/www/laravel
-    command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=30000
     env_file:
       - .env
     depends_on:

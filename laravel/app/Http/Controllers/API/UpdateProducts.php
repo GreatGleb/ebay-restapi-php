@@ -51,6 +51,7 @@ class UpdateProducts extends Controller
                 );
             })
             ->where('products.published_to_ebay_de', false)
+            ->whereNull('products.reference')
             ->orderBy('products.id');
 
         $chunkKey = 1;
@@ -94,7 +95,7 @@ class UpdateProducts extends Controller
             Log::add($logTraceId, 'finish', 3);
         });
 
-        return 1;
+        return [];
     }
 
     private function updateDbProductTablesFromTecDoc($data, $logTraceId): array
