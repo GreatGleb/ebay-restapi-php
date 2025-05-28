@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title','Update TecDoc data in DB')
+@section('title','Sync DB & Google Sheets new products from TecDoc')
 @section('content')
-    <h1>Update TecDoc data in DB</h1>
+    <h1>Sync DB & Google Sheets new products from TecDoc</h1>
 
     <h3>Logs</h3>
     <div class="logs-container">
