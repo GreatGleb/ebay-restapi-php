@@ -137,6 +137,31 @@ services:
     networks:
       - ebay_restapi_network
 
+  selenium-service:
+    build: ./selenium-service
+    container_name: ebay_restapi_selenium
+    volumes:
+      - ./selenium-service:/selenium-service
+    working_dir: /selenium-service
+    env_file:
+      - .env
+    expose:
+      - "8000"
+    networks:
+      - ebay_restapi_network
+    depends_on:
+      - selenium
+
+  selenium:
+    image: selenium/standalone-chrome
+    container_name: selenium
+    ports:
+      - "4444:4444"       # Selenium WebDriver API
+      - "7900:7900"       # VNC-доступ (по желанию)
+    shm_size: '2gb'
+    networks:
+      - ebay_restapi_network
+
 volumes:
   postgres_data:
 

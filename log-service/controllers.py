@@ -1,11 +1,8 @@
 from fastapi import Request, HTTPException, Query
 from fastapi.responses import JSONResponse
 import os
-from dotenv import load_dotenv
 from datetime import datetime
 import re
-
-load_dotenv('/.env')
 
 class LogsController:
     def __init__(self):
