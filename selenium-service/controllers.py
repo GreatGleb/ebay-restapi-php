@@ -92,7 +92,7 @@ class Controller:
         parsed_url = urlparse(photo_link)
 
         path_parts = parsed_url.path.split('/')
-        providerId = path_parts[4]
+        providerId = path_parts[3]
 
         query_params = parse_qs(parsed_url.query)
         key = query_params.get('api_key', [None])[0]
@@ -101,8 +101,6 @@ class Controller:
 
     async def get_api_key(self):
         await self.set_driver()
-        print(self.driver)
-        print('self.driver')
 
         successLogin = await self.login()
 
@@ -115,6 +113,8 @@ class Controller:
             return False
 
         providerId, key = await self.parse_key(photo_link)
+
+        self.driver.quit()
 
         return {'providerId': providerId , 'key': key}
 

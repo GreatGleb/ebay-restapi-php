@@ -4,6 +4,7 @@ namespace Great\Tecdoc\Controllers;
 
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Myrzan\TecDocClient\Client;
 use Myrzan\TecDocClient\Generated\GetArticleDirectSearchAllNumbersWithState;
 use Myrzan\TecDocClient\Generated\GetArticleIdsWithState;
@@ -28,13 +29,7 @@ class TecDocController
     public function __construct($logTraceId)
     {
         $this->logTraceId = $logTraceId;
-//        $this->apiKey = getenv('TECDOC_KEY_RM');
-//        $this->providerId = getenv('TECDOC_PROVIDER_ID_RM');
-//        $this->apiKey = getenv('TECDOC_KEY_APNEXT');
-//        $this->providerId = getenv('TECDOC_PROVIDER_ID_APNEXT');
-        $this->apiKey = '2BeBXg67uLkZ2w57dH3wKkXX2p2DJgygGqNU8icfTJXSHheFWxGw';
-        $this->providerId = '20888';
-        $this->client = new Client($this->apiKey, $this->providerId);
+        $this->setApiKeys();
     }
 
     public function ajaxRequest()
@@ -352,54 +347,80 @@ class TecDocController
 
         return null;
     }
+
+    public function getArticleCarMarks($articleId)
+    {
+        $request = (new GetArticleLinkedAllLinkingTargetManufacturer())
+            ->setArticleCountry('LT')
+            ->setArticleId($articleId)
+            ->setLinkingTargetType('P');
+
+        $response = $this->client->getArticleLinkedAllLinkingTargetManufacturer($request);
+        $response = $response->getData();
+
+        return $response;
+    }
+
+    public function getArticleModelsByCarMark($articleId, $markId)
+    {
+        $request  = (new GetArticleLinkedAllLinkingTarget3())
+            ->setLang('LT')
+            ->setArticleCountry('LT')
+            ->setArticleId($articleId)
+            ->setLinkingTargetManuId($markId)
+            ->setLinkingTargetType('P');
+
+        $response = $this->client->getArticleLinkedAllLinkingTarget3($request);
+        $response = $response->getData();
+
+        return $response;
+    }
+
+    public function getArticleVehicleDetailsByModel($articleId, $carModelId)
+    {
+        $request = (new GetVehicleByIds3())
+            ->setCountriesCarSelection('LT')
+            ->setArticleCountry('LT')
+            ->setLang('RU')
+            ->setCountry('LT')
+            ->setCarIds([$carModelId]);
+
+        $response = $this->client->getVehicleByIds3($request);
+        $response = $response->getData();
+
+        return $response;
+    }
+
     public function getArticleModels($articleId)
     {
 //        $manuArray = [];
         $data = [];
 
-        $getArticleLinkedAllLinkingTargetManufacturer = (new GetArticleLinkedAllLinkingTargetManufacturer())
-            ->setArticleCountry('LT')
-            ->setArticleId($articleId)
-            ->setLinkingTargetType('P');
+        $carMarks = $this->sendRequest([$this, 'getArticleCarMarks'], $articleId);
 
-        $getArticleLinkedAllLinkingTargetManufacturerResponse = $this->client->getArticleLinkedAllLinkingTargetManufacturer($getArticleLinkedAllLinkingTargetManufacturer)->getData();
-
-        foreach ($getArticleLinkedAllLinkingTargetManufacturerResponse as $key => $manu) {
-            $getArticleLinkedAllLinkingTarget3  = (new GetArticleLinkedAllLinkingTarget3())
-                ->setLang('LT')
-                ->setArticleCountry('LT')
-                ->setArticleId($articleId)
-                ->setLinkingTargetManuId($manu->getManuId())
-                ->setLinkingTargetType('P');
-
-            $getArticleLinkedAllLinkingTarget3Response = $this->client->getArticleLinkedAllLinkingTarget3($getArticleLinkedAllLinkingTarget3)->getData()[0]->getArticleLinkages();
+        foreach ($carMarks as $key => $manu) {
+            $carModels = $this->sendRequest([$this, 'getArticleModelsByCarMark'], $articleId, $manu->getManuId());
+            $carModels = $carModels[0]->getArticleLinkages();
 
 //            $manuArray[$key] = [
 //                'name' => $manu->getManuName(),
 //                'children' => []
 //            ];
 
-            foreach ($getArticleLinkedAllLinkingTarget3Response as $kerCarInfo => $carInfo) {
-                $getVehicleByIds3 = (new GetVehicleByIds3())
-                    ->setCountriesCarSelection('LT')
-                    ->setArticleCountry('LT')
-                    ->setLang('RU')
-                    ->setCountry('LT')
-                    ->setCarIds([$carInfo->getLinkingTargetId()]);
-
-                $getVehicleByIds3Response = $this->client->getVehicleByIds3($getVehicleByIds3)->getData();
-                $vehicleDetails = $getVehicleByIds3Response[0]->getVehicleDetails();
+            foreach ($carModels as $carInfo) {
+                $vehicleDetails = $this->sendRequest([$this, 'getArticleVehicleDetailsByModel'], $articleId, $carInfo->getLinkingTargetId());
+                $vehicleDetails = $vehicleDetails[0]->getVehicleDetails();
 
 //                if(!empty($vehicleDetails)) {
 //                    $data[] = $this->extractObjectProperties($vehicleDetails);
 //                }
-
-                $data[] = $vehicleDetails->getCarId();
 //                array_push($manuArray[$key]['children'], [
 //                    'name' => $mod->getManuName() . ' ' . $mod->getModelName() . ' ' . $mod->getTypeName() . ', ' . $this->data($mod) . ', ' .
 //                        $mod->getCylinderCapacityCcm() . ' ccm, ' . $mod->getPowerHpTo() . ' AG, ' . $mod->getPowerKwTo() . ' kW, ' . $mod->getFuelType(),
 //                    'carId' => '/vehicle/' . $mod->getCarId()
 //                ]);
+
+                $data[] = $vehicleDetails->getCarId();
             }
         }
 
@@ -785,7 +806,7 @@ class TecDocController
     public function getInfoByProductSupplierReference($reference, $brandId) {
         Log::add($this->logTraceId, 'get article id', 7);
 
-        $articleId = $this->getArticleIdByProductSupplierReference($reference, $brandId);
+        $articleId = $this->sendRequest([$this, 'getArticleIdByProductSupplierReference'], $reference, $brandId);
 
         $data = [];
 
@@ -793,14 +814,15 @@ class TecDocController
 //            $ruData = $this->getArticleData($articleId, 'ru', false, true, true);
 //            $enData = $this->getArticleData($articleId, 'en', false, true, true);
 //            $deDataFull = $this->getArticleData($articleId, 'de', true);
+
             Log::add($this->logTraceId, 'get article data ru', 7);
-            $ruDataFull = $this->getArticleData($articleId, 'ru', true);
+            $ruDataFull = $this->sendRequest([$this, 'getArticleData'], $articleId, 'ru', true);
 
             Log::add($this->logTraceId, 'get article data en', 7);
-            $enData = $this->getArticleData($articleId, 'en', false, true, true);
+            $enData = $this->sendRequest([$this, 'getArticleData'], $articleId, 'en', false, true, true);
 
             Log::add($this->logTraceId, 'get article data de', 7);
-            $deData = $this->getArticleData($articleId, 'de', false, true, true);
+            $deData = $this->sendRequest([$this, 'getArticleData'], $articleId, 'de', false, true, true);
 
 //            $data = $deDataFull;
             $data = $ruDataFull;
@@ -814,7 +836,8 @@ class TecDocController
                 "en" => $enData["specifics"] ?? "",
                 "de" => $deData["specifics"] ?? "",
             ];
-            $data['ean'] = $this->getEanFromArray($ruDataFull['gtins']);
+
+            $data['ean'] = $this->getEanFromArray($ruDataFull['gtins'] ?? []);
 
             Log::add($this->logTraceId, 'get compatibilities', 7);
             $data['compatibilities'] = $this->getArticleModels($articleId);
@@ -853,5 +876,72 @@ class TecDocController
         $brands = $this->client->GetAmBrands($request)->getData();
 
         return $brands;
+    }
+
+    private function setApiKeys()
+    {
+        $rootPath = dirname(__DIR__, 2);
+        $tokensDir = $rootPath . '/tokens';
+        $filePath = $tokensDir . '/tokens.json';
+
+        if (file_exists($filePath)) {
+            $json = file_get_contents($filePath);
+            $data = json_decode($json, true);
+
+            if(isset($data['providerId']) && $data['providerId'] && isset($data['key']) && $data['key']) {
+                $this->apiKey = $data['key'];
+                $this->providerId = (int) $data['providerId'];
+                $this->client = new Client($this->apiKey, $this->providerId);
+            } else {
+                $this->scrapAndSetApiKeys();
+            }
+        } else {
+            $this->scrapAndSetApiKeys();
+        }
+
+        return $data ?? [];
+    }
+
+    private function scrapAndSetApiKeys()
+    {
+        $url = "http://ebay_restapi_nginx/selenium/get_api_key";
+        $response = Http::timeout(300)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])
+            ->get($url);
+
+        $data = $response->json();
+
+        if(isset($data['providerId']) && $data['providerId'] && isset($data['key']) && $data['key']) {
+            $rootPath = dirname(__DIR__, 2);
+
+            $tokensDir = $rootPath . '/tokens';
+
+            $filePath = $tokensDir . '/tokens.json';
+
+            if (!is_dir(__DIR__ . '/tokens')) {
+                mkdir(__DIR__ . '/tokens', 0755, true);
+            }
+
+            file_put_contents($filePath, json_encode($data, JSON_PRETTY_PRINT));
+
+            $this->providerId = (int) $data['providerId'];
+            $this->apiKey = $data['key'];
+            $this->client = new Client($this->apiKey, $this->providerId);
+        }
+    }
+
+    private function sendRequest(callable $func, ...$args)
+    {
+        $result = $func(...$args);
+
+        if(!$result) {
+            $this->scrapAndSetApiKeys();
+            $result = $func(...$args);
+        }
+
+        return $result;
     }
 }

@@ -19,7 +19,7 @@ class UseTecDocController
         $tecdoc = new TecDocController(null);
 //        $info = $tecdoc->getAllBrands();
 //        $info = $tecdoc->search($reference);
-//        $info = $tecdoc->getArticlesIdByProductSupplierReference($reference, 403);
+//        $info = $tecdoc->getArticleIdByProductSupplierReference($reference, 403);
         $info = $tecdoc->getInfoByProductSupplierReference($reference, 403);
 //        $info = $tecdoc->getArticleData($reference, 'ru', true);
 
