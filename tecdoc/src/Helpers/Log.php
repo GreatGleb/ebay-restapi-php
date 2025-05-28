@@ -5,7 +5,11 @@ namespace Great\Tecdoc\Helpers;
 use Illuminate\Support\Facades\Http;
 class Log
 {
-    public static function add(string $traceId, string $message, int $indent) {
+    public static function add($traceId, string $message, int $indent) {
+        if(!$traceId) {
+            return false;
+        }
+
         $request = [
             'source' => 'Tecdoc',
             'trace_id' => $traceId,
@@ -20,5 +24,7 @@ class Log
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json'
             ])->post($url, $request);
+
+        return true;
     }
 }

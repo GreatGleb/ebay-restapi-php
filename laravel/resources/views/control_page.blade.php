@@ -6,12 +6,9 @@
 
     <h1>Control Products Data</h1>
 
-    <h2>Products - stock and price</h2>
+    <h2>New Products - sync DB & Google Sheets</h2>
     <p>
-        <a href="{{ route('updateProductStockAndPrice.supplier.autoPartner') }}" target="_blank">Update DB products - stock and price from AutoPartner</a>
-    </p>
-    <p>
-        <a href="{{ route('updateProductStockAndPrice.calculate', ['profitPercentage' => 30]) }}" target="_blank">Update DB products - stock and price - calculate VAT taxes and retail price</a>
+        <a href="{{ route('updateFromTecDoc&SyncDB&Sheets') }}" target="_blank">Sync DB & Google Sheets new products from TecDoc</a>
     </p>
 
     <h2>Products - DB</h2>
@@ -19,7 +16,14 @@
         <a href="http://localhost/python/products/save_to_db_from_google_sheets" target="_blank">Add/Update DB products from Google Sheets</a>
     </p>
     <p>
-        <a href="{{ route('updateProducts.fromTecDoc') }}" target="_blank">Update DB products from TecDoc</a>
+        <a href="{{ route('updateProducts.fromTecDoc') }}" target="_blank">Update DB new products from TecDoc</a>
+    </p>
+    <h3>Update stock and price</h3>
+    <p>
+        <a href="{{ route('updateProductStockAndPrice.supplier.autoPartner') }}" target="_blank">Update DB products - stock and price from AutoPartner</a>
+    </p>
+    <p>
+        <a href="{{ route('updateProductStockAndPrice.calculate', ['profitPercentage' => 30]) }}" target="_blank">Update DB products - stock and price - calculate VAT taxes and retail price</a>
     </p>
 
     <h2>Products - Google Sheets</h2>

@@ -27,7 +27,7 @@
         }
 
         async function sendRequestForUpdating(logTrackId) {
-            const url = "http://localhost/api/update/products/fromTecDoc";
+            const url = "http://localhost/jobs/update/products/fromTecDoc";
 
             try {
                 const response = await fetch(url, {
@@ -47,9 +47,9 @@
         function addLogToHTML(logs) {
             logs = logs['logs']
             const container = document.querySelector('.logs-container');
-            let currentLevels = [container];
 
             for(let log of logs) {
+                let currentLevels = [container];
                 const li = document.createElement('li');
                 li.textContent = `[${log.date}] [${log.source}] ${log.message}`;
 

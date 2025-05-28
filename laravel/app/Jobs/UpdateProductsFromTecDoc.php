@@ -23,9 +23,23 @@ class UpdateProductsFromTecDoc implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(): void
+    public function handle(): bool
     {
         $updater = new UpdateProducts();
-        $updater->fromTecDoc($this->logTraceId);
+        $isUpdatedFromGoogleSheets = $updater->fromGoogleSheets($this->logTraceId);
+
+        if(!$isUpdatedFromGoogleSheets) {
+            return false;
+        }
+
+        $isUpdatedFromTecDoc = $updater->fromTecDoc($this->logTraceId);
+
+        if(!$isUpdatedFromTecDoc) {
+            return false;
+        }
+
+        $isUpdatedToGoogleSheets = $updater->toGoogleSheets($this->logTraceId);
+
+        return $isUpdatedToGoogleSheets;
     }
 }

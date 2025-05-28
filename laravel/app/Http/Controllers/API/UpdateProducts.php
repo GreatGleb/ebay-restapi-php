@@ -36,7 +36,7 @@ class UpdateProducts extends Controller
         return [$resultOfUpdating, $updateFields];
     }
 
-    public function fromTecDoc($logTraceId): array
+    public function fromTecDoc($logTraceId = null): bool
     {
         Log::add($logTraceId, 'start work', 1);
         Log::add($logTraceId, 'get products what not published to ebay', 2);
@@ -86,16 +86,19 @@ class UpdateProducts extends Controller
 
             $data = $response->json();
 
-            Log::add($logTraceId, 'update db by tecdoc data', 3);
-
-            $this->updateDbProductTablesFromTecDoc($data, $logTraceId);
+            if($data) {
+                Log::add($logTraceId, 'update db by tecdoc data', 3);
+                $this->updateDbProductTablesFromTecDoc($data, $logTraceId);
+            }
 
             $chunkKey = $chunkKey + 1;
 
-            Log::add($logTraceId, 'finish', 3);
+            Log::add($logTraceId, 'finish chunk', 3);
         });
 
-        return [];
+        Log::add($logTraceId, 'finish work', 1);
+
+        return true;
     }
 
     private function updateDbProductTablesFromTecDoc($data, $logTraceId): array
@@ -328,6 +331,62 @@ class UpdateProducts extends Controller
                 }
             }
         }
+
+        return $result;
+    }
+
+    public function fromGoogleSheets($logTraceId = null): bool
+    {
+        Log::add($logTraceId, 'start updating DB from Google Sheets', 1);
+
+        $url = "http://ebay_restapi_nginx/python/products/save_to_db_from_google_sheets";
+        $response = Http::timeout(300)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+                'log-trace-id' => $logTraceId,
+            ])
+            ->get($url);
+
+        $result = true;
+
+        if (!$response->successful()) {
+            Log::add($logTraceId, 'request failed', 2);
+
+            $result = false;
+        } else {
+            Log::add($logTraceId, 'response: ' . $response->body(), 2);
+        }
+
+        Log::add($logTraceId, 'finish updating DB from Google Sheets', 1);
+
+        return $result;
+    }
+
+    public function toGoogleSheets($logTraceId = null): bool
+    {
+        Log::add($logTraceId, 'start updating DB to Google Sheets', 1);
+
+        $url = "http://ebay_restapi_nginx/python/products/update_from_db_to_google_sheets";
+        $response = Http::timeout(300)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+                'log-trace-id' => $logTraceId,
+            ])
+            ->get($url);
+
+        $result = true;
+
+        if (!$response->successful()) {
+            Log::add($logTraceId, 'request failed', 2);
+
+            $result = false;
+        } else {
+            Log::add($logTraceId, 'response: ' . $response->body(), 2);
+        }
+
+        Log::add($logTraceId, 'finish updating DB to Google Sheets', 1);
 
         return $result;
     }

@@ -6,7 +6,11 @@ use Illuminate\Support\Facades\Http;
 
 class Log
 {
-    public static function add(string $traceId, string $message, int $indent) {
+    public static function add(string|null $traceId, string $message, int $indent) {
+        if(!$traceId) {
+            return false;
+        }
+
         $request = [
             'source' => 'Laravel',
             'trace_id' => $traceId,
