@@ -17,6 +17,7 @@ use Myrzan\TecDocClient\Generated\GetVehicleByIds3;
 use Myrzan\TecDocClient\Generated\GetVehicleIdsByCriteria;
 use ReflectionClass;
 use Great\Tecdoc\Helpers\Log;
+use Myrzan\TecDocClient\Generated\GetAmBrands;
 
 class TecDocController
 {
@@ -27,10 +28,12 @@ class TecDocController
     public function __construct($logTraceId)
     {
         $this->logTraceId = $logTraceId;
-        $this->apiKey = getenv('TECDOC_KEY_RM');
-        $this->providerId = getenv('TECDOC_PROVIDER_ID_RM');
+//        $this->apiKey = getenv('TECDOC_KEY_RM');
+//        $this->providerId = getenv('TECDOC_PROVIDER_ID_RM');
 //        $this->apiKey = getenv('TECDOC_KEY_APNEXT');
 //        $this->providerId = getenv('TECDOC_PROVIDER_ID_APNEXT');
+        $this->apiKey = '2BeBXg67uLkZ2w57dH3wKkXX2p2DJgygGqNU8icfTJXSHheFWxGw';
+        $this->providerId = '20888';
         $this->client = new Client($this->apiKey, $this->providerId);
     }
 
@@ -590,7 +593,7 @@ class TecDocController
     {
         $getArticleDirectSearchAllNumbersWithState = (new getArticleDirectSearchAllNumbersWithState())
             ->setArticleCountry('LT')
-            ->setLang('LT')
+            ->setLang('RU')
             ->setArticleNumber($string)
             //->setSearchExact(true)
             ->setSortType(2)
@@ -610,9 +613,13 @@ class TecDocController
                 ->setArticleCountry('LT')//PL
                 ->setLang('en')
                 ->setSearchExact(true)
-                ->setBrandId($brand)
                 ->setArticleNumber($supplier_reference)
                 ->setNumberType(0);
+
+            if($brand) {
+                $request = $request->setBrandId($brand);
+            }
+
             $response = $this->client->getArticleDirectSearchAllNumbersWithState($request)->getData();
 
             if (!empty($response)) {
@@ -749,7 +756,7 @@ class TecDocController
         return $ean;
     }
 
-    private function getArticleData(int $articleId, string $lang, bool $includeAll = false, bool $includeProductName = false, bool $includeParams = false)
+    public function getArticleData(int $articleId, string $lang, bool $includeAll = false, bool $includeProductName = false, bool $includeParams = false)
     {
         $request = (new GetArticles())
             ->setArticleCountry('LT')//DE
@@ -791,7 +798,9 @@ class TecDocController
 
             Log::add($this->logTraceId, 'get article data en', 7);
             $enData = $this->getArticleData($articleId, 'en', false, true, true);
-//            $deData = $this->getArticleData($articleId, 'de', false, true, true);
+
+            Log::add($this->logTraceId, 'get article data de', 7);
+            $deData = $this->getArticleData($articleId, 'de', false, true, true);
 
 //            $data = $deDataFull;
             $data = $ruDataFull;
@@ -833,5 +842,16 @@ class TecDocController
         }
 
         return implode(",\n", $result);
+    }
+
+    public function getAllBrands()
+    {
+        $request = new GetAmBrands();
+        $request = (new GetAmBrands())
+            ->setArticleCountry('LT')//DE
+            ->setLang('en');
+        $brands = $this->client->GetAmBrands($request)->getData();
+
+        return $brands;
     }
 }

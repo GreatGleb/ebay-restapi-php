@@ -15,6 +15,19 @@ class UseTecDocController
         return $info;
     }
 
+    function testGetProductInfo($reference) {
+        $tecdoc = new TecDocController(null);
+//        $info = $tecdoc->getAllBrands();
+//        $info = $tecdoc->search($reference);
+//        $info = $tecdoc->getArticlesIdByProductSupplierReference($reference, 403);
+        $info = $tecdoc->getInfoByProductSupplierReference($reference, 403);
+//        $info = $tecdoc->getArticleData($reference, 'ru', true);
+
+        dd($info);
+
+        return $info;
+    }
+
     function getProductsInfo(Request $request) {
         $logTraceId = getallheaders()['Log-Trace-Id'];
 

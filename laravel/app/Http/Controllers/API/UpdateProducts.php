@@ -54,6 +54,10 @@ class UpdateProducts extends Controller
             ->whereNull('products.reference')
             ->orderBy('products.id');
 
+        $countOfProducts = $queryProducts->count();
+
+        Log::add($logTraceId, 'got' . $countOfProducts . ' products what not published to ebay', 2);
+
         $chunkKey = 1;
         $queryProducts->chunk(10, function ($products) use (&$requestForTecDoc, $logTraceId, &$chunkKey) {
             Log::add($logTraceId, 'start chunk ' . $chunkKey . ' by 10 products', 2);
@@ -64,6 +68,10 @@ class UpdateProducts extends Controller
             foreach ($products as $product) {
                 $brandId = $product->producer_tecdoc_id;
                 $reference = $product->tecdoc_number;
+
+                if(!$brandId) {
+                    $brandId = 403;
+                }
 
                 $requestForTecDoc[] = [
                     'id' => $product->id,
