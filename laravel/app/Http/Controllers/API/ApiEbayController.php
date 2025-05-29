@@ -321,10 +321,27 @@ class ApiEbayController extends Controller
                 $result['categoryId'] = $items[$bestShopKey]['categories'][0]['categoryId'] ?? null;
                 $result['photo'] = $items[$bestShopKey]['image']['imageUrl'] ?? null;
                 $result['specifics'] = $this->getItemSpecifics($items[$bestShopKey]['itemId']);
+                $result['specifics']['seller'] = $bestShopName;
             }
+        } else {
+            $result['error'] = true;
         }
 
         return $result;
+    }
+
+    public function searchItemsByProducts($products)
+    {
+        $data = [];
+
+        foreach ($products as $product) {
+            $item = $this->getItemsByEAN($product['ean']);
+            $item['product-id'] = $product['id'];
+
+            $data[] = $item;
+        }
+
+        return $data;
     }
 
     public function getCategoryByName($name) {

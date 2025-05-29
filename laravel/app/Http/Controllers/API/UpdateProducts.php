@@ -59,7 +59,7 @@ class UpdateProducts extends Controller
         Log::add($logTraceId, 'got' . $countOfProducts . ' products what not published to ebay', 2);
 
         $chunkKey = 1;
-        $queryProducts->chunk(10, function ($products) use (&$requestForTecDoc, $logTraceId, &$chunkKey) {
+        $queryProducts->chunk(10, function ($products) use ($logTraceId, &$chunkKey) {
             Log::add($logTraceId, 'start chunk ' . $chunkKey . ' by 10 products', 2);
             Log::add($logTraceId, 'prepare request for tecdoc', 3);
 
@@ -397,6 +397,135 @@ class UpdateProducts extends Controller
         Log::add($logTraceId, 'finish updating DB to Google Sheets', 1);
 
         return $result;
+    }
+
+    public function fromEbay($logTraceId = null): bool
+    {
+        Log::add($logTraceId, 'start work', 1);
+        Log::add($logTraceId, 'get products what not published to ebay', 2);
+
+        $queryProducts = Product::query()
+            ->select('products.*', 'producer_brands.tecdoc_id as producer_tecdoc_id')
+            ->leftJoin('producer_brands', function ($join) {
+                $join->on(
+                    DB::raw('LOWER(products.producer_brand)'),
+                    '=',
+                    DB::raw('LOWER(producer_brands.name)')
+                );
+            })
+            ->where('products.published_to_ebay_de', false)
+            ->whereNotNull('products.ean')
+            ->orderBy('products.id');
+
+        $countOfProducts = $queryProducts->count();
+
+        Log::add($logTraceId, 'got' . $countOfProducts . ' products what not published to ebay', 2);
+
+        $ebayClass = new ApiEbayController();
+
+        $chunkKey = 1;
+        $queryProducts->chunk(10, function ($products) use ($logTraceId, $ebayClass, &$chunkKey) {
+            Log::add($logTraceId, 'start chunk ' . $chunkKey . ' by 10 products', 2);
+            Log::add($logTraceId, 'prepare request for tecdoc', 3);
+
+            $requestForEbay = [];
+
+            foreach ($products as $product) {
+                $requestForEbay[] = [
+                    'id' => $product->id,
+                    'reference' => $product->reference,
+                    'ean' => $product->ean,
+                ];
+            }
+
+            Log::add($logTraceId, 'send request to ebay', 3);
+
+            $data = $ebayClass->searchItemsByProducts($requestForEbay);
+
+            if($data) {
+                Log::add($logTraceId, 'update db by ebay data', 3);
+                $this->updateDbProductTablesFromEbay($data, $logTraceId);
+            }
+
+            $chunkKey = $chunkKey + 1;
+
+            Log::add($logTraceId, 'finish chunk', 3);
+        });
+
+        Log::add($logTraceId, 'finish work', 1);
+
+        return true;
+    }
+
+    private function updateDbProductTablesFromEbay($data, $logTraceId): array
+    {
+        $productUpdateData = [];
+        $productUpdateFields = [
+            'category_id_ebay_de',
+            'ru_category_from_ebay_de',
+        ];
+
+        $ebaySimilarProductsUpdateData = [];
+
+        $categoryIds = collect($data)
+            ->pluck('categoryId')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $categories = \DB::table('categories')
+            ->whereIn('ebay_de_id', $categoryIds)
+            ->pluck('full_name_ru', 'ebay_de_id')
+            ->toArray();
+
+        Log::add($logTraceId, 'start preparing foreach', 3);
+
+        foreach ($data as $product) {
+            Log::add($logTraceId, 'foreach id:' . $product['product-id'], 4);
+
+            if(isset($product['error']) && $product['error']) {
+                echo "error</br>";
+                Log::add($logTraceId, 'foreach error id:' . $product['product-id'], 4);
+                continue;
+            }
+
+            $productUpdateData[] = [
+                'id' => $product['product-id'],
+                'category_id_ebay_de' => $product['categoryId'],
+                'ru_category_from_ebay_de' => $categories[$product['categoryId']],
+            ];
+
+            $ebaySimilarProductsUpdateData[] = [
+                'product_id' => $product['product-id'],
+                'names' => json_encode($product['names']),
+                'prices' => json_encode($product['prices']),
+                'specifics' => json_encode($product['specifics']),
+                'photo' => json_encode($product['photo']),
+            ];
+        }
+
+        Log::add($logTraceId, 'update db products', 3);
+        $resultOfUpdatingProducts = Product::upsert($productUpdateData, ['id'], $productUpdateFields);
+
+        Log::add($logTraceId, 'update db ebay similar products', 3);
+        $productIds = collect($ebaySimilarProductsUpdateData)
+            ->pluck('product_id')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $resultOfDeletingEbaySimilarProducts = \DB::table('product_ebay_similar_products')->whereIn('product_id', $productIds)->delete();
+        $resultOfInsertingEbaySimilarProducts = \DB::table('product_ebay_similar_products')->insert($ebaySimilarProductsUpdateData);
+
+        dd($ebaySimilarProductsUpdateData, $data);
+
+        $results = [
+            'updatingProducts' => $resultOfUpdatingProducts,
+            'deletingEbaySimilarProducts' => $resultOfDeletingEbaySimilarProducts ?? 'empty',
+            'insertingEbaySimilarProducts' => $resultOfInsertingEbaySimilarProducts ?? 'empty',
+        ];
+
+        return $results;
     }
 
     public function brands(): void

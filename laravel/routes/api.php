@@ -10,6 +10,7 @@ use App\Http\Controllers\API\GetJsonFiles;
 
 Route::post('/update/products', [UpdateProducts::class, 'run']);
 Route::get('/update/products/fromTecDoc', [UpdateProducts::class, 'fromTecDoc'])->name('updateProducts.fromTecDoc');
+Route::get('/update/products/fromEbay', [UpdateProducts::class, 'fromEbay'])->name('updateProducts.fromEbay');
 Route::get('/update/brands', [UpdateProducts::class, 'brands'])->name('updateBrands');
 Route::get('/ebay/getCategoriesText', [ApiEbayController::class, 'getCategoriesText'])->name('ebay.getCategoriesText');
 
@@ -33,6 +34,7 @@ Route::get('/ebay/getCategories', [ApiEbayController::class, 'getCategories'])->
 Route::post('/ebay/getItemAspectsForCategory', [ApiEbayController::class, 'getItemAspectsForCategory'])->name('ebay.getItemAspectsForCategory');
 Route::get('/ebay/getCategoryByName/{name}', [ApiEbayController::class, 'getCategoryByName'])->name('ebay.getCategoryByName');
 Route::get('/ebay/getItemsByEAN/{name}', [ApiEbayController::class, 'getItemsByEAN'])->name('ebay.getItemsByEAN');
+Route::post('/ebay/searchItemsByProducts', [ApiEbayController::class, 'searchItemsByProducts'])->name('ebay.searchItemsByProducts');
 Route::get('/ebay/getRateLimits', [ApiEbayController::class, 'getRateLimits'])->name('ebay.getRateLimits');
 Route::get('/ebay/getFulfillmentPolicies', [ApiEbayController::class, 'getFulfillmentPolicies'])->name('ebay.getFulfillmentPolicies');
 Route::get('/ebay/getPaymentPolicies', [ApiEbayController::class, 'getPaymentPolicies'])->name('ebay.getPaymentPolicies');
