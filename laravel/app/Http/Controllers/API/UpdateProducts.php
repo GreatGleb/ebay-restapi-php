@@ -500,7 +500,7 @@ class UpdateProducts extends Controller
                 'names' => json_encode($product['names']),
                 'prices' => json_encode($product['prices']),
                 'specifics' => json_encode($product['specifics']),
-                'photo' => json_encode($product['photo']),
+                'photo' => $product['photo'],
             ];
         }
 
@@ -516,8 +516,6 @@ class UpdateProducts extends Controller
 
         $resultOfDeletingEbaySimilarProducts = \DB::table('product_ebay_similar_products')->whereIn('product_id', $productIds)->delete();
         $resultOfInsertingEbaySimilarProducts = \DB::table('product_ebay_similar_products')->insert($ebaySimilarProductsUpdateData);
-
-        dd($ebaySimilarProductsUpdateData, $data);
 
         $results = [
             'updatingProducts' => $resultOfUpdatingProducts,
