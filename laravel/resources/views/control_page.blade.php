@@ -6,9 +6,12 @@
 
     <h1>Control Products Data</h1>
 
-    <h2>New Products - sync DB & Google Sheets</h2>
+    <h2>Products - sync DB & Google Sheets</h2>
     <p>
-        <a href="{{ route('updateFromTecDoc&SyncDB&Sheets') }}" target="_blank">Sync DB & Google Sheets new products from TecDoc</a>
+        <a href="{{ route('syncDBandSheets.fromTecDoc') }}" target="_blank">Sync DB & Google Sheets products from TecDoc</a>
+    </p>
+    <p>
+        <a href="{{ route('syncDBandSheets.fromEbay') }}" target="_blank">Sync DB & Google Sheets products from eBay</a>
     </p>
 
     <h2>Products - DB</h2>
