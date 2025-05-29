@@ -31,15 +31,29 @@ class EbayCurl extends Ebay
     }
 
     protected static function getCurlHeaders(Ebay $ebay, $number, $callName = null) {
-        $headers = [['Content-Type: application/x-www-form-urlencoded', 'Authorization: Basic '.$ebay->codeAuth],
-            ['X-EBAY-API-COMPATIBILITY-LEVEL: ' . 967,
+        $headers = [
+            [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Authorization: Basic '.$ebay->codeAuth
+            ],
+            [
+                'X-EBAY-API-COMPATIBILITY-LEVEL: ' . 967,
                 'X-EBAY-API-DEV-NAME: ' . $ebay->devID,
                 'X-EBAY-API-APP-NAME: ' . $ebay->clientID,
                 'X-EBAY-API-CERT-NAME: ' . $ebay->secretID,
                 'X-EBAY-API-CALL-NAME: ' . $callName,
                 'X-EBAY-API-SITEID: ' . $ebay->siteID,
-                'X-EBAY-C-MARKETPLACE-ID: ' . $ebay->marketplaceID],
-            ['Authorization:Bearer ' . $ebay->access_token, 'Accept:application/json', 'Content-Type:application/json', 'X-EBAY-C-MARKETPLACE-ID: ' . $ebay->marketplaceID, 'X-EBAY-C-ENDUSERCTX: contextualLocation=country%3DUS%2Czip%3D19406']];
+                'X-EBAY-C-MARKETPLACE-ID: ' . $ebay->marketplaceID
+            ],
+            [
+                'Authorization:Bearer ' . $ebay->access_token,
+                'Accept:application/json',
+                'Content-Type:application/json',
+                'X-EBAY-C-MARKETPLACE-ID: ' . $ebay->marketplaceID,
+//                'X-EBAY-C-ENDUSERCTX: contextualLocation=country%3DUS%2Czip%3D19406'
+            ]
+        ];
+
         return $headers[$number-1];
     }
 

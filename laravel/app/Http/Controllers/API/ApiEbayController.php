@@ -244,6 +244,77 @@ class ApiEbayController extends Controller
         return $aspects;
     }
 
+    public function getItemData($id)
+    {
+        $url = 'https://api.ebay.com/buy/browse/v1/item/' . $id;
+        $headers = EbayCurl::getCurlHeaders($this, 3);
+        $response = EbayCurl::sendCurl($this, $url, $headers, null, false);
+        $response = json_decode($response, true);
+
+        return $response;
+    }
+
+    public function getItemSpecifics($id)
+    {
+        $item = $this->getItemData($id);
+        $specifics = $item['localizedAspects'] ?? [];
+
+        return $specifics;
+    }
+
+    public function getItemsByEAN($ean) {
+        $result = [];
+
+        $url = 'https://api.ebay.com/buy/browse/v1/item_summary/search?q=' . $ean . '&limit=10';
+        $headers = EbayCurl::getCurlHeaders($this, 3);
+        $response = EbayCurl::sendCurl($this, $url, $headers, null, false);
+        $response = json_decode($response, true);
+
+        if(isset($response['itemSummaries']) && $response['itemSummaries']) {
+            $items = $response['itemSummaries'];
+
+            $result = [
+                'names' => [],
+                'prices' => [],
+            ];
+
+            $bestShopKey = 0;
+            $bestShopName = '';
+
+            foreach ($items as $key => $item) {
+                if (isset($item['seller']['username']) && $item['seller']['username'] == 'autodoc_shop') {
+                    $bestShopKey = $key;
+                    $bestShopName = $item['seller']['username'];
+                }
+
+                $result['names'][] = $item['title'];
+                $result['prices'][] = (float)($item['price']['value'] ?? null);
+            }
+
+            if ($bestShopName != 'autodoc_shop') {
+                $url = 'https://api.ebay.com/buy/browse/v1/item_summary/search?q=' . $ean . '&limit=100';
+                $headers = EbayCurl::getCurlHeaders($this, 3);
+                $response = EbayCurl::sendCurl($this, $url, $headers, null, false);
+                $response = json_decode($response, true);
+                $items = $response['itemSummaries'] ?? [];
+
+                foreach ($items as $key => $item) {
+                    if (isset($item['seller']['username']) && $item['seller']['username'] == 'autodoc_shop') {
+                        $bestShopKey = $key;
+                    }
+                }
+            }
+
+            if (isset($items[$bestShopKey]['title'])) {
+                $result['categoryId'] = $items[$bestShopKey]['categories'][0]['categoryId'] ?? null;
+                $result['photo'] = $items[$bestShopKey]['image']['imageUrl'] ?? null;
+                $result['specifics'] = $this->getItemSpecifics($items[$bestShopKey]['itemId']);
+            }
+        }
+
+        return $result;
+    }
+
     public function getCategoryByName($name) {
         $name = urlencode($name);
 
