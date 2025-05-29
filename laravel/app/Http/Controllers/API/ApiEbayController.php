@@ -301,6 +301,18 @@ class ApiEbayController extends Controller
                 foreach ($items as $key => $item) {
                     if (isset($item['seller']['username']) && $item['seller']['username'] == 'autodoc_shop') {
                         $bestShopKey = $key;
+                        $bestShopName = $item['seller']['username'];
+                    }
+                }
+            }
+
+            if ($bestShopName == 'autodoc_shop') {
+                if(isset($items[$bestShopKey]['title'])) {
+                    $index = array_search($items[$bestShopKey]['title'], $result['names']);
+
+                    if ($index !== false) {
+                        unset($result['names'][$index]);
+                        array_unshift($result['names'], $items[$bestShopKey]['title']);
                     }
                 }
             }
