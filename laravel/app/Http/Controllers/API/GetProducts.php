@@ -39,7 +39,8 @@ class GetProducts extends Controller
 
         $ebaySimilarProducts = DB::table('product_ebay_similar_products')
             ->whereIn('product_id', $products->pluck('id'))
-            ->get();
+            ->get()
+            ->groupBy('product_id');
 
         $products->transform(function ($product) use ($compatibilities, $brands, $oeCodes, $photos, $ebaySimilarProducts) {
             $brandKey = strtolower($product->producer_brand);
@@ -57,12 +58,12 @@ class GetProducts extends Controller
                 $product->oe_codes = [];
             }
 
-            if(isset($ebaySimilarProducts[$product->id])) {
-                $ebaySimilarProductsName = $ebaySimilarProducts[$product->id]->names;
+            if(isset($ebaySimilarProducts[$product->id][0])) {
+                $ebaySimilarProductsName = $ebaySimilarProducts[$product->id][0]->names;
                 $ebaySimilarProductsName = json_decode($ebaySimilarProductsName, true);
                 $ebaySimilarProductsName = implode("\n", $ebaySimilarProductsName);
                 $product->ebay_similar_products_name = $ebaySimilarProductsName;
-                $product->ebay_similar_products_photo = $ebaySimilarProducts[$product->id]->photo;
+                $product->ebay_similar_products_photo = $ebaySimilarProducts[$product->id][0]->photo;
             } else {
                 $product->oe_codes = [];
             }
