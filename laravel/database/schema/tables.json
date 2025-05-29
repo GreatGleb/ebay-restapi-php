@@ -269,11 +269,27 @@
                 },
                 {
                     "name": "photo",
-                    "type": "text",
+                    "type": "photo",
                     "nullable": true,
                     "default": null,
                     "comment": "Photo",
                     "sheet_column_name": "Photo"
+                },
+                {
+                    "name": "ebay_similar_products_name",
+                    "type": "text",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "eBay.de similar products names",
+                    "sheet_column_name": "eBay.de similar products names"
+                },
+                {
+                    "name": "ebay_similar_products_photo",
+                    "type": "photo",
+                    "nullable": true,
+                    "default": null,
+                    "comment": "eBay.de similar products photo",
+                    "sheet_column_name": "eBay.de similar products photo"
                 },
                 {
                     "name": "has_hologram",

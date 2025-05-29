@@ -37,7 +37,11 @@ class GetProducts extends Controller
             ->get()
             ->groupBy('product_id');
 
-        $products->transform(function ($product) use ($compatibilities, $brands, $oeCodes, $photos) {
+        $ebaySimilarProducts = DB::table('product_ebay_similar_products')
+            ->whereIn('product_id', $products->pluck('id'))
+            ->get();
+
+        $products->transform(function ($product) use ($compatibilities, $brands, $oeCodes, $photos, $ebaySimilarProducts) {
             $brandKey = strtolower($product->producer_brand);
             $product->producer_tecdoc_id = $brands[$brandKey]->tecdoc_id ?? null;
 
@@ -53,6 +57,16 @@ class GetProducts extends Controller
                 $product->oe_codes = [];
             }
 
+            if(isset($ebaySimilarProducts[$product->id])) {
+                $ebaySimilarProductsName = $ebaySimilarProducts[$product->id]->names;
+                $ebaySimilarProductsName = json_decode($ebaySimilarProductsName, true);
+                $ebaySimilarProductsName = implode("\n", $ebaySimilarProductsName);
+                $product->ebay_similar_products_name = $ebaySimilarProductsName;
+                $product->ebay_similar_products_photo = $ebaySimilarProducts[$product->id]->photo;
+            } else {
+                $product->oe_codes = [];
+            }
+
             if(isset($photos[$product->id])) {
                 $productPhotos = [];
                 $productPhotos['links'] = $photos[$product->id]->pluck('original_photo_url')->toArray() ?? [];
@@ -62,6 +76,10 @@ class GetProducts extends Controller
                     $withLogo = true;
                 }
                 $productPhotos['withLogo'] = $withLogo;
+
+                if(isset($productPhotos['links'][0])) {
+                    $product->photo = $productPhotos['links'][0];
+                }
 
                 $product->photos = $productPhotos;
             } else {

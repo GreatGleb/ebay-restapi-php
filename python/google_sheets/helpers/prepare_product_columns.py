@@ -99,6 +99,8 @@ class PrepareProductColumns:
                         value = '\'+'
                     else:
                         value = None
+            elif column_type == 'photo':
+                value = f'=IMAGE("{value}")'
             if db_key == 'oe_codes':
                 if source_type == 'fromDbToSheets':
                     if value:
@@ -123,11 +125,6 @@ class PrepareProductColumns:
                 elif source_type == 'fromDbToSheets':
                     if value and isinstance(value, dict) and value['links']:
                         withLogo = value['withLogo']
-                        photos = value['links']
-                        photo = photos[0]
-
-                        if photo:
-                            prepared_dict['photo'] = f'=IMAGE("{photo}")'
 
                         if withLogo:
                             value = 'saved to github with logo'
