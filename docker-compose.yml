@@ -162,6 +162,19 @@ services:
     networks:
       - ebay_restapi_network
 
+  photo-service:
+    build: ./photo-service
+    container_name: ebay_restapi_photo
+    volumes:
+      - ./photo-service:/photo-service
+    working_dir: /photo-service
+    env_file:
+      - .env
+    expose:
+      - "8000"
+    networks:
+      - ebay_restapi_network
+
 volumes:
   postgres_data:
 
