@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 import imghdr
+from PIL import Image, ImageFilter
 
 load_dotenv('/.env')
 
@@ -61,6 +62,7 @@ class Controller:
                 print(f"[403 Forbidden] Доступ запрещён. Возможно, нужен другой ключ или заголовки.")
 
                 return 403, 403
+            return None, None
         except requests.exceptions.RequestException as e:
             print(f"[RequestException] Failed to download {url}: {e}")
             return None, None
@@ -100,7 +102,10 @@ class Controller:
 
         shutil.move(str(downloaded_path), str(final_path))
 
-        return downloaded_photo
+        return {
+            'file_name': downloaded_photo,
+            'file_path': str(final_path)
+        }
 
     def git_commit_push(self):
         status_result = subprocess.run(
@@ -126,28 +131,74 @@ class Controller:
 
         return result
 
+    def add_logo_to_image(self, image_path, image_name):
+        try:
+            logo_path = "logo/logo.png"
+
+            logo = Image.open(logo_path)
+            img = Image.open(image_path)
+
+            img_width = img.width
+            img_height = img.height
+
+            logo_x_x = img_width - int(img_width/12)
+            logo_x_y = int(img_height/12)
+
+            size = img.width
+
+            new_size = int(size/8)
+            logo = logo.resize((new_size, new_size), Image.Resampling.LANCZOS)
+
+            new_img = Image.new("RGB", (img.width, img.height))
+            new_img.paste(img, (0, 0))
+            new_img.paste(logo, (logo_x_y, logo_x_y), logo)
+
+            branded_dir = self.repo_dir / 'branded'
+            branded_dir.mkdir(parents=True, exist_ok=True)
+            final_path = branded_dir / image_name
+
+            new_img.save(final_path)
+
+            return final_path.exists()
+        except Exception as e:
+            print(f"Ошибка при добавлении логотипа: {e}")
+            return False
+
     def test(self):
-        self.set_git_connection()
-
-        url = 'http://webservice.tecalliance.services/pegasus-3-0/documents/20888/845520187112708/0?api_key=2BeBXg67uLkZ2w57dH3wKkXX2p2DJgygGuUPSN8htSo3dpM7qBAy'
-        name = 'product4'
-
-        photo = self.save_photo(url, name)
-
-        result = self.git_commit_push()
-
-        return photo
-
-    async def save_photo_from_request(self, request: Request):
 #         self.delete_photo_dir()
         self.set_git_connection()
 
-        data = await request.json()
+        url = 'http://webservice.tecalliance.services/pegasus-3-0/documents/20888/845520187112708/0?api_key=2BeBXg67uLkZ2w57dH3wKkXX2p2DJgygGuUPSN8htSo3dpM7qBAy'
+        name = 'product5'
 
-        for item in data:
-            item['photo'] = self.save_photo(item['url'], item['name'])
+        photo = self.save_photo(url, name)
+        print(photo)
+
+        self.add_logo_to_image(photo['file_path'], photo['file_name'])
 
         result = self.git_commit_push()
+
+        return result
+
+    async def save_photo_from_request(self, request: Request):
+        self.delete_photo_dir()
+        self.set_git_connection()
+
+        items = await request.json()
+
+        for item in items:
+            photo = self.save_photo(item['url'], item['name'])
+            saved_with_logo = self.add_logo_to_image(photo['file_path'], photo['file_name'])
+
+            item['original_photo_url'] = '/original/' + photo['file_name']
+            item['cortexparts_photo_url'] = '/branded/' + photo['file_name']
+            item['saved_with_logo'] = saved_with_logo
+
+        result = self.git_commit_push()
+
+        data = {}
+        data['result'] = result
+        data['items'] = items
 
         return data
 

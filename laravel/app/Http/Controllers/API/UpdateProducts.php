@@ -140,7 +140,7 @@ class UpdateProducts extends Controller
 
             if(isset($tecDocProduct['error']) && $tecDocProduct['error']) {
                 echo "error</br>";
-                Log::add($logTraceId, 'foreach error ' . $key, 4);
+                Log::add($logTraceId, 'foreach error product-id:' . $tecDocProduct['product-id'], 4);
                 continue;
             }
 
@@ -295,6 +295,9 @@ class UpdateProducts extends Controller
             if($filteredPhotoUpdateData) {
                 $resultOfInsertingPhotos = ProductPhoto::insert($filteredPhotoUpdateData);
             }
+
+//            $resultOfDeletingPhotos = ProductPhoto::whereIn('product_id', $productIds)->delete();
+//            $resultOfInsertingPhotos = ProductPhoto::insert($photoUpdateData);
         }
         if ($tecdocUpdateData) {
             Log::add($logTraceId, 'update db tecdoc data', 3);

@@ -7,12 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Controller;
-use App\Models\Product;
-use App\Models\ProductOeCode;
-use App\Models\ProductCompatibility;
 use App\Models\ProductPhoto;
-use App\Models\ProducerBrand;
-use App\Models\ProductTecdocData;
 use App\Helpers\Log;
 
 class UpdateProductPhotos extends Controller
@@ -30,16 +25,8 @@ class UpdateProductPhotos extends Controller
 
         Log::add($logTraceId, 'got' . $countOfPhotos . ' photos what from tecalliance', 2);
 
-        $photoCounters = [];
-
         $chunkKey = 1;
-        $queryProductPhotos->chunk(10, function ($photosChunk) use ($logTraceId, &$chunkKey, &$photoCounters) {
-            if($chunkKey != 2) {
-
-                $chunkKey++;
-                return;
-            }
-
+        $queryProductPhotos->chunk(10, function ($photosChunk) use ($logTraceId, &$chunkKey) {
             Log::add($logTraceId, 'start chunk ' . $chunkKey . ' by 10 photos', 2);
             Log::add($logTraceId, 'prepare request for microservice', 3);
 
@@ -48,19 +35,17 @@ class UpdateProductPhotos extends Controller
             foreach ($photosChunk as $photo) {
                 $productId = $photo->product_id;
 
-                if (!isset($photoCounters[$productId])) {
-                    $photoCounters[$productId] = 1;
-                }
+                $photoWithOneProduct = ProductPhoto::where('product_id', $productId)->get();
+                $photoWithOneProductIndex = $photoWithOneProduct->pluck('id')->toArray();
+                $photoWithOneProductIndex = array_flip($photoWithOneProductIndex);
 
-                $photoIndex = $photoCounters[$productId];
+                $photoIndex = $photoWithOneProductIndex[$photo->id] + 1;
 
                 $filename = "{$productId}_{$photoIndex}";
 
-                $photoCounters[$productId]++;
-
                 $requestForMicroService[] = [
                     'id' => $photo->id,
-                    '$productId' => $productId,
+                    'product_id' => $productId,
                     'name' => $filename,
                     'url' => $photo->original_photo_url,
                 ];
@@ -78,11 +63,9 @@ class UpdateProductPhotos extends Controller
 
             $data = $response->json();
 
-            dd($data);
-
             if($data) {
                 Log::add($logTraceId, 'update db by tecdoc data', 3);
-//                $this->updateDbProductTablesFromTecDoc($data, $logTraceId);
+                $this->updateDb($data, $logTraceId);
             }
 
             $chunkKey = $chunkKey + 1;
@@ -93,5 +76,41 @@ class UpdateProductPhotos extends Controller
         Log::add($logTraceId, 'finish work', 1);
 
         return true;
+    }
+
+    public function updateDb($data, $logTraceId = null) {
+        Log::add($logTraceId, 'started update db', 3);
+
+        if($data['result']) {
+            $updateData = [];
+            $updateFields = [
+                'original_photo_url',
+                'cortexparts_photo_url',
+            ];
+
+            foreach ($data['items'] as $item) {
+                $original_photo_url = '';
+                $cortexparts_photo_url = null;
+
+                if($item['original_photo_url']) {
+                    $original_photo_url = 'https://cortexparts.github.io/photo' . $item['original_photo_url'];
+                }
+
+                if($item['cortexparts_photo_url']) {
+                    $cortexparts_photo_url = 'https://cortexparts.github.io/photo' . $item['cortexparts_photo_url'];
+                }
+
+                $updateData[] = [
+                    'id' => $item['id'],
+                    'product_id' => $item['product_id'],
+                    'original_photo_url' => $original_photo_url,
+                    'cortexparts_photo_url' => $cortexparts_photo_url,
+                ];
+            }
+
+            $resultOfUpdatingProducts = ProductPhoto::upsert($updateData, ['id'], $updateFields);
+        }
+
+        return $resultOfUpdatingProducts ?? false;
     }
 }
