@@ -280,8 +280,21 @@ class UpdateProducts extends Controller
                 ->values()
                 ->toArray();
 
-            $resultOfDeletingPhotos = ProductPhoto::whereIn('product_id', $productIds)->delete();
-            $resultOfInsertingPhotos = ProductPhoto::insert($photoUpdateData);
+            $productIdsWithPhotos = ProductPhoto::whereIn('product_id', $productIds)
+                ->pluck('product_id')
+                ->unique()
+                ->toArray();
+
+            $filteredPhotoUpdateData = collect($photoUpdateData)
+                ->reject(function ($photo) use ($productIdsWithPhotos) {
+                    return in_array($photo['product_id'], $productIdsWithPhotos);
+                })
+                ->values()
+                ->toArray();
+
+            if($filteredPhotoUpdateData) {
+                $resultOfInsertingPhotos = ProductPhoto::insert($filteredPhotoUpdateData);
+            }
         }
         if ($tecdocUpdateData) {
             Log::add($logTraceId, 'update db tecdoc data', 3);

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ApiEbayController;
 use App\Http\Controllers\API\UpdateProducts;
+use App\Http\Controllers\API\UpdateProductPhotos;
 use App\Http\Controllers\API\UpdateAutoPartnerStockAndPrice;
 use App\Http\Controllers\API\UpdateStockAndPrice;
 use App\Http\Controllers\API\GetProducts;
@@ -11,6 +12,7 @@ use App\Http\Controllers\API\GetJsonFiles;
 Route::post('/update/products', [UpdateProducts::class, 'run']);
 Route::get('/update/products/fromTecDoc', [UpdateProducts::class, 'fromTecDoc'])->name('updateProducts.fromTecDoc');
 Route::get('/update/products/fromEbay', [UpdateProducts::class, 'fromEbay'])->name('updateProducts.fromEbay');
+Route::get('/update/products/photos', [UpdateProductPhotos::class, 'run'])->name('updateProducts.photos');
 Route::get('/update/brands', [UpdateProducts::class, 'brands'])->name('updateBrands');
 Route::get('/ebay/getCategoriesText', [ApiEbayController::class, 'getCategoriesText'])->name('ebay.getCategoriesText');
 

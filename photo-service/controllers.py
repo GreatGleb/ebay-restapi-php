@@ -24,6 +24,9 @@ class Controller:
         self.stable_api_key = os.getenv('TECDOC_KEY_RM')
         self.stable_provider_id = os.getenv('TECDOC_PROVIDER_ID_RM')
 
+    def delete_photo_dir(self):
+        subprocess.run(["rm", "-rf", str(self.repo_dir)], check=True)
+
     def update_api_key(self, url: str, provider_id: str, new_api_key: str) -> str:
         parsed_url = urlparse(url)
 
@@ -89,7 +92,6 @@ class Controller:
             downloaded_photo, downloaded_path = self.download_photo(new_url, Path("/tmp/downloaded_photos"), filename)
 
         if not downloaded_photo or downloaded_photo == 403:
-            print(new_url)
             return False
 
         original_dir = self.repo_dir / "original"
@@ -115,8 +117,11 @@ class Controller:
             subprocess.run(["git", "-C", str(self.repo_dir), "pull", "--rebase"], check=True)
             subprocess.run(["git", "-C", str(self.repo_dir), "push"], capture_output=True, text=True)
 
+            print('saved')
             result = True
         else:
+            print(status_result)
+            print('not saved')
             result = False
 
         return result
@@ -132,5 +137,18 @@ class Controller:
         result = self.git_commit_push()
 
         return photo
+
+    async def save_photo_from_request(self, request: Request):
+#         self.delete_photo_dir()
+        self.set_git_connection()
+
+        data = await request.json()
+
+        for item in data:
+            item['photo'] = self.save_photo(item['url'], item['name'])
+
+        result = self.git_commit_push()
+
+        return data
 
 controller = Controller()

@@ -10,3 +10,11 @@ router.add_api_route(
     tags=["Test"],
     summary="Test"
 )
+
+router.add_api_route(
+    "/add",
+    controller.save_photo_from_request,
+    methods=["POST"],
+    tags=["Upload photos"],
+    summary="Upload photos"
+)
