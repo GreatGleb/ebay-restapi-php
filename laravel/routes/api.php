@@ -11,6 +11,7 @@ use App\Http\Controllers\API\GetJsonFiles;
 
 Route::post('/update/products', [UpdateProducts::class, 'run']);
 Route::get('/update/products/fromTecDoc', [UpdateProducts::class, 'fromTecDoc'])->name('updateProducts.fromTecDoc');
+Route::get('/update/products/fromApNextEu', [UpdateProducts::class, 'fromApNextEu'])->name('updateProducts.fromApNextEu');
 Route::get('/update/products/fromEbay', [UpdateProducts::class, 'fromEbay'])->name('updateProducts.fromEbay');
 Route::get('/update/products/photos', [UpdateProductPhotos::class, 'run'])->name('updateProducts.photos');
 Route::get('/update/brands', [UpdateProducts::class, 'brands'])->name('updateBrands');

@@ -867,13 +867,20 @@ class TecDocController
         return implode(",\n", $result);
     }
 
-    public function getAllBrands()
+    public function getAllBrandsRequestFunction()
     {
-        $request = new GetAmBrands();
         $request = (new GetAmBrands())
-            ->setArticleCountry('LT')//DE
+            ->setArticleCountry('PL')//DE
             ->setLang('en');
         $brands = $this->client->GetAmBrands($request)->getData();
+
+        return $brands;
+    }
+
+    public function getAllBrands()
+    {
+        $brands = $this->sendRequest([$this, 'getAllBrandsRequestFunction']);
+        $brands = $this->extractArrayOfObjectProperties($brands);
 
         return $brands;
     }
@@ -921,8 +928,8 @@ class TecDocController
 
             $filePath = $tokensDir . '/tokens.json';
 
-            if (!is_dir(__DIR__ . '/tokens')) {
-                mkdir(__DIR__ . '/tokens', 0755, true);
+            if (!is_dir($rootPath . '/tokens')) {
+                mkdir($rootPath . '/tokens', 0755, true);
             }
 
             file_put_contents($filePath, json_encode($data, JSON_PRETTY_PRINT));

@@ -27,6 +27,7 @@ $router = $app->make('router');
 $router->group(['prefix' => 'tecdoc'], function ($router) {
     $router->get('/', [TecDocController::class, 'index']);
     $router->post('/products-info', [UseTecDocController::class, 'getProductsInfo']);
+    $router->get('/get-all-brands', [UseTecDocController::class, 'getAllBrands']);
     $router->get('/{reference}', [UseTecDocController::class, 'testGetProductInfo']);
 });
 

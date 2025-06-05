@@ -15,12 +15,20 @@ class UseTecDocController
         return $info;
     }
 
+    function getAllBrands()
+    {
+        $tecdoc = new TecDocController(null);
+        $brands = $tecdoc->getAllBrands();
+
+        return $brands;
+    }
+
     function testGetProductInfo($reference) {
         $tecdoc = new TecDocController(null);
 //        $info = $tecdoc->getAllBrands();
-//        $info = $tecdoc->search($reference);
-//        $info = $tecdoc->getArticleIdByProductSupplierReference($reference, 403);
-        $info = $tecdoc->getInfoByProductSupplierReference($reference, 403);
+        $info = $tecdoc->search($reference);
+//        $info = $tecdoc->getArticleIdByProductSupplierReference($reference, null);
+//        $info = $tecdoc->getInfoByProductSupplierReference($reference, 403);
 //        $info = $tecdoc->getArticleData($reference, 'ru', true);
 
         dd($info);

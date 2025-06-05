@@ -10,3 +10,11 @@ router.add_api_route(
     tags=["Google Sheets"],
     summary="Get all available Google Sheets"
 )
+
+router.add_api_route(
+    "/products",
+    controller.products,
+    methods=["POST"],
+    tags=["Google Sheets"],
+    summary="Get all available Google Sheets"
+)

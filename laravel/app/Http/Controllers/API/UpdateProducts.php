@@ -542,11 +542,163 @@ class UpdateProducts extends Controller
         return $results;
     }
 
+    public function fromApNextEu($logTraceId = null): bool
+    {
+        Log::add($logTraceId, 'start work', 1);
+        Log::add($logTraceId, 'get products what not published to ebay', 2);
+
+        $queryProducts = Product::query()
+            ->where('products.published_to_ebay_de', false)
+            ->whereNull('products.name_original_pl')
+            ->orderBy('products.id');
+
+        $countOfProducts = $queryProducts->count();
+
+        Log::add($logTraceId, 'got' . $countOfProducts . ' products what not published to ebay', 2);
+
+        $chunkKey = 1;
+        $queryProducts->chunk(10, function ($products) use ($logTraceId, &$chunkKey) {
+            Log::add($logTraceId, 'start chunk ' . $chunkKey . ' by 10 products', 2);
+            Log::add($logTraceId, 'prepare request for scrapping', 3);
+
+            $requestForScrapping = [];
+
+            foreach ($products as $product) {
+                $reference = $product->tecdoc_number;
+
+                $requestForScrapping[] = [
+                    'id' => $product->id,
+                    'reference' => $reference,
+                ];
+            }
+
+            Log::add($logTraceId, 'send request to scrapping', 3);
+
+//            $url = "http://ebay_restapi_nginx/selenium/products";
+//            $response = Http::timeout(300)
+//                ->withHeaders([
+//                    'Content-Type' => 'application/json',
+//                    'Accept' => 'application/json',
+//                    'log-trace-id' => $logTraceId,
+//                ])->post($url, $requestForScrapping);
+//
+//            $data = $response->json();
+
+            $data = [
+                "result" => true,
+                "items" => [
+                    [
+                        "id" => 35,
+                        "reference" => "7175682",
+                        "parsed" => [
+                            "link" => "https://www.apnext.eu/pl/wyszukiwanie/1/1/7175682/pokrywa-mostu-iveco-daily-06/5734087",
+                            "name" => "POKRYWA MOSTU IVECO DAILY 06-",
+                            "brand_id" => "0",
+                            "main_stock" => 2,
+                            "second_stock" => 2,
+                            "price" => 28.54,
+                        ],
+                    ],
+                ],
+            ];
+
+            if($data) {
+                Log::add($logTraceId, 'update db by tecdoc data', 3);
+                $this->updateDbProductTablesFromApNextEu($data, $logTraceId);
+            }
+
+            $chunkKey = $chunkKey + 1;
+
+            Log::add($logTraceId, 'finish chunk', 3);
+        });
+
+        Log::add($logTraceId, 'finish work', 1);
+
+        return true;
+    }
+
+    private function updateDbProductTablesFromApNextEu($data, $logTraceId): array
+    {
+        $productUpdateData = [];
+        $productUpdateFields = [
+            'supplier_price_net',
+            'name_original_pl',
+            'link',
+            'stock_quantity_pl',
+            'stock_quantity_pruszkow',
+            'producer_brand',
+        ];
+
+        if(!$data['items']) {
+            return false;
+        }
+
+        $brandIds = array_unique(array_map(function($item) {
+            return $item['parsed']['brand_id'] ?? null;
+        }, $data['items']));
+
+        $brands = ProducerBrand::whereIn('tecdoc_id', $brandIds)->pluck('name', 'tecdoc_id')->toArray();
+
+        Log::add($logTraceId, 'start preparing foreach', 3);
+
+        foreach ($data['items'] as $item) {
+            if(!isset($item['parsed']['link'])) {
+                continue;
+            }
+
+            $producerBrand = null;
+
+            if(isset($item['parsed']['brand_id'])) {
+                try {
+                    $producerBrand = (int) $item['parsed']['brand_id'];
+                    $producerBrand = $brands[$producerBrand] ?? null;
+                } catch (Exception $e) {
+                    Log::add($logTraceId, 'Error while try get brand from parced item ' . $e->getMessage(), 3);
+                }
+            }
+
+            $productUpdateData[] = [
+                'id' => $item['id'],
+                'supplier_price_net' => $item['parsed']['price'] ?? null,
+                'name_original_pl' => $item['parsed']['name'] ?? null,
+                'link' => $item['parsed']['link'] ?? null,
+                'stock_quantity_pl' => $item['parsed']['main_stock'] ?? 0,
+                'stock_quantity_pruszkow' => $item['parsed']['second_stock'] ?? 0,
+                'producer_brand' => $producerBrand,
+            ];
+        }
+
+        Log::add($logTraceId, 'update db products', 3);
+        $resultOfUpdatingProducts = Product::upsert($productUpdateData, ['id'], $productUpdateFields);
+
+        return $resultOfUpdatingProducts;
+    }
+
     public function brands(): void
     {
-        ProducerBrand::insert([
-            "name" => "MAXGEAR",
-            "tecdoc_id" => 403
-        ]);
+        $logTraceId = null;
+
+        $url = "http://ebay_restapi_nginx/tecdoc/get-all-brands";
+        $response = Http::timeout(300)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+                'log-trace-id' => $logTraceId,
+            ])->get($url);
+
+        $data = $response->json();
+
+        if($data) {
+            $insertData = [];
+
+            foreach ($data as $brand) {
+                $insertData[] = [
+                    'name' => $brand['brandName'],
+                    'tecdoc_id' => $brand['brandId'],
+                ];
+            }
+
+            ProducerBrand::insert($insertData);
+        }
     }
 }
