@@ -8,7 +8,7 @@ use App\Models\Product;
 
 class UpdateStockAndPrice extends Controller
 {
-    public float $vatRate = 1.21;
+    public float $vatRate = 1.23;
     public function run(Request $request) {
         $profitPercentage = $request->profitPercentage ?? 30;
         $profitMultiplier = (float) $profitPercentage;

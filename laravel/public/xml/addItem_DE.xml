@@ -9,7 +9,7 @@
       $item->adding
       <VATDetails>
           <BusinessSeller>true</BusinessSeller>
-          <VATPercent>21.0</VATPercent>
+          <VATPercent>23.0</VATPercent>
       </VATDetails>
       <ConditionID>1000</ConditionID>
       <CategoryMappingAllowed>true</CategoryMappingAllowed>
