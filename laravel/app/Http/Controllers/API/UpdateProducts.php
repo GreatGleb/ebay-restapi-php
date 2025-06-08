@@ -574,33 +574,33 @@ class UpdateProducts extends Controller
 
             Log::add($logTraceId, 'send request to scrapping', 3);
 
-//            $url = "http://ebay_restapi_nginx/selenium/products";
-//            $response = Http::timeout(300)
-//                ->withHeaders([
-//                    'Content-Type' => 'application/json',
-//                    'Accept' => 'application/json',
-//                    'log-trace-id' => $logTraceId,
-//                ])->post($url, $requestForScrapping);
-//
-//            $data = $response->json();
+            $url = "http://ebay_restapi_nginx/selenium/products";
+            $response = Http::timeout(300)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                    'log-trace-id' => $logTraceId,
+                ])->post($url, $requestForScrapping);
 
-            $data = [
-                "result" => true,
-                "items" => [
-                    [
-                        "id" => 35,
-                        "reference" => "7175682",
-                        "parsed" => [
-                            "link" => "https://www.apnext.eu/pl/wyszukiwanie/1/1/7175682/pokrywa-mostu-iveco-daily-06/5734087",
-                            "name" => "POKRYWA MOSTU IVECO DAILY 06-",
-                            "brand_id" => "0",
-                            "main_stock" => 2,
-                            "second_stock" => 2,
-                            "price" => 28.54,
-                        ],
-                    ],
-                ],
-            ];
+            $data = $response->json();
+
+//            $data = [
+//                "result" => true,
+//                "items" => [
+//                    [
+//                        "id" => 35,
+//                        "reference" => "7175682",
+//                        "parsed" => [
+//                            "link" => "https://www.apnext.eu/pl/wyszukiwanie/1/1/7175682/pokrywa-mostu-iveco-daily-06/5734087",
+//                            "name" => "POKRYWA MOSTU IVECO DAILY 06-",
+//                            "brand_id" => "0",
+//                            "main_stock" => 2,
+//                            "second_stock" => 2,
+//                            "price" => 28.54,
+//                        ],
+//                    ],
+//                ],
+//            ];
 
             if($data) {
                 Log::add($logTraceId, 'update db by tecdoc data', 3);
