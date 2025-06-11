@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ApiEbayController;
+use App\Http\Controllers\ProductController;
 use App\Jobs\UpdateProductsFromTecDoc;
 use App\Jobs\UpdateProductsFromEbay;
 
@@ -12,6 +13,8 @@ Route::get('/exportEbay', [ApiEbayController::class, 'exportItems'])->name('ebay
 Route::get('', function () {
     return view('control_page');
 });
+
+Route::get('products/ebay/getHTML/{id}', [ProductController::class, 'getEbayProductHtml']);
 
 Route::get('/update/products/fromTecDoc/db&sheets', function () {
     return view('syncDBandSheetsFroTecDoc');
