@@ -456,7 +456,7 @@
                                 <ul>
                                     <li>Alle Rücksendungen müssen vor dem Versand über das eBay-Nachrichtensystem von uns genehmigt werden.</li>
                                     <li>Beschädigte Artikel müssen uns innerhalb von 24 Stunden nach Lieferung über das eBay-Nachrichtensystem mit einigen Fotos des Schadens melden.</li>
-                                    <li>Wir akzeptieren Rücksendungen gerne innerhalb von 30 Tagen nach Lieferdatum.</li>
+                                    <li>Wir akzeptieren Rücksendungen gerne innerhalb von 14 Tagen nach Lieferdatum.</li>
                                     <li>Wir übernehmen keine Rücksendekosten bei folgenden Gründen: passt nicht, entspricht nicht der Beschreibung oder den Fotos, funktioniert nicht oder ist defekt, wenn Sie vor dem Kauf nicht die Kompatibilität des Artikels mit der FIN (Fahrzeug-Identifikationsnummer) Ihres Fahrzeugs geprüft haben.</li>
                                     <li>Die Artikel müssen unbenutzt und im neuwertigen Zustand mit sämtlichem Originalzubehör (sofern enthalten) zurückgesendet werden.</li>
                                     <li>Alle zurückgesendeten Artikel werden vor der Rückerstattung geprüft.</li>
