@@ -20,6 +20,7 @@ return new class extends Migration
 
             $table->foreignId('product_id')->constrained();
             $table->text('xml')->nullable();
+            $table->boolean('uploading_at_current_moment')->default(false);
 
             // Timestamps
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));

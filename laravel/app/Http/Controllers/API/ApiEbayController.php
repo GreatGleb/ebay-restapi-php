@@ -1081,39 +1081,47 @@ class ApiEbayController extends Controller
         }
     }
 
-    public function prepareItemsBeforeAddToEbay($logTraceId = null)
+    public function prepareXMLtoEbay($logTraceId = null, $type = 'add')
     {
         set_time_limit(0);
 
-        $sellerProfiles = $this->getAllPolicies();
-        if(!$sellerProfiles) {
-            return False;
+        $sellerProfiles = [];
+        if($type == 'add') {
+            $sellerProfiles = $this->getAllPolicies();
+            if(!$sellerProfiles) {
+                return false;
+            }
         }
 
 //        $start = microtime(true);
 
-        $queryProducts = Product::
-            where('products.published_to_ebay_de', false)
-            ->whereNotNull('products.ebay_name_de')
-            ->orderBy('products.id');
+        if($type == 'update') {
+            $queryProducts = Product::
+                where('products.published_to_ebay_de', true)
+                ->whereNotNull('products.ebay_de_item_id')
+                ->orderBy('products.id');
+        } else {
+            $queryProducts = Product::
+                where('products.published_to_ebay_de', false)
+                ->whereNotNull('products.ebay_name_de')
+                ->orderBy('products.id');
+        }
 
 //        $countProducts = $queryProducts->count();
 
         $chunkKey = 0;
 
         //, $countProducts, $start
-        $queryProducts->chunk(10, function ($products) use ($logTraceId, $sellerProfiles, &$chunkKey) {
+        $queryProducts->chunk(10, function ($products) use ($logTraceId, $sellerProfiles, $type, &$chunkKey) {
 //            $end = microtime(true);
 //            $executionTime = $end - $start;
 //            $start = microtime(true);
 
             $chunkKey++;
 
-            if($chunkKey != 9) {
-                return;
-            }
-
-            $arrOfPreparedItemsXML = [];
+//            if($chunkKey != 1) {
+//                return;
+//            }
 
             $productIds = $products->pluck('id');
 
@@ -1134,34 +1142,140 @@ class ApiEbayController extends Controller
                 ->toArray();
 
             foreach ($products as $product) {
-                $exists = $this->checkIfItemExists($product['internal_reference']);
-                if($exists) {
-                    continue;
-                }
+//                $exists = $this->checkIfItemExists($product['internal_reference']);
+//                if($type == 'add') {
+//                    if ($exists) {
+//                        continue;
+//                    }
+//                } else if($type == 'update') {
+//                    if (!$exists) {
+//                        continue;
+//                    }
+//                }
 
                 $item = [];
 
                 $item['Country'] = 'LT';
                 $item['Location'] = 'Vilnius';
                 $item['PostalCode'] = '08214';
-                $item['SellerProfiles'] = $sellerProfiles;
-                $item['CategoryMappingAllowed'] = 'true';
-                $item['DispatchTimeMax'] = '1';
-                $item['ListingDuration'] = 'GTC';
-                $item['ListingType'] = 'FixedPriceItem';
-                $item['VATDetails'] = [
-                    'BusinessSeller' => 'true',
-                    'VATPercent' => '23.0',
-                ];
+                if($type == 'add') {
+                    $item['SellerProfiles'] = $sellerProfiles;
+                    $item['CategoryMappingAllowed'] = 'true';
+                    $item['DispatchTimeMax'] = '1';
+                    $item['ListingDuration'] = 'GTC';
+                    $item['ListingType'] = 'FixedPriceItem';
+                    $item['VATDetails'] = [
+                        'BusinessSeller' => 'true',
+                        'VATPercent' => '23.0',
+                    ];
+                    $item['Site'] = $this->marketplaceSite;
+                    $item['Currency'] = $this->currency;
+                    $item['ConditionID'] = '1000';
+
+                    $itemPhotos = $photos[$product->id]->pluck('cortexparts_photo_url')->toArray() ?? [];
+                    if(!$itemPhotos) {
+                        continue;
+                    }
+
+                    $item['PictureDetails'] = [
+                        'PictureURL' => $itemPhotos
+                    ];
+
+                    $itemOeCodes = $oeCodes[$product->id]->pluck('number')->toArray() ?? [];
+                    $itemOeCodesStr = implode(', ', $itemOeCodes);
+
+                    $ourDefinedSpecifics = [
+                        'Hersteller' => $product->producer_brand,
+                        'Herstellernummer' => $product->reference,
+                        'Herstellergarantie' => '6 Monate',
+                        'Oldtimer-Teil' => 'Nein',
+                        'Tuning- & Styling-Teil' => 'Nein',
+                        'EAN' => $product->ean
+                    ];
+
+                    $itemEbaySimilarProducts = $ebaySimilarProducts[$product->id][0] ?? [];
+                    if(!$itemEbaySimilarProducts || !$itemEbaySimilarProducts->specifics) {
+                        continue;
+                    }
+
+                    $itemEbaySimilarProducts = (array) $itemEbaySimilarProducts;
+                    $itemSpecificsFromEbaySimilarProducts = $itemEbaySimilarProducts['specifics'];
+                    $itemSpecificsFromEbaySimilarProducts = json_decode($itemSpecificsFromEbaySimilarProducts, true);
+
+                    $specificsDict = [];
+
+                    foreach ($itemSpecificsFromEbaySimilarProducts as $itemSpecific) {
+                        if(!isset($itemSpecific['name']) or !isset($itemSpecific['value'])) {
+                            continue;
+                        }
+
+                        $specName = $itemSpecific['name'];
+                        if(isset($ourDefinedSpecifics[$specName]) and $ourDefinedSpecifics[$specName]) {
+                            $specificsDict[$itemSpecific['name']] = $ourDefinedSpecifics[$specName];
+                            continue;
+                        }
+
+                        if($specName == 'Einbauposition') {
+                            $specPosition = str_replace("Sie die Kompatibilitätsinformationen", '', $itemSpecific['value']);
+                            $itemSpecific['value'] = $specPosition;
+                        }
+
+                        if($specName == 'Vergleichsnummer') {
+                            $itemSpecific['value'] = preg_replace('/autodoc/i', 'CortexParts', $itemSpecific['value']);
+                            $itemSpecific['value'] = EbayData::truncateWordsByLimit($itemSpecific['value']);
+                        }
+
+                        if($specName == 'OE/OEM Referenznummer(n)') {
+                            if($itemSpecific['value'] != $itemOeCodesStr) {
+                                $ebayOeCodes = explode(', ', $itemSpecific['value']);
+
+                                $itemSpecific['value'] = implode(', ',
+                                    collect($itemOeCodes)
+                                        ->merge($ebayOeCodes)
+                                        ->unique()
+                                        ->values()
+                                        ->all());
+                            }
+                        }
+
+                        $itemSpecific['value'] = trim(preg_replace('/\s+/', ' ', $itemSpecific['value']));
+                        $itemSpecific['value'] = mb_substr($itemSpecific['value'], 0, 65);
+
+                        $specName = trim(preg_replace('/\s+/', ' ', $specName));
+                        $specName = mb_substr($specName, 0, 65);
+
+                        $specificsDict[$specName] = $itemSpecific['value'];
+                    }
+
+                    $specifics = [];
+                    foreach ($specificsDict as $name => $value) {
+                        $specifics[] = [
+                            'Name' => $name,
+                            'Value' => $value
+                        ];
+                    }
+
+                    $item['ItemSpecifics'] = [
+                        'NameValueList' => $specifics
+                    ];
+
+                    $productCompatibilitiesIds = ProductCompatibility::
+                    where('product_id', $product->id)
+                        ->get()
+                        ->pluck('car_tecdoc_id')
+                        ->toArray();
+
+                    $productCompatibilities = EbayData::setCompatibiliesToXML($productCompatibilitiesIds);
+                    $item['ItemCompatibilityList'] = $productCompatibilities;
+                } else if($type == 'update') {
+                    $item['ItemID'] = $product->ebay_de_item_id;
+                }
 
                 $item['SKU'] = $product->internal_reference;
                 $item['Title'] = $product->ebay_name_de;
                 $item['PrimaryCategory'] = [
                     'CategoryID' => $product->category_id_ebay_de
                 ];
-                $item['Site'] = $this->marketplaceSite;
-                $item['Currency'] = $this->currency;
-                $item['ConditionID'] = '1000';
                 $item['StartPrice'] = $product->retail_price_gross;
 
                 $stock = $product->stock_quantity_pruszkow;
@@ -1170,90 +1284,6 @@ class ApiEbayController extends Controller
                 }
 
                 $item['Quantity'] = $stock;
-
-                $itemPhotos = $photos[$product->id]->pluck('cortexparts_photo_url')->toArray() ?? [];
-                if(!$itemPhotos) {
-                    continue;
-                }
-
-                $item['PictureDetails'] = [
-                    'PictureURL' => $itemPhotos
-                ];
-
-                $itemOeCodes = $oeCodes[$product->id]->pluck('number')->toArray() ?? [];
-                $itemOeCodesStr = implode(', ', $itemOeCodes);
-
-                $ourDefinedSpecifics = [
-                    'Hersteller' => $product->producer_brand,
-                    'Herstellernummer' => $product->reference,
-                    'Herstellergarantie' => '6 Monate',
-                    'Oldtimer-Teil' => 'Nein',
-                    'Tuning- & Styling-Teil' => 'Nein',
-                    'EAN' => $product->ean
-                ];
-
-                $itemEbaySimilarProducts = $ebaySimilarProducts[$product->id][0] ?? [];
-                if(!$itemEbaySimilarProducts || !$itemEbaySimilarProducts->specifics) {
-                    continue;
-                }
-
-                $itemEbaySimilarProducts = (array) $itemEbaySimilarProducts;
-                $itemSpecificsFromEbaySimilarProducts = $itemEbaySimilarProducts['specifics'];
-                $itemSpecificsFromEbaySimilarProducts = json_decode($itemSpecificsFromEbaySimilarProducts, true);
-
-                $specificsDict = [];
-
-                foreach ($itemSpecificsFromEbaySimilarProducts as $itemSpecific) {
-                    if(!isset($itemSpecific['name']) or !isset($itemSpecific['value'])) {
-                        continue;
-                    }
-
-                    $specName = $itemSpecific['name'];
-                    if(isset($ourDefinedSpecifics[$specName]) and $ourDefinedSpecifics[$specName]) {
-                        $specificsDict[$itemSpecific['name']] = $ourDefinedSpecifics[$specName];
-                        continue;
-                    }
-
-                    if($specName == 'Vergleichsnummer') {
-                        $itemSpecific['value'] = preg_replace('/autodoc/i', 'CortexParts', $itemSpecific['value']);
-                    }
-
-                    if($specName == 'OE/OEM Referenznummer(n)') {
-                        if($itemSpecific['value'] != $itemOeCodesStr) {
-                            $ebayOeCodes = explode(', ', $itemSpecific['value']);
-
-                            $itemSpecific['value'] = implode(', ',
-                                collect($itemOeCodes)
-                                ->merge($ebayOeCodes)
-                                ->unique()
-                                ->values()
-                                ->all());
-                        }
-                    }
-
-                    $specificsDict[$specName] = $itemSpecific['value'];
-                }
-
-                $specifics = [];
-                foreach ($specificsDict as $name => $value) {
-                    $specifics[] = [
-                        'Name' => $name,
-                        'Value' => $value
-                    ];
-                }
-
-                $item['ItemSpecifics'] = [
-                    'NameValueList' => $specifics
-                ];
-
-                $productCompatibilitiesIds = ProductCompatibility::
-                    where('product_id', $product->id)
-                    ->get()
-                    ->pluck('car_tecdoc_id')
-                    ->toArray();
-
-                $productCompatibilities = EbayData::setCompatibiliesToXML($productCompatibilitiesIds);
-                $item['ItemCompatibilityList'] = $productCompatibilities;
 
                 $productController = new ProductController();
                 $generatedHTML = $productController->getEbayProductHtml($product['id']);
@@ -1264,20 +1294,124 @@ class ApiEbayController extends Controller
                 ];
 
                 $xml = EbayData::arrayToXmlContent($item);
-                $arrOfPreparedItemsXML[] = [
-                    'id' => $product['id'],
-                    'product_id' => $product['id'],
-                    'xml' => $xml,
-                ];
+
+                $dbXMLitem = DB::table('product_prepared_xml_for_upload_to_ebay')
+                    ->where('product_id', $product['id'])
+                    ->where('type', $type)
+                    ->first();
+
+                if ($dbXMLitem) {
+                    DB::table('product_prepared_xml_for_upload_to_ebay')
+                        ->where('id', $dbXMLitem->id)
+                        ->update([
+                            'xml' => $xml,
+                        ]);
+                } else {
+                    DB::table('product_prepared_xml_for_upload_to_ebay')->insert([
+                        'product_id' => $product['id'],
+                        'type' => $type,
+                        'xml' => $xml,
+                    ]);
+                }
             }
 
-            DB::table('product_prepared_xml_for_upload_to_ebay')->upsert($arrOfPreparedItemsXML, ['id'], ['product_id', 'xml']);
 //            $end = microtime(true);
 //            $executionTime2 = $end - $start;
-//            dd($countProducts, 'db:' . $executionTime, 'xml+html:' . $executionTime2, $arrOfPreparedItemsXML);
+//            dd($countProducts, 'db:' . $executionTime, 'xml+html:' . $executionTime2);
         });
 
-        return True;
+        return true;
+    }
+
+    public function prepareXMLtoAddItems($logTraceId = null)
+    {
+        $this->prepareXMLtoEbay($logTraceId);
+    }
+    public function prepareXMLtoUpdateToEbay($logTraceId = null)
+    {
+        $this->prepareXMLtoEbay($logTraceId, 'update');
+    }
+
+    public function uploadPreparedItemsToEbay($logTraceId = null, $type = 'add')
+    {
+        if($type == 'add') {
+            $queryProducts = Product::
+                where('products.published_to_ebay_de', false)
+                ->whereNotNull('products.ebay_name_de')
+                ->orderBy('products.id');
+        } else if($type == 'update') {
+            $queryProducts = Product::
+                where('products.published_to_ebay_de', true)
+                ->whereNotNull('products.ebay_de_item_id')
+                ->orderBy('products.id');
+        }
+
+        $chunkKey = 0;
+
+        $results = [];
+
+        $queryProducts->chunk(10, function ($products) use ($logTraceId, &$chunkKey, $type, &$results) {
+            $productIds = $products->pluck('id');
+
+            $xmlItems = DB::table('product_prepared_xml_for_upload_to_ebay')
+                            ->whereIn('product_id', $productIds)
+                            ->where('uploading_at_current_moment', false)
+                            ->where('type', $type)
+                            ->get()
+                            ->toArray();
+
+            foreach ($xmlItems as $xmlItem) {
+                $reservedFromOtherProcesses = DB::table('product_prepared_xml_for_upload_to_ebay')
+                    ->where('id', $xmlItem->id)
+                    ->update([
+                        'uploading_at_current_moment' => true,
+                    ]);
+
+
+                if($reservedFromOtherProcesses) {
+                    if($type == 'add') {
+                        $result = $this->addItem($xmlItem);
+                    } else if($type == 'update') {
+                        $result = $this->reviseItem($xmlItem);
+                    }
+
+                    $result = json_encode($result);
+                    $result = json_decode($result,true);
+
+                    $results[] = $result;
+
+                    if($type == 'add') {
+                        if (isset($result['ItemID'])) {
+                            Product::where('id', $xmlItem->product_id)
+                                ->update([
+                                    'published_to_ebay_de' => true,
+                                    'ebay_de_item_id' => $result['ItemID']
+                                ]);
+                        }
+                    }
+                }
+
+                DB::table('product_prepared_xml_for_upload_to_ebay')
+                    ->where('id', $xmlItem->id)
+                    ->update([
+                        'uploading_at_current_moment' => false,
+                    ]);
+            }
+
+            $chunkKey++;
+        });
+
+        dd($results);
+    }
+
+    public function addPreparedItemsToEbay($logTraceId = null)
+    {
+        $this->uploadPreparedItemsToEbay($logTraceId);
+    }
+
+    public function updatePreparedItemsToEbay($logTraceId = null)
+    {
+        $this->uploadPreparedItemsToEbay($logTraceId, 'update');
     }
 
     public function importAdd(Request $request)

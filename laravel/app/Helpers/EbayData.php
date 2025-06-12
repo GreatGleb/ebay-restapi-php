@@ -593,7 +593,6 @@ class EbayData extends Ebay
 
     public static function setCompatibiliesToXML($compatibilitiesIds)
     {
-        $result = [];
         $compatibilityList = [];
 
         $thisClass = new EbayData();
@@ -634,7 +633,23 @@ class EbayData extends Ebay
             }
         }
 
-        $result['CompatibilityList'] = $compatibilityList;
+        return $compatibilityList;
+    }
+
+    public static function truncateWordsByLimit(string $str, int $limit = 65): string
+    {
+        $words = explode(', ', $str);
+        $result = '';
+
+        foreach ($words as $i => $word) {
+            $newPart = $i === 0 ? $word : ', ' . $word;
+
+            if (mb_strlen($result . $newPart) > $limit) {
+                break;
+            }
+
+            $result .= $newPart;
+        }
 
         return $result;
     }

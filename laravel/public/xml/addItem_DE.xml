@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AddItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
     <RequesterCredentials>
-    <eBayAuthToken>$ebay->access_token</eBayAuthToken>
+        <eBayAuthToken>$ebay->access_token</eBayAuthToken>
     </RequesterCredentials>
     <ErrorLanguage>en_US</ErrorLanguage>
     <WarningLevel>High</WarningLevel>
-    $item
+    $item->xml
 </AddItemRequest>

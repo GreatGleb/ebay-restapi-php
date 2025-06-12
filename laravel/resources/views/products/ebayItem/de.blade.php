@@ -386,7 +386,7 @@
 
                     <div class="line"></div>
 
-                    <p>Copyright &copy; <script>document.write(new Date().getFullYear())</script> CortexParts. All rights reserved.</p>
+                    <p>Copyright &copy; {{ $thisYear }} CortexParts. All rights reserved.</p>
                 </div>
             </section>
             <section id="shipp" class="tab-panel">
@@ -445,7 +445,7 @@
 
                 <div class="line"></div>
 
-                <p>Copyright &copy; <script>document.write(new Date().getFullYear())</script> CortexParts. All rights reserved.</p>
+                <p>Copyright &copy; {{ $thisYear }} CortexParts. All rights reserved.</p>
             </section>
             <section id="returns" class="tab-panel">
                 <div class="row">
@@ -472,7 +472,7 @@
 
                 <div class="line"></div>
 
-                <p>Copyright &copy; <script>document.write(new Date().getFullYear())</script> CortexParts. All rights reserved.</p>
+                <p>Copyright &copy; {{ $thisYear }} CortexParts. All rights reserved.</p>
             </section>
             <section id="feedback" class="tab-panel">
                 <div class="row">
@@ -493,7 +493,7 @@
 
                 <div class="line"></div>
 
-                <p>Copyright &copy; <script>document.write(new Date().getFullYear())</script> CortexParts. All rights reserved.</p>
+                <p>Copyright &copy; {{ $thisYear }} CortexParts. All rights reserved.</p>
             </section>
             <section id="contacts" class="tab-panel">
                 <div class="row">
@@ -516,7 +516,7 @@
 
                 <div class="line"></div>
 
-                <p>Copyright &copy; <script>document.write(new Date().getFullYear())</script> CortexParts. All rights reserved.</p>
+                <p>Copyright &copy; {{ $thisYear }} CortexParts. All rights reserved.</p>
             </section>
         </div>
     </div>

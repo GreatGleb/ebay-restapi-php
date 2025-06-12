@@ -37,7 +37,9 @@ class ProductController
             $product['photo'] = $photos['cortexparts_photo_url'] ?? null;
         }
 
-        $html = view('products.ebayItem.de', ['product' => $product])->render();
+        $thisYear = date('Y');
+
+        $html = view('products.ebayItem.de', ['product' => $product, 'thisYear' => $thisYear])->render();
 
         return $html;
     }

@@ -24,6 +24,9 @@
     <p>
         <a href="{{ route('ebay.prepareXMLtoAddItems') }}" target="_blank">To DB prepare&save xml before upload new items to eBay</a>
     </p>
+    <p>
+        <a href="{{ route('ebay.prepareXMLtoUpdateToEbay') }}" target="_blank">To DB prepare&save xml before update items to eBay</a>
+    </p>
     <h3>Update stock and price</h3>
     <p>
         <a href="{{ route('updateProductStockAndPrice.supplier.autoPartner') }}" target="_blank">Update DB products - stock and price from AutoPartner</a>
