@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers\API;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use App\Helpers\EbayCurl;
 use App\Helpers\EbayData;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\ProductController;
 use App\Imports\EbayImport;
-use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
+use App\Models\Product;
+use App\Models\ProductCompatibility;
+use App\Models\ProductOeCode;
+use App\Models\ProductPhoto;
 
 set_time_limit(300);
 error_reporting(E_ALL);
@@ -16,12 +22,30 @@ ini_set('memory_limit', '1024M');
 
 class ApiEbayController extends Controller
 {
-    protected $siteID = [100, 77][1];
-    protected $marketplaceID = ["EBAY_US", "EBAY_DE"][1];
-    protected $marketplaceLocale = ["en-US", "de-DE"][1];
-    protected $marketplaceShortLocale = ["US", "DE"][1];
-    protected $marketplaceSite = ["eBayMotors", "Germany"][1];
-    protected $currency = ["USD", "EUR"][1];
+    protected $siteID = [
+        'us' => 100,
+        'de' => 77,
+    ];
+    protected $marketplaceID = [
+        'us' => 'EBAY_US',
+        'de' => 'EBAY_DE',
+    ];
+    protected $marketplaceLocale = [
+        'us' => 'en-US',
+        'de' => 'de-DE',
+    ];
+    protected $marketplaceShortLocale = [
+        'us' => 'US',
+        'de' => 'DE',
+    ];
+    protected $marketplaceSite = [
+        'us' => "eBayMotors",
+        'de' => "Germany",
+    ];
+    protected $currency = [
+        'us' => "USD",
+        'de' => "EUR",
+    ];
     protected $clientID;
     protected $certID;
     protected $devID;
@@ -47,6 +71,14 @@ class ApiEbayController extends Controller
         $this->secretID = env('SECRET_ID', '');
         $this->ruName = env('RU_NAME', '');
         $this->codeAuth = base64_encode($this->clientID.':'.$this->certID);
+
+        $this->siteID = $this->siteID['de'];
+        $this->marketplaceID = $this->marketplaceID['de'];
+        $this->marketplaceLocale = $this->marketplaceLocale['de'];
+        $this->marketplaceShortLocale = $this->marketplaceShortLocale['de'];
+        $this->marketplaceSite = $this->marketplaceSite['de'];
+        $this->currency = $this->currency['de'];
+
         $this->getAccessToken();
     }
 
@@ -372,14 +404,57 @@ class ApiEbayController extends Controller
         $headers = EbayCurl::getCurlHeaders($this, 3);
         $url = 'https://api.ebay.com/sell/account/v1/payment_policy?marketplace_id=' . $this->marketplaceID;
         $response = EbayCurl::sendCurl($this, $url, $headers, null, false);
-        return $response;
+        return json_decode($response, true);
     }
 
     public function getReturnPolicies() {
         $headers = EbayCurl::getCurlHeaders($this, 3);
         $url = 'https://api.ebay.com/sell/account/v1/return_policy?marketplace_id=' . $this->marketplaceID;
         $response = EbayCurl::sendCurl($this, $url, $headers, null, false);
-        return $response;
+        return json_decode($response, true);
+    }
+
+    public function getAllPolicies()
+    {
+        $deliveryPolicies = $this->getFulfillmentPolicies()['fulfillmentPolicies'][0] ?? [];
+        $deliveryPolicyName = $deliveryPolicies['name'] ?? null;
+        $deliveryPolicyId = $deliveryPolicies['fulfillmentPolicyId'] ?? null;
+
+        $returnPolicies = $this->getReturnPolicies()['returnPolicies'][0] ?? [];
+        $returnPolicyName = $returnPolicies['name'] ?? null;
+        $returnPolicyId = $returnPolicies['returnPolicyId'] ?? null;
+
+        $paymentPolicies = $this->getPaymentPolicies()['paymentPolicies'][0] ?? [];
+        $paymentPolicyName = $paymentPolicies['name'] ?? null;
+        $paymentPolicyId = $paymentPolicies['paymentPolicyId'] ?? null;
+
+        if(!(
+            isset($deliveryPolicyName) and
+            isset($deliveryPolicyId) and
+            isset($returnPolicyName) and
+            isset($returnPolicyId) and
+            isset($paymentPolicyName) and
+            isset($paymentPolicyId)
+        )) {
+            return [];
+        }
+
+        $sellerProfiles = [
+            'SellerShippingProfile' => [
+                'ShippingProfileID' => $deliveryPolicyId,
+                'ShippingProfileName' => $deliveryPolicyName,
+            ],
+            'SellerReturnProfile' => [
+                'ReturnProfileID' => $returnPolicyId,
+                'ReturnProfileName' => $returnPolicyName,
+            ],
+            'SellerPaymentProfile' => [
+                'PaymentProfileID' => $paymentPolicyId,
+                'PaymentProfileName' => $paymentPolicyName,
+            ]
+        ];
+
+        return $sellerProfiles;
     }
 
     public function getItem($item) {
@@ -395,7 +470,8 @@ class ApiEbayController extends Controller
     public function getSellerList() {
         $result = [];
 
-        $result[] = $this->getByDatesSellerList(['2023-03-16', '2023-04-20']);
+        $result[] = $this->getByDatesSellerList(['2025-03-01', '2025-06-08']);
+
         $result = Arr::collapse($result);
 
         $this->items = $result;
@@ -450,6 +526,7 @@ class ApiEbayController extends Controller
         $postFields = EbayCurl::getCurlPostFields($this, 'sellerList', $item);
 
         $response = EbayCurl::sendCurl($this, $this->linkAPI, $headers, $postFields);
+
         return $response;
     }
 
@@ -661,16 +738,16 @@ class ApiEbayController extends Controller
         return $result;
     }
 
-    public function checkIfItemExists($sku, $title) {
+    public function checkIfItemExists($sku) {
+        $itsExists = 0;
+
         if(!isset($this->items)) {
             $this->getSellerList();
         }
 
-        $itsExists = 0;
-
         foreach($this->items as $item) {
             if (isset($item["SKU"])) {
-                if ($item["SKU"] == $sku and $item["Title"] == $title) {
+                if ($item["SKU"] == $sku) {
                     $itsExists = 1;
                 }
             }
@@ -1004,6 +1081,205 @@ class ApiEbayController extends Controller
         }
     }
 
+    public function prepareItemsBeforeAddToEbay($logTraceId = null)
+    {
+        set_time_limit(0);
+
+        $sellerProfiles = $this->getAllPolicies();
+        if(!$sellerProfiles) {
+            return False;
+        }
+
+//        $start = microtime(true);
+
+        $queryProducts = Product::
+            where('products.published_to_ebay_de', false)
+            ->whereNotNull('products.ebay_name_de')
+            ->orderBy('products.id');
+
+//        $countProducts = $queryProducts->count();
+
+        $chunkKey = 0;
+
+        //, $countProducts, $start
+        $queryProducts->chunk(10, function ($products) use ($logTraceId, $sellerProfiles, &$chunkKey) {
+//            $end = microtime(true);
+//            $executionTime = $end - $start;
+//            $start = microtime(true);
+
+            $chunkKey++;
+
+            if($chunkKey != 9) {
+                return;
+            }
+
+            $arrOfPreparedItemsXML = [];
+
+            $productIds = $products->pluck('id');
+
+            $photos = ProductPhoto::
+                whereIn('product_id', $productIds)
+                ->get()
+                ->groupBy('product_id');
+
+            $oeCodes = ProductOeCode::
+                whereIn('product_id', $productIds)
+                ->get()
+                ->groupBy('product_id');
+
+            $ebaySimilarProducts = \DB::table('product_ebay_similar_products')
+                ->whereIn('product_id', $productIds)
+                ->get()
+                ->groupBy('product_id')
+                ->toArray();
+
+            foreach ($products as $product) {
+                $exists = $this->checkIfItemExists($product['internal_reference']);
+                if($exists) {
+                    continue;
+                }
+
+                $item = [];
+
+                $item['Country'] = 'LT';
+                $item['Location'] = 'Vilnius';
+                $item['PostalCode'] = '08214';
+                $item['SellerProfiles'] = $sellerProfiles;
+                $item['CategoryMappingAllowed'] = 'true';
+                $item['DispatchTimeMax'] = '1';
+                $item['ListingDuration'] = 'GTC';
+                $item['ListingType'] = 'FixedPriceItem';
+                $item['VATDetails'] = [
+                    'BusinessSeller' => 'true',
+                    'VATPercent' => '23.0',
+                ];
+
+                $item['SKU'] = $product->internal_reference;
+                $item['Title'] = $product->ebay_name_de;
+                $item['PrimaryCategory'] = [
+                    'CategoryID' => $product->category_id_ebay_de
+                ];
+                $item['Site'] = $this->marketplaceSite;
+                $item['Currency'] = $this->currency;
+                $item['ConditionID'] = '1000';
+                $item['StartPrice'] = $product->retail_price_gross;
+
+                $stock = $product->stock_quantity_pruszkow;
+                if(!$stock && $product->stock_quantity_pl) {
+                    $stock = $product->stock_quantity_pl;
+                }
+
+                $item['Quantity'] = $stock;
+
+                $itemPhotos = $photos[$product->id]->pluck('cortexparts_photo_url')->toArray() ?? [];
+                if(!$itemPhotos) {
+                    continue;
+                }
+
+                $item['PictureDetails'] = [
+                    'PictureURL' => $itemPhotos
+                ];
+
+                $itemOeCodes = $oeCodes[$product->id]->pluck('number')->toArray() ?? [];
+                $itemOeCodesStr = implode(', ', $itemOeCodes);
+
+                $ourDefinedSpecifics = [
+                    'Hersteller' => $product->producer_brand,
+                    'Herstellernummer' => $product->reference,
+                    'Herstellergarantie' => '6 Monate',
+                    'Oldtimer-Teil' => 'Nein',
+                    'Tuning- & Styling-Teil' => 'Nein',
+                    'EAN' => $product->ean
+                ];
+
+                $itemEbaySimilarProducts = $ebaySimilarProducts[$product->id][0] ?? [];
+                if(!$itemEbaySimilarProducts || !$itemEbaySimilarProducts->specifics) {
+                    continue;
+                }
+
+                $itemEbaySimilarProducts = (array) $itemEbaySimilarProducts;
+                $itemSpecificsFromEbaySimilarProducts = $itemEbaySimilarProducts['specifics'];
+                $itemSpecificsFromEbaySimilarProducts = json_decode($itemSpecificsFromEbaySimilarProducts, true);
+
+                $specificsDict = [];
+
+                foreach ($itemSpecificsFromEbaySimilarProducts as $itemSpecific) {
+                    if(!isset($itemSpecific['name']) or !isset($itemSpecific['value'])) {
+                        continue;
+                    }
+
+                    $specName = $itemSpecific['name'];
+                    if(isset($ourDefinedSpecifics[$specName]) and $ourDefinedSpecifics[$specName]) {
+                        $specificsDict[$itemSpecific['name']] = $ourDefinedSpecifics[$specName];
+                        continue;
+                    }
+
+                    if($specName == 'Vergleichsnummer') {
+                        $itemSpecific['value'] = preg_replace('/autodoc/i', 'CortexParts', $itemSpecific['value']);
+                    }
+
+                    if($specName == 'OE/OEM Referenznummer(n)') {
+                        if($itemSpecific['value'] != $itemOeCodesStr) {
+                            $ebayOeCodes = explode(', ', $itemSpecific['value']);
+
+                            $itemSpecific['value'] = implode(', ',
+                                collect($itemOeCodes)
+                                ->merge($ebayOeCodes)
+                                ->unique()
+                                ->values()
+                                ->all());
+                        }
+                    }
+
+                    $specificsDict[$specName] = $itemSpecific['value'];
+                }
+
+                $specifics = [];
+                foreach ($specificsDict as $name => $value) {
+                    $specifics[] = [
+                        'Name' => $name,
+                        'Value' => $value
+                    ];
+                }
+
+                $item['ItemSpecifics'] = [
+                    'NameValueList' => $specifics
+                ];
+
+                $productCompatibilitiesIds = ProductCompatibility::
+                    where('product_id', $product->id)
+                    ->get()
+                    ->pluck('car_tecdoc_id')
+                    ->toArray();
+
+                $productCompatibilities = EbayData::setCompatibiliesToXML($productCompatibilitiesIds);
+                $item['ItemCompatibilityList'] = $productCompatibilities;
+
+                $productController = new ProductController();
+                $generatedHTML = $productController->getEbayProductHtml($product['id']);
+                $item['description'] = $generatedHTML;
+
+                $item = [
+                    'Item' => $item
+                ];
+
+                $xml = EbayData::arrayToXmlContent($item);
+                $arrOfPreparedItemsXML[] = [
+                    'id' => $product['id'],
+                    'product_id' => $product['id'],
+                    'xml' => $xml,
+                ];
+            }
+
+            DB::table('product_prepared_xml_for_upload_to_ebay')->upsert($arrOfPreparedItemsXML, ['id'], ['product_id', 'xml']);
+//            $end = microtime(true);
+//            $executionTime2 = $end - $start;
+//            dd($countProducts, 'db:' . $executionTime, 'xml+html:' . $executionTime2, $arrOfPreparedItemsXML);
+        });
+
+        return True;
+    }
+
     public function importAdd(Request $request)
     {
         $emptyStatus = 'ItsAlreadyWas';
@@ -1025,6 +1301,7 @@ class ApiEbayController extends Controller
                 'Herstellergarantie:' => 'garantie', 'Hersteller:' => 'hersteller', 'Produkttyp:' => 'produkttyp',
                 'Country/Region of Manufacture' => 'country', 'Country' => 'country', 'GABARIT'=>'deliveryMethod',
                 'Länge mm'=>'length', 'Einbauposition'=>'position', 'Vergleichsnummer' => 'vergleichsnummer', 'Keywords'=>'keywords'];
+
             $h = 0;
             foreach ($headers as $header) {
                 if (!in_array($header, $allowedFields)) {
@@ -1137,6 +1414,7 @@ class ApiEbayController extends Controller
                 }
                 $n++;
             }
+
             $i = 0;
             $result = 0;
             while(!$result) {

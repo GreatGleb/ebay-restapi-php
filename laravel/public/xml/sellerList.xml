@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <GetSellerListRequest xmlns="urn:ebay:apis:eBLBaseComponents">
-  <RequesterCredentials>
-    <eBayAuthToken>$ebay->access_token</eBayAuthToken>
-  </RequesterCredentials>
+    <RequesterCredentials>
+        <eBayAuthToken>$ebay->access_token</eBayAuthToken>
+    </RequesterCredentials>
     <ErrorLanguage>en_US</ErrorLanguage>
     <WarningLevel>High</WarningLevel>
-  <GranularityLevel>Coarse</GranularityLevel>
-  <EndTimeFrom>$item->timeFrom</EndTimeFrom>
-  <EndTimeTo>$item->timeTo</EndTimeTo>
-  <IncludeWatchCount>true</IncludeWatchCount>
-  <Pagination>
-    <EntriesPerPage>200</EntriesPerPage>
-    <PageNumber>$item->pageNumber</PageNumber>
-  </Pagination>
+    <GranularityLevel>Coarse</GranularityLevel>
+    <StartTimeFrom>$item->timeFrom</StartTimeFrom>
+    <StartTimeTo>$item->timeTo</StartTimeTo>
+    <IncludeWatchCount>true</IncludeWatchCount>
+    <Pagination>
+        <EntriesPerPage>200</EntriesPerPage>
+        <PageNumber>$item->pageNumber</PageNumber>
+    </Pagination>
 </GetSellerListRequest>

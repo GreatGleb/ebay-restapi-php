@@ -14,13 +14,20 @@ class ProductController
         if(isset($product['specifics_de'])) {
             $specifics = [];
 
-            $lines = explode(',', $product['specifics_de']);
+            $lines = explode("\n", $product['specifics_de']);
             foreach ($lines as $line) {
                 $line = trim($line);
+                $line = rtrim($line, ", \t\r\0\x0B");
                 if ($line === '') continue;
 
-                [$name, $value] = array_map('trim', explode(' - ', $line, 2));
-                $specifics[] = ['name' => $name, 'value' => $value];
+                $explodedLine = array_map('trim', explode(' - ', $line, 2));
+
+                if (count($explodedLine) === 2) {
+                    [$name, $value] = $explodedLine;
+                    $specifics[] = ['name' => $name, 'value' => $value];
+                } else {
+                    dd('Problem specific line:', $product['specifics_de'], $line);
+                }
             }
 
             $product['specifics_de'] = $specifics;

@@ -8,10 +8,10 @@ use App\Imports\EbayImport;
 class EbayData extends Ebay
 {
     private function getAllCompatibilities() {
-        $file = public_path() . '\ebay_models.xlsx';
+        $dirPath = storage_path('app/private');
+        $file = $dirPath . '/ebay_models.xlsx';
 
         $compatibilities = (new EbayImport)->toArray($file)[0];
-
         return $compatibilities;
     }
 
@@ -163,47 +163,6 @@ class EbayData extends Ebay
                 }
 
                 $XMLText = EbayData::getXMLSpecifications($values);
-                break;
-            case 'compatibility':
-                $values = explode(", ", $values);
-
-                $thisClass = new EbayData();
-                $XMLText = '<ItemCompatibilityList>';
-                $compatibilities = $thisClass->getAllCompatibilities();
-                foreach ($compatibilities as $compatibility) {
-                    if (in_array($compatibility[0], $values)) {
-                        $XMLText .= <<< EOD
-                <Compatibility>
-                 <NameValueList/>
-                 <NameValueList>
-                   <Name>Year</Name>
-                   <Value>$compatibility[5]</Value>
-                 </NameValueList>
-                 <NameValueList>
-                   <Name>Make</Name>
-                   <Value>$compatibility[1]</Value>
-                 </NameValueList>
-                 <NameValueList>
-                   <Name>Model</Name>
-                   <Value>$compatibility[2]</Value>
-                 </NameValueList>
-                 <NameValueList>
-                   <Name>Platform</Name>
-                   <Value>$compatibility[4]</Value>
-                 </NameValueList>
-                 <NameValueList>
-                   <Name>Trim</Name>
-                   <Value>$compatibility[3]</Value>
-                 </NameValueList>
-                 <NameValueList>
-                   <Name>CCM</Name>
-                   <Value>$compatibility[6]</Value>
-                 </NameValueList>
-               </Compatibility>
-        EOD;
-                    }
-                }
-                $XMLText .= '</ItemCompatibilityList>';
                 break;
             case 'deliveryMethod':
                 $XMLText = "<SellerShippingProfile><ShippingProfileID>" . $values['id'];
@@ -535,5 +494,148 @@ class EbayData extends Ebay
 
             EbayData::setImportLogResult($fileNameForLogs, $log);
         }
+    }
+
+    public static function arrayToXmlContent(array $data, \SimpleXMLElement $xml = null): string
+    {
+        if ($xml === null) {
+            $xml = new \SimpleXMLElement('<root/>');
+        }
+
+        self::appendArrayToXml($data, $xml);
+
+        $dom = dom_import_simplexml($xml)->ownerDocument;
+        $dom->formatOutput = false;
+
+        $innerXml = '';
+        foreach ($dom->documentElement->childNodes as $child) {
+            $innerXml .= $dom->saveXML($child);
+        }
+
+        return $innerXml;
+    }
+
+    private static function appendArrayToXml(array $data, \SimpleXMLElement $xml): void
+    {
+        foreach ($data as $key => $value) {
+            self::appendValueToXml($key, $value, $xml);
+        }
+    }
+
+    private static function appendValueToXml(string $key, $value, \SimpleXMLElement $xml): void
+    {
+        $type = self::detectType($value);
+
+        if($type == 'primitive')
+            self::handlePrimitive($key, $value, $xml);
+        else if($type == 'assoc')
+            self::handleAssoc($key, $value, $xml);
+        else if($type == 'listOfAssoc')
+            self::handleListOfAssoc($key, $value, $xml);
+        else if($type == 'listOfPrimitive')
+            self::handleListOfPrimitive($key, $value, $xml);
+    }
+
+    private static function detectType($value): string
+    {
+        if (!is_array($value)) return 'primitive';
+
+        if (self::isAssoc($value)) return 'assoc';
+
+        foreach ($value as $item) {
+            if (is_array($item)) return 'listOfAssoc';
+        }
+
+        return 'listOfPrimitive';
+    }
+
+    private static function isAssoc(array $arr): bool {
+        return array_keys($arr) !== range(0, count($arr) - 1);
+    }
+
+    private static function handlePrimitive(string $key, $value, \SimpleXMLElement $xml): void
+    {
+        $xml->addChild($key, self::sanitizeValue($value));
+    }
+
+    private static function handleAssoc(string $key, array $value, \SimpleXMLElement $xml): void
+    {
+        $child = $xml->addChild($key);
+        self::appendArrayToXml($value, $child);
+    }
+
+    private static function handleListOfAssoc(string $key, array $value, \SimpleXMLElement $xml): void
+    {
+        if($key == 'CompatibilityList') {
+            $child = $xml->addChild($key);
+            foreach ($value as $item) {
+                self::appendArrayToXml($item, $child);
+            }
+        } else {
+            foreach ($value as $item) {
+                $child = $xml->addChild($key);
+                self::appendArrayToXml($item, $child);
+            }
+        }
+    }
+
+    private static function handleListOfPrimitive(string $key, array $value, \SimpleXMLElement $xml): void
+    {
+        foreach ($value as $item) {
+            $xml->addChild($key, self::sanitizeValue($item));
+        }
+    }
+
+    private static function sanitizeValue($value): string
+    {
+        return htmlspecialchars((string)$value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+    }
+
+    public static function setCompatibiliesToXML($compatibilitiesIds)
+    {
+        $result = [];
+        $compatibilityList = [];
+
+        $thisClass = new EbayData();
+        $compatibilities = $thisClass->getAllCompatibilities();
+
+        foreach ($compatibilities as $compatibility) {
+            if (in_array($compatibility[0], $compatibilitiesIds)) {
+                $compatibilityList[] = [
+                    'Compatibility' => [
+                        'NameValueList' => [
+                            [
+                                'Name' => 'Year',
+                                'Value' => $compatibility[5]
+                            ],
+                            [
+                                'Name' => 'Make',
+                                'Value' => $compatibility[1]
+                            ],
+                            [
+                                'Name' => 'Model',
+                                'Value' => $compatibility[2]
+                            ],
+                            [
+                                'Name' => 'Platform',
+                                'Value' => $compatibility[4]
+                            ],
+                            [
+                                'Name' => 'Trim',
+                                'Value' => $compatibility[3]
+                            ],
+                            [
+                                'Name' => 'CCM',
+                                'Value' => $compatibility[6]
+                            ]
+                        ]
+                    ]
+                ];
+            }
+        }
+
+        $result['CompatibilityList'] = $compatibilityList;
+
+        return $result;
     }
 }

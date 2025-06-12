@@ -1,34 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AddItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
-  <RequesterCredentials>
+    <RequesterCredentials>
     <eBayAuthToken>$ebay->access_token</eBayAuthToken>
-  </RequesterCredentials>
-  <ErrorLanguage>en_US</ErrorLanguage>
-  <WarningLevel>High</WarningLevel>
-  <Item>
-      $item->adding
-      <VATDetails>
-          <BusinessSeller>true</BusinessSeller>
-          <VATPercent>23.0</VATPercent>
-      </VATDetails>
-      <ConditionID>1000</ConditionID>
-      <CategoryMappingAllowed>true</CategoryMappingAllowed>
-      <Country>LT</Country>
-      <DispatchTimeMax>3</DispatchTimeMax>
-      <ListingDuration>GTC</ListingDuration>
-      <ListingType>FixedPriceItem</ListingType>
-      <Location>City</Location>
-      <PostalCode>43333</PostalCode>
-      <SellerProfiles>
-        $item->deliveryMethod
-        <SellerReturnProfile>
-          <ReturnProfileID>2#######6</ReturnProfileID>
-          <ReturnProfileName>Rücksendung von Waren</ReturnProfileName>
-        </SellerReturnProfile>
-        <SellerPaymentProfile>
-          <PaymentProfileID>2########6</PaymentProfileID>
-          <PaymentProfileName>eBay Managed Payments</PaymentProfileName>
-        </SellerPaymentProfile>
-      </SellerProfiles>
-  </Item>
+    </RequesterCredentials>
+    <ErrorLanguage>en_US</ErrorLanguage>
+    <WarningLevel>High</WarningLevel>
+    $item
 </AddItemRequest>

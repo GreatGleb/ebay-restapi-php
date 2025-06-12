@@ -8,7 +8,11 @@ RUN apt-get update && apt-get install -y \
     zip \
     libzip-dev \
     libpq-dev \
-    && docker-php-ext-install pdo pdo_pgsql ftp zip \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd pdo pdo_pgsql ftp zip \
     && rm -rf /var/lib/apt/lists/*
 
 # Устанавливаем Composer
@@ -16,6 +20,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 
 # Копируем исходный код в контейнер
 COPY . /var/www/laravel
+COPY ./php-fpm-www.conf/www.conf /usr/local/etc/php-fpm.d/www.conf
 
 # Указываем рабочую директорию
 WORKDIR /var/www/laravel
