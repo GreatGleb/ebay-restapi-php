@@ -674,6 +674,77 @@ class UpdateProducts extends Controller
         return $resultOfUpdatingProducts;
     }
 
+    public function setOrderOfUploadingNewProductsToEbay()
+    {
+        $products = Product::
+            where('products.published_to_ebay_de', false)
+            ->whereNotNull('products.product_type_en')
+            ->orderBy('products.id')
+            ->get();
+
+        $productsGroup = [];
+
+        foreach ($products as $product) {
+            $productType = $product->product_type_en;
+
+            if(!isset($productsGroup[$productType])) {
+                $productsGroup[$productType] = [];
+            }
+
+            $productsGroup[$productType][] = $product->id;
+        }
+
+        $productsIdInOrder = [];
+
+        foreach ($productsGroup as $productType => $productIds) {
+            while($productsGroup[$productType]) {
+                foreach ($productsGroup as $productType2 => $productIds2) {
+                    $productId = array_shift($productsGroup[$productType2]);
+
+                    if ($productId) {
+                        $item = [
+                            'type' => $productType2,
+                            'id' => $productId,
+                        ];
+
+                        $productsIdInOrder[] = $item;
+                    }
+                }
+            }
+        }
+
+        $dbRequest = [];
+
+        foreach ($productsIdInOrder as $key => $item) {
+            $dbRequest[] = [
+                'id' => $item['id'],
+                'order_creation_to_ebay_de' => $key
+            ];
+        }
+
+        $resultOfUpdating = Product::upsert($dbRequest, ['id'], ['order_creation_to_ebay_de']);
+
+//        $products2 = Product::
+//            where('products.published_to_ebay_de', false)
+//            ->whereNotNull('products.product_type_en')
+//            ->whereNotNull('products.order_creation_to_ebay_de')
+//            ->orderBy('products.order_creation_to_ebay_de')
+//            ->get();
+//
+//        foreach ($products2 as $item) {
+//            $photo = ProductPhoto::where('product_id', $item['id'])->first();
+//            if($photo and $photo->cortexparts_photo_url) {
+//                $photo = $photo->cortexparts_photo_url;
+//
+//                echo '<img src="' . $photo . '" width="50px" />';
+//            }
+//
+//            echo $item->product_type_en . ' ' . $item['id'] . "<br>";
+//        }
+
+        return $resultOfUpdating;
+    }
+
     public function brands(): void
     {
         $logTraceId = null;

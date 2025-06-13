@@ -16,7 +16,7 @@ Route::get('/update/products/fromApNextEu', [UpdateProducts::class, 'fromApNextE
 Route::get('/update/products/fromEbay', [UpdateProducts::class, 'fromEbay'])->name('updateProducts.fromEbay');
 Route::get('/update/products/photos', [UpdateProductPhotos::class, 'run'])->name('updateProducts.photos');
 Route::get('/update/brands', [UpdateProducts::class, 'brands'])->name('updateBrands');
-Route::get('/ebay/getCategoriesText', [ApiEbayController::class, 'getCategoriesText'])->name('ebay.getCategoriesText');
+Route::get('/update/products/orderUploadingToEbay', [UpdateProducts::class, 'setOrderOfUploadingNewProductsToEbay']);
 
 Route::get('/update/products/ebayHTML', [PrepareProductsBeforeEbay::class, 'html']);
 
@@ -29,6 +29,7 @@ Route::get('/update/stockAndPrice/calculate', [UpdateStockAndPrice::class, 'run'
 Route::get('/ebay/run', [ApiEbayController::class, 'index']);
 Route::post('/ebay/updateEbay', [ApiEbayController::class, 'updateStockAndPrice'])->name('ebay.update');
 
+Route::get('/ebay/getCategoriesText', [ApiEbayController::class, 'getCategoriesText'])->name('ebay.getCategoriesText');
 Route::get('/ebay/getLinkFirstAuth', [ApiEbayController::class, 'getLinkFirstAuth'])->name('ebay.linkFirstAuth');
 Route::get('/ebay/setRefreshToken', [ApiEbayController::class, 'setRefreshToken'])->name('ebay.setRefreshToken');
 Route::get('/ebay/getCategories', [ApiEbayController::class, 'getCategories'])->name('ebay.getCategories');
