@@ -9,8 +9,7 @@ use App\Models\Product;
 class GetProducts extends Controller
 {
     public function run() {
-        $products = Product::where('published_to_ebay_de', false)
-            ->orderBy('id')
+        $products = Product::orderBy('id')
             ->get();
 
         $brandNames = $products->pluck('producer_brand')->filter()->unique()->map(fn($name) => strtolower($name))->toArray();

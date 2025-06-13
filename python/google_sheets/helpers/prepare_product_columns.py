@@ -113,6 +113,12 @@ class PrepareProductColumns:
                         value = 'saved to db from tecdoc'
                     else:
                         value = None
+            if db_key == 'description_to_ebay_de':
+                if source_type == 'fromDbToSheets':
+                    if value:
+                        value = 'saved to db from blade template'
+                    else:
+                        value = None
             if db_key == 'photos':
                 if source_type == 'fromSheetsToDb':
                     id_column_name = columns.get('id')['sheet_column_name']
