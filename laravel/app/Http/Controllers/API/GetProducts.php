@@ -78,7 +78,7 @@ class GetProducts extends Controller
                 $productPhotos['withLogo'] = $withLogo;
 
                 if(isset($productPhotos['links'][0])) {
-                    $product->photo = $productPhotos['links'][0];
+                    $product->photo = $photos[$product->id][0]->cortexparts_photo_url ?? $productPhotos['links'][0];
                 }
 
                 $product->photos = $productPhotos;
