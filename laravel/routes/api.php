@@ -16,7 +16,7 @@ Route::get('/update/products/fromApNextEu', [UpdateProducts::class, 'fromApNextE
 Route::get('/update/products/fromEbay', [UpdateProducts::class, 'fromEbay'])->name('updateProducts.fromEbay');
 Route::get('/update/products/photos', [UpdateProductPhotos::class, 'run'])->name('updateProducts.photos');
 Route::get('/update/brands', [UpdateProducts::class, 'brands'])->name('updateBrands');
-Route::get('/update/products/orderUploadingToEbay', [UpdateProducts::class, 'setOrderOfUploadingNewProductsToEbay']);
+Route::get('/update/products/setOrderUploadingToEbay', [UpdateProducts::class, 'setOrderOfUploadingNewProductsToEbay'])->name('updateProducts.setOrderUploadingToEbay');
 
 Route::get('/update/products/ebayHTML', [PrepareProductsBeforeEbay::class, 'html']);
 

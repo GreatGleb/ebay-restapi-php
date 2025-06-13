@@ -22,10 +22,13 @@
         <a href="{{ route('updateProducts.fromTecDoc') }}" target="_blank">Update DB new products from TecDoc</a>
     </p>
     <p>
-        <a href="{{ route('ebay.prepareXMLtoAddItems') }}" target="_blank">To DB prepare&save xml before upload new items to eBay</a>
+        <a href="{{ route('ebay.prepareXMLtoAddItems') }}" target="_blank">To DB prepare&save xml before EXPORT new items to eBay</a>
     </p>
     <p>
-        <a href="{{ route('ebay.prepareXMLtoUpdateToEbay') }}" target="_blank">To DB prepare&save xml before update items to eBay</a>
+        <a href="{{ route('ebay.prepareXMLtoUpdateToEbay') }}" target="_blank">To DB prepare&save xml before UPDATE items to eBay</a>
+    </p>
+    <p>
+        <a href="{{ route('updateProducts.setOrderUploadingToEbay') }}" target="_blank">To DB set order of uploading new products to eBay</a>
     </p>
     <h3>Update stock and price</h3>
     <p>
