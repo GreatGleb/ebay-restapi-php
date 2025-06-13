@@ -27,14 +27,9 @@ class EbayInterface
         $e->reviseItem();
         $e->reviseInventory();
         $e->addItem();
-        $e->updatingItem();
         $e->updatingInventory();
-        $e->addingItem();
         $e->checkIfItemExists();
         $e->updateStockAndPrice();
-        $e->checkImportLoading();
-        $e->importUpdate();
-        $e->importAdd();
         $e->findProduct();
 
         $e = new EbayCurl();
