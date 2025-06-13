@@ -637,6 +637,7 @@ class ApiEbayController extends Controller
         $this->uploadPreparedItemsToEbay($logTraceId, 'update');
     }
 
+    //old stuff functions
     public function addItem($item) {
         $headers = EbayCurl::getCurlHeaders($this, 2, 'AddItem');
         $postFields = EbayCurl::getCurlPostFields($this, 'addItem', $item);
