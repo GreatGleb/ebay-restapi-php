@@ -20,7 +20,27 @@ class UpdateProducts extends Controller
     public function run(Request $request) {
         $products = $request->all();
 
-        $allowedPropertiesInTableProducts = Schema::getColumnListing('products');
+//        $allowedPropertiesInTableProducts = Schema::getColumnListing('products');
+        $allowedPropertiesInTableProducts = [
+            'id',
+            'tecdoc_number',
+            'supplier_price_net',
+            'stock_quantity_pl',
+            'stock_quantity_pruszkow',
+            'internal_description',
+            'part_of_ebay_de_name_product_type',
+            'part_of_ebay_name_for_cars',
+            'ebay_name_ru',
+            'ebay_name_de',
+            'has_hologram',
+            'supplier',
+            'box_length_cm',
+            'box_width_cm',
+            'box_height_cm',
+            'comment',
+            'sold_in_general',
+        ];
+
         $productsFiltered = collect($products)->map(function ($item) use ($allowedPropertiesInTableProducts) {
             return array_intersect_key($item, array_flip($allowedPropertiesInTableProducts));
         })->toArray();

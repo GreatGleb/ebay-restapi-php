@@ -14,6 +14,10 @@ Route::get('', function () {
     return view('control_page');
 });
 
+Route::get('/test', function () {
+    return view('test'); // будет искать resources/views/test.blade.php
+});
+
 Route::get('products/ebay/getHTML/{id}', [ProductController::class, 'getEbayProductHtml']);
 
 Route::get('/update/products/fromTecDoc/db&sheets', function () {
