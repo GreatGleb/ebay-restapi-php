@@ -562,12 +562,14 @@ class ApiEbayController extends Controller
             $queryProducts = Product::
                 where('products.published_to_ebay_de', false)
                 ->whereNotNull('products.ebay_name_de')
-                ->orderBy('products.id');
+                ->whereNotNull('products.order_creation_to_ebay_de')
+                ->orderBy('products.order_creation_to_ebay_de');
         } else if($type == 'update') {
             $queryProducts = Product::
                 where('products.published_to_ebay_de', true)
                 ->whereNotNull('products.ebay_de_item_id')
-                ->orderBy('products.id');
+                ->whereNotNull('products.order_creation_to_ebay_de')
+                ->orderBy('products.order_creation_to_ebay_de');
         }
 
         $chunkKey = 0;
