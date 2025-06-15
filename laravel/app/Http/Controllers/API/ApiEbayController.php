@@ -328,7 +328,7 @@ class ApiEbayController extends Controller
             $queryProducts = Product::
                 where('products.published_to_ebay_de', false)
                 ->whereNotNull('products.ebay_name_de')
-                ->orderBy('products.id');
+                ->orderBy('products.order_creation_to_ebay_de');
         }
 
 //        $countProducts = $queryProducts->count();
@@ -549,11 +549,11 @@ class ApiEbayController extends Controller
 
     public function prepareXMLtoAddItems($logTraceId = null)
     {
-        $this->prepareXMLtoEbay($logTraceId);
+        return $this->prepareXMLtoEbay($logTraceId);
     }
     public function prepareXMLtoUpdateToEbay($logTraceId = null)
     {
-        $this->prepareXMLtoEbay($logTraceId, 'update');
+        return $this->prepareXMLtoEbay($logTraceId, 'update');
     }
 
     public function uploadPreparedItemsToEbay($logTraceId = null, $type = 'add')
