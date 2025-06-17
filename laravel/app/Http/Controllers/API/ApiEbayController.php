@@ -556,14 +556,19 @@ class ApiEbayController extends Controller
         return $this->prepareXMLtoEbay($logTraceId, 'update');
     }
 
-    public function uploadPreparedItemsToEbay($logTraceId = null, $type = 'add')
+    public function uploadPreparedItemsToEbay($logTraceId = null, $type = 'add', $productIds = [])
     {
         if($type == 'add') {
             $queryProducts = Product::
                 where('products.published_to_ebay_de', false)
                 ->whereNotNull('products.ebay_name_de')
-                ->whereNotNull('products.order_creation_to_ebay_de')
-                ->orderBy('products.order_creation_to_ebay_de');
+                ->whereNotNull('products.order_creation_to_ebay_de');
+
+            if($productIds) {
+                $queryProducts = $queryProducts->whereIn('products.id', $productIds);
+            }
+
+            $queryProducts = $queryProducts->orderBy('products.order_creation_to_ebay_de');
         } else if($type == 'update') {
             $queryProducts = Product::
                 where('products.published_to_ebay_de', true)
@@ -625,13 +630,11 @@ class ApiEbayController extends Controller
 
             $chunkKey++;
         });
-
-        dd($results);
     }
 
-    public function addPreparedItemsToEbay($logTraceId = null)
+    public function publicPreparedItemsToEbay($logTraceId = null, $productIds = [])
     {
-        $this->uploadPreparedItemsToEbay($logTraceId);
+        $this->uploadPreparedItemsToEbay($logTraceId, $productIds);
     }
 
     public function updatePreparedItemsToEbay($logTraceId = null)

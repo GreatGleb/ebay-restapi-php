@@ -2,9 +2,10 @@
 
 namespace App\Jobs;
 
+use App\Http\Controllers\API\ApiEbayController;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use App\Http\Controllers\API\UpdateProducts;
+use Illuminate\Support\Facades\DB;
 
 class UploadScheduledProductsToEbay implements ShouldQueue
 {
@@ -25,6 +26,11 @@ class UploadScheduledProductsToEbay implements ShouldQueue
      */
     public function handle()
     {
+        $productIds = DB::table('product_uploading_queue')->where('place', 'ebay_de')->first();
+        $productIds = $productIds->product_ids;
+        $productIds = json_decode($productIds, true);
 
+        $ebay = new ApiEbayController();
+        $ebay->publicPreparedItemsToEbay($productIds);
     }
 }

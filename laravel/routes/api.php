@@ -48,6 +48,6 @@ Route::post('/ebay/reviseInventory', [ApiEbayController::class, 'reviseInventory
 Route::post('/ebay/updatingInventory', [ApiEbayController::class, 'updatingInventory'])->name('ebay.updatingInventory');
 Route::get('/ebay/prepareXMLtoAddItems', [ApiEbayController::class, 'prepareXMLtoAddItems'])->name('ebay.prepareXMLtoAddItems');
 Route::get('/ebay/prepareXMLtoUpdateToEbay', [ApiEbayController::class, 'prepareXMLtoUpdateToEbay'])->name('ebay.prepareXMLtoUpdateToEbay');
-Route::get('/ebay/addPreparedItemsToEbay', [ApiEbayController::class, 'addPreparedItemsToEbay'])->name('ebay.addPreparedItemsToEbay');
+Route::get('/ebay/publicPreparedItemsToEbay', [ApiEbayController::class, 'publicPreparedItemsToEbay'])->name('ebay.publicPreparedItemsToEbay');
 Route::get('/ebay/updatePreparedItemsToEbay', [ApiEbayController::class, 'updatePreparedItemsToEbay'])->name('ebay.updatePreparedItemsToEbay');
 Route::post('/ebay/checkIfItemExists', [ApiEbayController::class, 'checkIfItemExists'])->name('ebay.checkIfItemExists');

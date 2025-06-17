@@ -67,12 +67,6 @@ class PlanEbayUploading extends Command
                 UploadScheduledProductsToEbay::dispatch()->delay($start->copy()->addSeconds($delay));
 
                 $chunkCounter++;
-
-//            $preparedItems = DB::table('product_prepared_xml_for_upload_to_ebay')
-//                ->whereIn('product_id', $productIds)
-//                ->get()
-//                ->groupBy('product_id')
-//                ->toArray();
             });
         }
     }
