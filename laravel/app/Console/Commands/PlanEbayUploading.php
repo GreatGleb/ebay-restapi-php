@@ -7,6 +7,7 @@ use App\Models\Product;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Jobs\UploadScheduledProductsToEbay;
 
 class PlanEbayUploading extends Command
 {
@@ -33,7 +34,7 @@ class PlanEbayUploading extends Command
         $prepared = $ebay->prepareXMLtoAddItems();
 
         if ($prepared) {
-            $limit = (int) 2500/26;
+            $limit = (int) (2500/26);
 
             $queryProducts = Product::
                 where('products.published_to_ebay_de', false)
@@ -51,13 +52,13 @@ class PlanEbayUploading extends Command
 
             $timesOfUploading = $queryProducts->count() / $chunksCount;
 
-            $start = Carbon::today('Europe/Berlin')->setHour($startHours)->setMinute(0)->setSecond(0); // 9:00 утра
+            $start = Carbon::today('Europe/Berlin')->setHour($startHours)->setMinute(0)->setSecond(0);
             $delayIntervalSeconds = $intervalSeconds / $timesOfUploading; // секунд между загрузками
 
             $queryProducts->chunk($chunksCount, function ($products) use($timesOfUploading, $start, $delayIntervalSeconds, &$chunkCounter) {
                 $productIds = $products->pluck('id')->toJson();
 
-                DB::table('product_uploading_schedule')->insert([
+                DB::table('product_uploading_queue')->insert([
                     'product_ids' => $productIds,
                     'place' => 'ebay_de',
                 ]);
