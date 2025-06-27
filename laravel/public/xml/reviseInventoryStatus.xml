@@ -5,5 +5,5 @@
   </RequesterCredentials>
   <ErrorLanguage>en_US</ErrorLanguage>
   <WarningLevel>High</WarningLevel>
-  $item->inventory
+  $item->xml
 </ReviseInventoryStatusRequest>

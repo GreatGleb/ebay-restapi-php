@@ -972,7 +972,7 @@ class ApiEbayController extends Controller
     }
 
     public function reviseInventory($item) {
-        $headers = EbayCurl::getCurlHeaders($this, 2, 'ReviseItem');
+        $headers = EbayCurl::getCurlHeaders($this, 2, 'ReviseInventoryStatus');
         $postFields = EbayCurl::getCurlPostFields($this, 'reviseInventory', $item);
 
         $response = EbayCurl::sendCurl($this, $this->linkAPI, $headers, $postFields);
@@ -991,125 +991,50 @@ class ApiEbayController extends Controller
             return $xml;
         }
     }
-    public function updatingInventory($items, $nameFields)
-    {
-        $result = '';
-        $inventory = '';
-
-        foreach ($items as $item) {
-            $inventory .= '<InventoryStatus>';
-            $inventory .= '<ItemID>';
-            $inventory .= $item->id;
-            $inventory .= '</ItemID>';
-            foreach ($nameFields as $key => $name) {
-                if (isset($item->{$key})) {
-                    $inventory .= EbayData::getXMLProperty($item->{$key}, $name);
-                }
-            }
-            $inventory .= '</InventoryStatus>';
-        }
-
-        $item = json_decode('{}');
-        $item->inventory = $inventory;
-        $result = $this->reviseInventory($item);
-
-        return $result;
-    }
 
     public function updateStockAndPrice() {
         $this->getAccessToken();
 
-        $start = microtime(true);
-
-        $file = public_path() . '\storage\download\OFERTA.xlsx';
-        $data = (new EbayImport)->toArray($file)[0];
-        if($data[1][0] !== 'Part number') {
-            return 'Error: not right file';
-        }
-
-        if(!isset($this->items)) {
-            $this->getSellerList();
-        }
-
         $dataForResult = [];
-        $logs = [];
-        $items = [];
 
-        foreach($this->items as $item) {
-            if (isset($item["SKU"])) {
-                $price = null; $quantity = null;
-                foreach ($data as $offer) {
-                    if ($offer[0] == $item["SKU"]) {
-                        $price = $offer[4];
-                        $quantity = $offer[6];
-                        break;
-                    }
-                }
-                if($price !== null) {
-                    $price = round($price * 1.3 * 1.11 * 1.21);
-                }
+        $queryProducts = Product::query()
+            ->where('published_to_ebay_de', true)
+            ->whereNotNull('retail_price_gross')
+            ->whereNotNull('stock_quantity_pl')
+            ->whereNotNull('stock_quantity_pruszkow')
+            ->whereNotNull('tecdoc_number')
+            ->whereNotNull('internal_reference')
+            ->whereNotNull('ebay_de_item_id')
+            ->orderBy('order_creation_to_ebay_de');
 
-                if($quantity !== null) {
-                    if($quantity == '5>') {
-                        if(str_starts_with($item["SKU"], 'EDS')) {
-                            $quantity = 10;
-                        } else {
-                            $quantity = 2;
-                        }
-                    } else {
-                        $quantity = (int)$quantity;
-                        if($quantity >= 2) {
-                            $quantity = 2;
-                        }
-                    }
-                    if((int)$item['Quantity'] != $quantity or (float)$item['SellingStatus']['CurrentPrice'] != $price) {
-                        $updateData = json_decode('{}');
-                        $updateData->id = $item['ItemID'];
-                        $updateData->{0} = $price;
-                        $updateData->{1} = $quantity;
-                        $updateData->{2} = $item;
-                        $items[] = $updateData;
-                    }
-                }
+        $chunkKey = 1;
+        $queryProducts->chunk(4, function ($products) use (&$chunkKey, &$dataForResult) {
+            $requestXMLArray = [];
+            $requestXMLArray['InventoryStatus'] = [];
 
-                if($price == 0 or $quantity === null) {
-                    if($quantity === null) {
-                        file_put_contents(__DIR__ . '/ebayLogs.csv', "\n" . date("Y-m-d H:i:s") . ';' . $item["SKU"] . ';notFound', FILE_APPEND | LOCK_EX);
-                    } else if($price == 0) {
-                        file_put_contents(__DIR__ . '/ebayLogs.csv', "\n" . date("Y-m-d H:i:s") . ';' . $item["SKU"] . ';price: 0', FILE_APPEND | LOCK_EX);
-                    }
-                }
-            }
-        }
+            $products = $products->toArray();
 
-        $itemChunks = collect($items);
-        $itemChunks = $itemChunks->chunk(4);
-        $itemChunks = $itemChunks->toArray();
+            foreach ($products as &$product) {
+                $product['stock'] = $product['stock_quantity_pl'] + $product['stock_quantity_pruszkow'];
+                $product['price'] = $product['retail_price_gross'];
 
-        foreach($itemChunks as $itemsChunk) {
-            $num = count($this->logs);
-            $i = 0;
-
-            $start_ebay = microtime(true);
-            while (count($this->logs) == $num) {
-                if ($i == 0) {
-                    $headers = ["price", "quantity"];
-                    $this->updatingInventory($itemsChunk, $headers);
-                }
-                $i++;
+                $requestXMLArray['InventoryStatus'][] = [
+                    'ItemID' => $product['ebay_de_item_id'],
+                    'SKU' => $product['internal_reference'],
+                    'Quantity' => $product['stock'],
+                    'StartPrice' => $product['price'],
+                ];
             }
 
-            $logsIndex = array_key_last($this->logs);
-            $logs[] = $this->logs[$logsIndex];
-            if(isset($this->logs[$logsIndex]->Ack)) {
-                $log = json_decode(json_encode($this->logs[$logsIndex]), TRUE);
-                if(isset($dataForResult[$log['Ack']])) {
-                    $dataForResult[$log['Ack']] = $dataForResult[$log['Ack']] + 1;
-                } else {
-                    $dataForResult[$log['Ack']] = 1;
-                }
-            }
-        }
+            $xml = EbayData::arrayToXmlContent($requestXMLArray);
+
+            $item = json_decode('{}');
+            $item->xml = $xml;
+
+            $dataForResult[] = $this->reviseInventory($item);
+
+            $chunkKey++;
+        });
 
         return $dataForResult;
     }

@@ -76,7 +76,7 @@ class EbayCurl extends Ebay
             $variables = ['ebay'=>'access_token', 'item'=>['xml']];
             $postFields[$field] = EbayData::addToXMLVariables($postFields[$field], $variables, $item, $ebay);
         } else if($field == 'reviseInventory') {
-            $variables = ['ebay'=>'access_token', 'item'=>'inventory'];
+            $variables = ['ebay'=>'access_token', 'item'=>'xml'];
             $postFields[$field] = EbayData::addToXMLVariables($postFields[$field], $variables, $item, $ebay);
         } else if($field == 'addItem') {
             $variables = ['ebay'=>'access_token', 'item'=>['xml']];

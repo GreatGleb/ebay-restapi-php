@@ -27,7 +27,6 @@ class EbayInterface
         $e->reviseItem();
         $e->reviseInventory();
         $e->addItem();
-        $e->updatingInventory();
         $e->checkIfItemExists();
         $e->updateStockAndPrice();
         $e->findProduct();

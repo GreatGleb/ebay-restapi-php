@@ -27,13 +27,11 @@ class UpdateProductsFromEbay implements ShouldQueue
     {
         $updater = new UpdateProducts();
         $isUpdatedFromGoogleSheets = $updater->fromGoogleSheets($this->logTraceId);
-
         if(!$isUpdatedFromGoogleSheets) {
             return false;
         }
 
         $isUpdatedFromEbay = $updater->fromEbay($this->logTraceId);
-
         if(!$isUpdatedFromEbay) {
             return false;
         }

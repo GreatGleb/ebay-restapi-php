@@ -27,7 +27,7 @@ Route::get('/update/supplierStockAndPrice/autopartner', [UpdateAutoPartnerStockA
 Route::get('/update/stockAndPrice/calculate', [UpdateProductPrices::class, 'run'])->name('updateProductStockAndPrice.calculate');
 
 Route::get('/ebay/run', [ApiEbayController::class, 'index']);
-Route::post('/ebay/updateEbay', [ApiEbayController::class, 'updateStockAndPrice'])->name('ebay.update');
+Route::get('/ebay/updateEbayStockAndPrice', [ApiEbayController::class, 'updateStockAndPrice'])->name('ebay.updateStockAndPrice');
 
 Route::get('/ebay/getCategoriesText', [ApiEbayController::class, 'getCategoriesText'])->name('ebay.getCategoriesText');
 Route::get('/ebay/getLinkFirstAuth', [ApiEbayController::class, 'getLinkFirstAuth'])->name('ebay.linkFirstAuth');
@@ -45,7 +45,6 @@ Route::post('/ebay/getItem', [ApiEbayController::class, 'getItem'])->name('ebay.
 Route::get('/ebay/getSellerList', [ApiEbayController::class, 'getSellerList'])->name('ebay.getSellerList');
 Route::post('/ebay/reviseItem', [ApiEbayController::class, 'reviseItem'])->name('ebay.reviseItem');
 Route::post('/ebay/reviseInventory', [ApiEbayController::class, 'reviseInventory'])->name('ebay.reviseInventory');
-Route::post('/ebay/updatingInventory', [ApiEbayController::class, 'updatingInventory'])->name('ebay.updatingInventory');
 Route::get('/ebay/prepareXMLtoAddItems', [ApiEbayController::class, 'prepareXMLtoAddItems'])->name('ebay.prepareXMLtoAddItems');
 Route::get('/ebay/prepareXMLtoUpdateToEbay', [ApiEbayController::class, 'prepareXMLtoUpdateToEbay'])->name('ebay.prepareXMLtoUpdateToEbay');
 Route::get('/ebay/publicPreparedItemsToEbay', [ApiEbayController::class, 'publicPreparedItemsToEbay'])->name('ebay.publicPreparedItemsToEbay');
