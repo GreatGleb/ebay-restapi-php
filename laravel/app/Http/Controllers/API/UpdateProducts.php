@@ -548,7 +548,7 @@ class UpdateProducts extends Controller
             $productUpdateData[] = [
                 'id' => $product['product-id'],
                 'category_id_ebay_de' => $product['categoryId'],
-                'ru_category_from_ebay_de' => $categories[$product['categoryId']],
+                'ru_category_from_ebay_de' => $categories[$product['categoryId']] ?? null,
             ];
 
             $ebaySimilarProductsUpdateData[] = [

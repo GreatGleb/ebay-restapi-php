@@ -128,7 +128,8 @@ class Controller:
                 if code_elem:
                     code_elem = code_elem[0]
                     html_elem = code_elem.get_attribute("innerHTML")
-                    code = html_elem.split("</span>")[-1].strip()
+                    code = html_elem.split("</span>")[-1].strip().replace(" ", "")
+                    productReference = productReference.strip().replace(" ", "")
 
                     if code == productReference:
                         product_variant = {}
