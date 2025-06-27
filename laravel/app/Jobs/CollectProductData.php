@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Helpers\Log;
-use App\Http\Controllers\API\ApiEbayController;
 use App\Http\Controllers\API\UpdateProductPhotos;
 use App\Http\Controllers\API\UpdateAutoPartnerStockAndPrice;
 use App\Http\Controllers\API\UpdateProductPrices;
@@ -12,7 +11,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use App\Http\Controllers\API\UpdateProducts;
 
-use Illuminate\Support\Facades\File;
 class CollectProductData implements ShouldQueue
 {
     use Queueable;
@@ -80,15 +78,6 @@ class CollectProductData implements ShouldQueue
                 Log::add($this->logTraceId, "stop fromPhotos", 2);
                 return false;
             }
-
-
-//        $isUpdatedFromEbay = $updater->setOrderOfUploadingNewProductsToEbay();
-//        $updaterEbay = new ApiEbayController();
-//        $isUpdatedEbayXML = $updaterEbay->prepareXMLtoAddItems($this->logTraceId);
-//
-//        if(!$isUpdatedEbayXML) {
-//            return false;
-//        }
 
             $chunkCounter++;
         });
