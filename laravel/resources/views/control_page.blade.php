@@ -8,7 +8,7 @@
 
     <h2>Products - sync DB & Google Sheets</h2>
     <p>
-        <a href="{{ route('syncDBandSheets.fromTecDoc') }}" target="_blank">Sync DB & Google Sheets products from TecDoc</a>
+        <a href="{{ route('syncDBandSheets.collectData') }}" target="_blank">Collect data for new products from Google Sheets</a>
     </p>
     <p>
         <a href="{{ route('syncDBandSheets.fromEbay') }}" target="_blank">Sync DB & Google Sheets products from eBay</a>

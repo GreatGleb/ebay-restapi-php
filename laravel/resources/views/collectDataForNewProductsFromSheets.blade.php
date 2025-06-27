@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title','Sync DB & Google Sheets new products from TecDoc')
+@section('title','Collect data for new products from Sheets')
 @section('content')
-    <h1>Sync DB & Google Sheets new products from TecDoc</h1>
+    <h1>Collect data for new products from Sheets</h1>
 
     <h3>Logs</h3>
     <div class="logs-container">
@@ -27,7 +27,7 @@
         }
 
         async function sendRequestForUpdating(logTrackId) {
-            const url = "http://localhost/jobs/update/products/fromTecDoc";
+            const url = "http://localhost/jobs/update/products/collectData";
 
             try {
                 const response = await fetch(url, {

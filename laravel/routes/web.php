@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ApiEbayController;
 use App\Http\Controllers\ProductController;
-use App\Jobs\UpdateProductsFromTecDoc;
+use App\Jobs\CollectProductData;
 use App\Jobs\UpdateProductsFromEbay;
 
 Route::get('/updateEbay', [ApiEbayController::class, 'updateStockAndPrice'])->name('ebay.update');
@@ -20,14 +20,15 @@ Route::get('/test', function () {
 
 Route::get('products/ebay/getHTML/{id}', [ProductController::class, 'getEbayProductHtml']);
 
-Route::get('/update/products/fromTecDoc/db&sheets', function () {
-    return view('syncDBandSheetsFroTecDoc');
-})->name('syncDBandSheets.fromTecDoc');
+Route::get('/update/products/collectData', function () {
+    return view('collectDataForNewProductsFromSheets');
+})->name('syncDBandSheets.collectData');
 
-Route::get('/jobs/update/products/fromTecDoc', function (Request $request) {
+Route::get('/jobs/update/products/collectData', function (Request $request) {
     $logTraceId = $request->header('log-trace-id');
 
-    UpdateProductsFromTecDoc::dispatch($logTraceId);
+    CollectProductData::dispatch($logTraceId);
+
     return response()->json(['status' => 'Job dispatched']);
 });
 

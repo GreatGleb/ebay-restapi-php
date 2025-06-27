@@ -28,8 +28,8 @@ class UseTecDocController
 //        $info = $tecdoc->getAllBrands();
 //        $info = $tecdoc->search($reference);
 //        $info = $tecdoc->getArticleIdByProductSupplierReference($reference, null);
-//        $info = $tecdoc->getInfoByProductSupplierReference($reference, 403);
-        $info = $tecdoc->getArticleData($reference, 'ru', true);
+        $info = $tecdoc->getInfoByProductSupplierReference($reference, 403);
+//        $info = $tecdoc->getArticleData($reference, 'ru', true);
 
         dd($info);
 

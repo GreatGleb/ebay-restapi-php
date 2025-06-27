@@ -9,8 +9,7 @@ class Kernel extends ConsoleKernel
 {
     protected function schedule(Schedule $schedule)
     {
-        // Пример: запуск команды каждый день в 3:00
-//        $schedule->command('app:daily-task')->dailyAt('03:00');
+        $schedule->command('app:plan-collecting-products-data')->dailyAt('04:25');
         $schedule->command('app:daily-task')->everyMinute();
     }
 

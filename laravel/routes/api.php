@@ -6,7 +6,7 @@ use App\Http\Controllers\API\UpdateProducts;
 use App\Http\Controllers\API\PrepareProductsBeforeEbay;
 use App\Http\Controllers\API\UpdateProductPhotos;
 use App\Http\Controllers\API\UpdateAutoPartnerStockAndPrice;
-use App\Http\Controllers\API\UpdateStockAndPrice;
+use App\Http\Controllers\API\UpdateProductPrices;
 use App\Http\Controllers\API\GetProducts;
 use App\Http\Controllers\API\GetJsonFiles;
 
@@ -24,7 +24,7 @@ Route::get('/get/products', [GetProducts::class, 'run']);
 Route::get('/getTableSchema', [GetJsonFiles::class, 'getTableSchema']);
 
 Route::get('/update/supplierStockAndPrice/autopartner', [UpdateAutoPartnerStockAndPrice::class, 'run'])->name('updateProductStockAndPrice.supplier.autoPartner');
-Route::get('/update/stockAndPrice/calculate', [UpdateStockAndPrice::class, 'run'])->name('updateProductStockAndPrice.calculate');
+Route::get('/update/stockAndPrice/calculate', [UpdateProductPrices::class, 'run'])->name('updateProductStockAndPrice.calculate');
 
 Route::get('/ebay/run', [ApiEbayController::class, 'index']);
 Route::post('/ebay/updateEbay', [ApiEbayController::class, 'updateStockAndPrice'])->name('ebay.update');

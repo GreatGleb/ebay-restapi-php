@@ -12,7 +12,7 @@ use App\Helpers\Log;
 
 class UpdateProductPhotos extends Controller
 {
-    public function run($logTraceId = null): bool
+    public function run($logTraceId = null, $productIds = []): bool
     {
         Log::add($logTraceId, 'start work', 1);
         Log::add($logTraceId, 'get photos what from tecalliance', 2);
@@ -20,6 +20,12 @@ class UpdateProductPhotos extends Controller
         $queryProductPhotos = ProductPhoto
             ::where('product_photos.original_photo_url', 'like', '%digital-assets.tecalliance.services%')
             ->orderBy('id');
+
+        if($productIds) {
+            $queryProductPhotos = ProductPhoto::query()
+                ->whereIn('product_id', $productIds)
+                ->orderBy('id');
+        }
 
         $countOfPhotos = $queryProductPhotos->count();
 

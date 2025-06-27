@@ -130,7 +130,7 @@
                     "sheet_column_name": "Installation position Russian"
                 },
                 {
-                    "name": "installation_position_de",
+                    "name": "installation_position_en",
                     "type": "string",
                     "length": 255,
                     "nullable": true,

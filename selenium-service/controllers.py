@@ -43,8 +43,12 @@ class Controller:
             wait = WebDriverWait(self.driver, 10)
 
             login_input = wait.until(lambda d: d.find_element(By.NAME, "LoginName"))
-            login_input.clear()
-            login_input.send_keys(self.username)
+
+            if login_input:
+                login_input.clear()
+                login_input.send_keys(self.username)
+            else:
+                print("Error: Could not find the login input field.")
 
             password_input = wait.until(lambda d: d.find_element(By.NAME, "Password"))
             password_input.clear()
@@ -95,17 +99,22 @@ class Controller:
     def searchProductAndGetInfo(self, productReference):
         wait = WebDriverWait(self.driver, 2)
 
-        login_input = wait.until(lambda d: d.find_element(By.CSS_SELECTOR, "#SmartSearchInput"))
-        login_input.clear()
-        login_input.send_keys(productReference)
+        search_input = wait.until(lambda d: d.find_element(By.CSS_SELECTOR, "#SmartSearchInput"))
+
+        print(productReference)
+        print('productReference')
+
+        if search_input:
+            search_input.clear()
+            search_input.send_keys(productReference)
+        else:
+            print("Error: Could not find the search input field.")
 
         search_btn = wait.until(lambda d: d.find_element(By.CSS_SELECTOR, '#BodyContentPlaceHolder_SmartSearchBar_SmartSearchButton'))
 
         old_url = self.driver.current_url
         search_btn.click()
         wait.until(lambda d: d.current_url != old_url)
-
-        print(productReference)
 
         product_items = self.driver.find_elements(By.CSS_SELECTOR, '.flex-products .flex-item')
 
@@ -193,6 +202,8 @@ class Controller:
         data = {}
         data['result'] = True
         data['items'] = items
+
+        self.driver.quit()
 
         return data
 

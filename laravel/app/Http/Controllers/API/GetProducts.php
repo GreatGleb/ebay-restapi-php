@@ -93,5 +93,4 @@ class GetProducts extends Controller
 
         return $products;
     }
-
 }

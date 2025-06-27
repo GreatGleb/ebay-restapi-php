@@ -13,21 +13,6 @@ services:
     networks:
       - ebay_restapi_network
 
-  laravel-worker:
-    container_name: ebay_restapi_laravel_worker
-    build: ./laravel
-    working_dir: /var/www/laravel
-    volumes:
-      - ./laravel:/var/www/laravel
-    command: php artisan queue:work --sleep=3 --tries=3 --timeout=30000
-    env_file:
-      - .env
-    depends_on:
-      - app
-      - db
-    networks:
-      - ebay_restapi_network
-
   web:
     image: nginx:latest
     container_name: ebay_restapi_nginx

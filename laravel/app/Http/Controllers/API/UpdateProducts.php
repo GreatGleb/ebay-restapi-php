@@ -23,6 +23,7 @@ class UpdateProducts extends Controller
 //        $allowedPropertiesInTableProducts = Schema::getColumnListing('products');
         $allowedPropertiesInTableProducts = [
             'id',
+            'reference',
             'tecdoc_number',
             'supplier_price_net',
             'stock_quantity_pl',
@@ -45,6 +46,12 @@ class UpdateProducts extends Controller
             return array_intersect_key($item, array_flip($allowedPropertiesInTableProducts));
         })->toArray();
 
+        foreach ($productsFiltered as &$product) {
+            if (!$product['supplier']) {
+                $product['supplier'] = 'AutoPartner';
+            }
+        }
+
         $updateFields = array_keys($productsFiltered[0]);
 
         $resultOfUpdating = Product::upsert($productsFiltered, ['id'], $updateFields);
@@ -56,7 +63,7 @@ class UpdateProducts extends Controller
         return [$resultOfUpdating, $updateFields];
     }
 
-    public function fromTecDoc($logTraceId = null): bool
+    public function fromTecDoc($logTraceId = null, $productIds = []): bool
     {
         Log::add($logTraceId, 'start work', 1);
         Log::add($logTraceId, 'get products what not published to ebay', 2);
@@ -73,6 +80,20 @@ class UpdateProducts extends Controller
             ->where('products.published_to_ebay_de', false)
             ->whereNull('products.reference')
             ->orderBy('products.id');
+
+        if($productIds) {
+            $queryProducts = Product::query()
+                ->select('products.*', 'producer_brands.tecdoc_id as producer_tecdoc_id')
+                ->leftJoin('producer_brands', function ($join) {
+                    $join->on(
+                        DB::raw('LOWER(products.producer_brand)'),
+                        '=',
+                        DB::raw('LOWER(producer_brands.name)')
+                    );
+                })
+                ->whereIn('products.id', $productIds)
+                ->orderBy('products.id');
+        }
 
         $countOfProducts = $queryProducts->count();
 
@@ -435,23 +456,22 @@ class UpdateProducts extends Controller
         return $result;
     }
 
-    public function fromEbay($logTraceId = null): bool
+    public function fromEbay($logTraceId = null, $productIds = []): bool
     {
         Log::add($logTraceId, 'start work', 1);
         Log::add($logTraceId, 'get products what not published to ebay', 2);
 
         $queryProducts = Product::query()
-            ->select('products.*', 'producer_brands.tecdoc_id as producer_tecdoc_id')
-            ->leftJoin('producer_brands', function ($join) {
-                $join->on(
-                    DB::raw('LOWER(products.producer_brand)'),
-                    '=',
-                    DB::raw('LOWER(producer_brands.name)')
-                );
-            })
             ->where('products.published_to_ebay_de', false)
             ->whereNotNull('products.ean')
             ->orderBy('products.id');
+
+        if($productIds) {
+            $queryProducts = Product::query()
+                ->whereNotNull('ean')
+                ->whereIn('id', $productIds)
+                ->orderBy('id');
+        }
 
         $countOfProducts = $queryProducts->count();
 
@@ -562,7 +582,7 @@ class UpdateProducts extends Controller
         return $results;
     }
 
-    public function fromApNextEu($logTraceId = null): bool
+    public function fromApNextEu($logTraceId = null, $productIds = []): bool
     {
         Log::add($logTraceId, 'start work', 1);
         Log::add($logTraceId, 'get products what not published to ebay', 2);
@@ -571,6 +591,12 @@ class UpdateProducts extends Controller
             ->where('products.published_to_ebay_de', false)
             ->whereNull('products.name_original_pl')
             ->orderBy('products.id');
+
+        if($productIds) {
+            $queryProducts = Product::query()
+                ->whereIn('id', $productIds)
+                ->orderBy('products.id');
+        }
 
         $countOfProducts = $queryProducts->count();
 
@@ -637,7 +663,7 @@ class UpdateProducts extends Controller
         return true;
     }
 
-    private function updateDbProductTablesFromApNextEu($data, $logTraceId): array
+    private function updateDbProductTablesFromApNextEu($data, $logTraceId)
     {
         $productUpdateData = [];
         $productUpdateFields = [

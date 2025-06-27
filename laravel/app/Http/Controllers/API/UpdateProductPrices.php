@@ -6,11 +6,11 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 
-class UpdateStockAndPrice extends Controller
+class UpdateProductPrices extends Controller
 {
     public float $vatRate = 1.23;
-    public function run(Request $request) {
-        $profitPercentage = $request->profitPercentage ?? 30;
+    public function run(Request $request = null, $profitPercentage = null) {
+        $profitPercentage = $request->profitPercentage ?? $profitPercentage ?? 30;
         $profitMultiplier = (float) $profitPercentage;
         $profitMultiplier = $profitMultiplier/100;
         $profitMultiplier = 1 + $profitMultiplier;
