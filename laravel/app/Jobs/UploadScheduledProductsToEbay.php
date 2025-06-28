@@ -16,7 +16,7 @@ class UploadScheduledProductsToEbay implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct($logTraceId)
+    public function __construct($logTraceId = null)
     {
         $this->logTraceId = $logTraceId;
     }
@@ -26,11 +26,18 @@ class UploadScheduledProductsToEbay implements ShouldQueue
      */
     public function handle()
     {
-        $productIds = DB::table('product_uploading_queue')->where('place', 'ebay_de')->first();
-        $productIds = $productIds->product_ids;
-        $productIds = json_decode($productIds, true);
+        $productEntry = DB::table('product_uploading_queue')->where('place', 'ebay_de')->first();
+
+        if($productEntry) {
+            $productIds = $productEntry->product_ids;
+            $productIds = json_decode($productIds, true);
+        }
 
         $ebay = new ApiEbayController();
-        $ebay->publicPreparedItemsToEbay($productIds);
+        $isUploadedProduct = $ebay->publicPreparedItemsToEbay(null, $productIds);
+
+        if($isUploadedProduct) {
+            DB::table('product_uploading_queue')->where('id', $productEntry->id)->delete();
+        }
     }
 }

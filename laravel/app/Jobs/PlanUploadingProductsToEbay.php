@@ -1,35 +1,56 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Jobs;
 
+use App\Helpers\Log;
 use App\Http\Controllers\API\ApiEbayController;
+use App\Http\Controllers\API\UpdateAutoPartnerStockAndPrice;
+use App\Http\Controllers\API\UpdateProductPrices;
+use App\Http\Controllers\API\UpdateProducts;
 use App\Models\Product;
-use Illuminate\Console\Command;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Jobs\UploadScheduledProductsToEbay;
 
-class PlanEbayUploading extends Command
+class PlanUploadingProductsToEbay implements ShouldQueue
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'app:plan-ebay-uploading';
+    use Queueable;
+
+    protected $logTraceId;
 
     /**
-     * The console command description.
-     *
-     * @var string
+     * Create a new job instance.
      */
-    protected $description = 'Plan items to upload ebay';
-
-    /**
-     * Execute the console command.
-     */
-    public function handle()
+    public function __construct($logTraceId = null)
     {
+        $this->logTraceId = $logTraceId;
+    }
+
+    /**
+     * Execute the job.
+     */
+    public function handle(): bool
+    {
+        Log::add($this->logTraceId, 'start PlanUploadingProductsToEbay', 1);
+
+        $updater = new UpdateProducts();
+        $isUpdatedFromGoogleSheets = $updater->fromGoogleSheets($this->logTraceId);
+        if(!$isUpdatedFromGoogleSheets) {
+            return false;
+        }
+
+        $isUpdatedUploadingOrder = $updater->setOrderOfUploadingNewProductsToEbay();
+        if(!$isUpdatedUploadingOrder) {
+            return false;
+        }
+
+        $updaterStockAndPrices = new UpdateAutoPartnerStockAndPrice();
+        $updaterStockAndPrices->run();
+
+        $updaterPrices = new UpdateProductPrices();
+        $updaterPrices->run();
+
         $ebay = new ApiEbayController();
         $prepared = $ebay->prepareXMLtoAddItems();
 
@@ -62,12 +83,17 @@ class PlanEbayUploading extends Command
                     'product_ids' => $productIds,
                     'place' => 'ebay_de',
                 ]);
-
                 $delay = $delayIntervalSeconds * $chunkCounter;
-                UploadScheduledProductsToEbay::dispatch()->delay($start->copy()->addSeconds($delay));
 
+                if($chunkCounter > 0) {
+                    return;
+                }
+
+                UploadScheduledProductsToEbay::dispatch()->delay($start->copy()->addSeconds($delay));
                 $chunkCounter++;
             });
         }
+
+        return true;
     }
 }
