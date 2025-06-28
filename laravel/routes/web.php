@@ -1,5 +1,7 @@
 <?php
 
+use App\Console\Commands\PlanUploadingProductsToEbay;
+use App\Jobs\UploadScheduledProductsToEbay;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ApiEbayController;
@@ -7,7 +9,6 @@ use App\Http\Controllers\ProductController;
 use App\Jobs\CollectProductData;
 use App\Jobs\UpdateProductsFromEbay;
 
-Route::get('/updateEbay', [ApiEbayController::class, 'updateStockAndPrice'])->name('ebay.update');
 Route::get('/exportEbay', [ApiEbayController::class, 'exportItems'])->name('ebay.export');
 
 Route::get('', function () {
@@ -42,3 +43,10 @@ Route::get('/jobs/update/products/fromEbay', function (Request $request) {
 Route::get('/update/products/fromEbay/db&sheets', function () {
     return view('syncDBandSheetsFromEbay');
 })->name('syncDBandSheets.fromEbay');
+
+Route::get('/jobs/update/products/PlanUploadingProductsToEbay', function () {
+    $job = new PlanUploadingProductsToEbay();
+    $job->handle();
+
+    return response()->json(['status' => 'Job dispatched']);
+});
