@@ -34,7 +34,7 @@ class UpdateProductPricesInEbay implements ShouldQueue
         $updaterStockAndPrices = new UpdateAutoPartnerStockAndPrice();
         $updaterStockAndPrices->run();
         $updaterPrices = new UpdateProductPrices();
-        $updaterPrices->run($this->logTraceId);
+        $updaterPrices->run();
 
         $ebay = new ApiEbayController();
         $isUpdatedToEbay = $ebay->updateStockAndPrice();

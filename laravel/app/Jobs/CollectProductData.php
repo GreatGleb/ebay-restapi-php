@@ -84,8 +84,9 @@ class CollectProductData implements ShouldQueue
 
         $updaterStockAndPrices = new UpdateAutoPartnerStockAndPrice();
         $updaterStockAndPrices->run();
+
         $updaterPrices = new UpdateProductPrices();
-        $updaterPrices->run($this->logTraceId);
+        $updaterPrices->run();
 
         $isUpdatedToGoogleSheets = $updater->toGoogleSheets($this->logTraceId);
 

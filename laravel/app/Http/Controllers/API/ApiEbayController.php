@@ -8,11 +8,11 @@ use App\Helpers\EbayCurl;
 use App\Helpers\EbayData;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ProductController;
-use App\Imports\EbayImport;
 use App\Models\Product;
 use App\Models\ProductCompatibility;
 use App\Models\ProductOeCode;
 use App\Models\ProductPhoto;
+use Illuminate\Support\Facades\File;
 
 set_time_limit(300);
 error_reporting(E_ALL);
@@ -575,10 +575,11 @@ class ApiEbayController extends Controller
                 ->whereNotNull('products.ebay_de_item_id')
                 ->whereNotNull('products.order_creation_to_ebay_de')
                 ->orderBy('products.order_creation_to_ebay_de');
+        } else {
+            return false;
         }
 
         $chunkKey = 0;
-
         $results = [];
 
         $queryProducts->chunk(10, function ($products) use ($logTraceId, &$chunkKey, $type, &$results) {
@@ -630,16 +631,18 @@ class ApiEbayController extends Controller
 
             $chunkKey++;
         });
+
+        return true;
     }
 
     public function publicPreparedItemsToEbay($logTraceId = null, $productIds = [])
     {
-        $this->uploadPreparedItemsToEbay($logTraceId, $productIds);
+        return $this->uploadPreparedItemsToEbay($logTraceId, 'add', $productIds);
     }
 
     public function updatePreparedItemsToEbay($logTraceId = null)
     {
-        $this->uploadPreparedItemsToEbay($logTraceId, 'update');
+        return $this->uploadPreparedItemsToEbay($logTraceId, 'update');
     }
 
     //old stuff functions
@@ -656,6 +659,9 @@ class ApiEbayController extends Controller
                     $this->getAccessToken();
                     return $this->addItem($item);
                 } else {
+                    $logPath = base_path('app/Helpers/ebay_error_log.xml');
+                    File::append($logPath, $response);
+
                     return $xml;
                 }
             }
