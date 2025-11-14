@@ -22,5 +22,7 @@ docker-compose exec app bash
 add laravel/app/Http/Controllers/API/tokens.json
 add python/google_sheets/tokens/service-account.json
 
+docker compose exec tecdoc composer install --prefer-source
+
 docker compose down; docker compose up -d;
 ```
