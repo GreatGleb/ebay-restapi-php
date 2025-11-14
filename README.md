@@ -3,8 +3,6 @@
 [![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php)](https://php.net)
 [![Docs](https://img.shields.io/badge/Docs-Online-blue)](https://yourusername.github.io/php-refactoring/docs/)
 
-description
-
 ## **Installation**
 ```bash
 git clone https://github.com/GreatGleb/ebay-restapi-php.git
@@ -23,6 +21,10 @@ add laravel/app/Http/Controllers/API/tokens.json
 add python/google_sheets/tokens/service-account.json
 
 docker compose exec tecdoc composer install --prefer-source
-
 docker compose down; docker compose up -d;
+
+launch before using migration of brands: http://localhost/api/update/brands
+
+main page: http://localhost/
+db page: http://localhost:3000/project/default/editor/17177?schema=public
 ```
