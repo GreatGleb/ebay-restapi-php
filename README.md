@@ -12,4 +12,12 @@ cd ebay-restapi-php
 docker-compose up -d
 docker-compose exec app composer install --prefer-source
 docker-compose exec app php artisan migrate
+
+docker-compose exec app bash
+> chown -R www-data:www-data /var/www/laravel/storage; \
+> chown -R www-data:www-data /var/www/laravel/bootstrap/cache; \
+> chmod -R 775 /var/www/laravel/storage; \
+> chmod -R 775 /var/www/laravel/bootstrap/cache;
+
+add laravel/app/Http/Controllers/API/tokens.json
 ```
