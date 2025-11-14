@@ -47,7 +47,7 @@ class UpdateProducts extends Controller
         })->toArray();
 
         foreach ($productsFiltered as &$product) {
-            if (!$product['supplier']) {
+            if (!isset($product['supplier']) or !$product['supplier']) {
                 $product['supplier'] = 'AutoPartner';
             }
         }
