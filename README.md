@@ -9,9 +9,9 @@ description
 ```bash
 git clone https://github.com/GreatGleb/ebay-restapi-php.git
 cd ebay-restapi-php
-docker-compose up -d
-docker-compose exec app composer install --prefer-source
-docker-compose exec app php artisan migrate
+docker compose up -d
+docker compose exec app composer install --prefer-source
+docker compose exec app php artisan migrate
 
 docker-compose exec app bash
 > chown -R www-data:www-data /var/www/laravel/storage; \
@@ -20,4 +20,7 @@ docker-compose exec app bash
 > chmod -R 775 /var/www/laravel/bootstrap/cache;
 
 add laravel/app/Http/Controllers/API/tokens.json
+add python/google_sheets/tokens/service-account.json
+
+docker compose down; docker compose up -d;
 ```
