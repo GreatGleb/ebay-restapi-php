@@ -2,6 +2,7 @@ from db.db import Database
 from db.models.category import Category
 import os
 import requests
+import traceback
 from ...manager import GoogleSheetsManager
 from ...helpers.rename_product_columns import RenameProductColumns
 from ...helpers.prepare_product_columns import PrepareProductColumns
@@ -57,39 +58,44 @@ class UpdateProductsFromDbToGoogleSheets:
         return filtered_data
 
     async def save_to_sheets(self, sheet, products_table_columns, products_db_data):
-        finder = TableCellFinder(sheet)
-        id_column_name = products_table_columns['id']['sheet_column_name']
+        try:
+            finder = TableCellFinder(sheet)
+            id_column_name = products_table_columns['id']['sheet_column_name']
 
-        dataItems = []
+            dataItems = []
 
-        for item in products_db_data:
-            product_id = item[id_column_name]
+            for item in products_db_data:
+                product_id = item[id_column_name]
 
-            for key, value in item.items():
-                current_column_name = key
-                thisProductCellIndexes = finder.get_cell_by_column_and_value(id_column_name, product_id)
+                for key, value in item.items():
+                    current_column_name = key
+                    thisProductCellIndexes = finder.get_cell_by_column_and_value(id_column_name, product_id)
 
-                if thisProductCellIndexes is None:
-                    continue
+                    if thisProductCellIndexes is None:
+                        continue
 
-                currentColumnIndex = finder.get_cell_by_column_and_value(current_column_name)[0]
-                currentCellIndex = currentColumnIndex + str(thisProductCellIndexes[1])
+                    currentColumnIndex = finder.get_cell_by_column_and_value(current_column_name)[0]
+                    currentCellIndex = currentColumnIndex + str(thisProductCellIndexes[1])
 
-                item = {
-                    'range': f"{self.sheet_name}!{currentCellIndex}",
-                    'values': [[value]]
-                }
+                    item = {
+                        'range': f"{self.sheet_name}!{currentCellIndex}",
+                        'values': [[value]]
+                    }
 
-                dataItems.append(item)
+                    dataItems.append(item)
 
-        dataForUploadToSheets = {
-            "data": dataItems
-        }
+            dataForUploadToSheets = {
+                "data": dataItems
+            }
 
-        result = self.manager.write_to_cells(
-            spreadsheet_id=self.sheet_id,
-            body=dataForUploadToSheets
-        )
+            result = self.manager.write_to_cells(
+                spreadsheet_id=self.sheet_id,
+                body=dataForUploadToSheets
+            )
+        except Exception as e:
+            result = [e, traceback.format_exc()]
+            print("ERROR:", e)
+            print(traceback.format_exc())
 
         return result
 
