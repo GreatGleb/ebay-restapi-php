@@ -396,7 +396,12 @@ class ApiEbayController extends Controller
                     $item['Currency'] = $this->currency;
                     $item['ConditionID'] = '1000';
 
-                    $itemPhotos = $photos[$product->id]->pluck('cortexparts_photo_url')->toArray() ?? [];
+                    $photosForProduct = Arr::get($photos, $product->id, []);
+                    $itemPhotos = Collection::make($photosForProduct)
+                        ->map(function ($photo) {
+                            return $photo->cortexparts_photo_url ?? $photo->original_photo_url;
+                        })
+                        ->toArray();
                     if(!$itemPhotos) {
                         continue;
                     }
@@ -863,7 +868,7 @@ class ApiEbayController extends Controller
     public function getSellerList() {
         $result = [];
 
-        $result[] = $this->getByDatesSellerList(['2025-03-01', '2025-06-08']);
+        $result[] = $this->getByDatesSellerList(['2025-11-01', '2025-11-20']);
 
         $result = Arr::collapse($result);
 

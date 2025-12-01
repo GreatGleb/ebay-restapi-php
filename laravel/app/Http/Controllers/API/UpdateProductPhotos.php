@@ -14,7 +14,7 @@ class UpdateProductPhotos extends Controller
 {
     public function run($logTraceId = null, $productIds = []): bool
     {
-        Log::add($logTraceId, 'start work', 1);
+        Log::add($logTraceId, 'start work UpdateProductPhotos', 1);
         Log::add($logTraceId, 'get photos what from tecalliance', 2);
 
         $queryProductPhotos = ProductPhoto
@@ -79,7 +79,7 @@ class UpdateProductPhotos extends Controller
             Log::add($logTraceId, 'finish chunk', 3);
         });
 
-        Log::add($logTraceId, 'finish work', 1);
+        Log::add($logTraceId, 'finish work UpdateProductPhotos', 1);
 
         return true;
     }

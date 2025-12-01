@@ -65,7 +65,7 @@ class UpdateProducts extends Controller
 
     public function fromTecDoc($logTraceId = null, $productIds = []): bool
     {
-        Log::add($logTraceId, 'start work', 1);
+        Log::add($logTraceId, 'start work fromTecDoc', 1);
         Log::add($logTraceId, 'get products what not published to ebay', 2);
 
         $queryProducts = Product::query()
@@ -126,7 +126,7 @@ class UpdateProducts extends Controller
             Log::add($logTraceId, 'send request to tecdoc', 3);
 
             $url = "http://ebay_restapi_nginx/tecdoc/products-info";
-            $response = Http::timeout(300)
+            $response = Http::timeout(21600)
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json',
@@ -145,7 +145,7 @@ class UpdateProducts extends Controller
             Log::add($logTraceId, 'finish chunk', 3);
         });
 
-        Log::add($logTraceId, 'finish work', 1);
+        Log::add($logTraceId, 'finish work fromTecDoc', 1);
 
         return true;
     }
@@ -458,7 +458,7 @@ class UpdateProducts extends Controller
 
     public function fromEbay($logTraceId = null, $productIds = []): bool
     {
-        Log::add($logTraceId, 'start work', 1);
+        Log::add($logTraceId, 'start work fromEbay', 1);
         Log::add($logTraceId, 'get products what not published to ebay', 2);
 
         $queryProducts = Product::query()
@@ -508,7 +508,7 @@ class UpdateProducts extends Controller
             Log::add($logTraceId, 'finish chunk', 3);
         });
 
-        Log::add($logTraceId, 'finish work', 1);
+        Log::add($logTraceId, 'finish work fromEbay', 1);
 
         return true;
     }
@@ -584,7 +584,7 @@ class UpdateProducts extends Controller
 
     public function fromApNextEu($logTraceId = null, $productIds = []): bool
     {
-        Log::add($logTraceId, 'start work', 1);
+        Log::add($logTraceId, 'start work fromApNextEu', 1);
         Log::add($logTraceId, 'get products what not published to ebay', 2);
 
         $queryProducts = Product::query()
@@ -616,6 +616,8 @@ class UpdateProducts extends Controller
                     'id' => $product->id,
                     'reference' => $reference,
                 ];
+
+                Log::add($logTraceId, 'prepare product ' . $product->id . " " . $reference, 3);
             }
 
             Log::add($logTraceId, 'send request to scrapping', 3);
@@ -649,8 +651,12 @@ class UpdateProducts extends Controller
 //            ];
 
             if($data) {
-                Log::add($logTraceId, 'update db by tecdoc data', 3);
+                var_dump($data);
+                var_dump("apnexteu data");
+                Log::add($logTraceId, 'update db by apnexteu data', 3);
                 $this->updateDbProductTablesFromApNextEu($data, $logTraceId);
+            } else {
+                Log::add($logTraceId, 'empty apnexteu data', 3);
             }
 
             $chunkKey = $chunkKey + 1;
@@ -658,7 +664,7 @@ class UpdateProducts extends Controller
             Log::add($logTraceId, 'finish chunk', 3);
         });
 
-        Log::add($logTraceId, 'finish work', 1);
+        Log::add($logTraceId, 'finish work fromApNextEu', 1);
 
         return true;
     }
@@ -702,6 +708,8 @@ class UpdateProducts extends Controller
                     Log::add($logTraceId, 'Error while try get brand from parced item ' . $e->getMessage(), 3);
                 }
             }
+
+            Log::add($logTraceId, 'parsed ' . $item['id'], 3);
 
             $productUpdateData[] = [
                 'id' => $item['id'],

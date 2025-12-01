@@ -28,7 +28,7 @@ class CollectProductData implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(): bool
+    public function handle()
     {
         Log::add($this->logTraceId, 'start collecting data for new products by 30 products at chunk', 1);
 
@@ -46,11 +46,17 @@ class CollectProductData implements ShouldQueue
 
         $productsCount = $queryProducts->count();
 
+        var_dump($queryProducts->pluck('id'));
+        var_dump('product ids');
         Log::add($this->logTraceId, "Products number: $productsCount", 2);
+        var_dump($productsCount);
+        var_dump("Products number");
 
         $chunkCounter = 0;
 
         $queryProducts->chunk(30, function ($products) use(&$chunkCounter, $updater) {
+            var_dump($chunkCounter);
+            var_dump('$chunkCounter');
             Log::add($this->logTraceId, "start chunk #$chunkCounter", 2);
             $productIds = $products->pluck('id')->toArray();
 

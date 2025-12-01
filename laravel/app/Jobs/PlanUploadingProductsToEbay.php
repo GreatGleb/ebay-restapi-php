@@ -13,6 +13,8 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+ini_set('memory_limit', '1024M');
+
 class PlanUploadingProductsToEbay implements ShouldQueue
 {
     use Queueable;
@@ -37,11 +39,13 @@ class PlanUploadingProductsToEbay implements ShouldQueue
         $updater = new UpdateProducts();
         $isUpdatedFromGoogleSheets = $updater->fromGoogleSheets($this->logTraceId);
         if(!$isUpdatedFromGoogleSheets) {
+            dd('not $isUpdatedFromGoogleSheets');
             return false;
         }
 
         $isUpdatedUploadingOrder = $updater->setOrderOfUploadingNewProductsToEbay();
         if(!$isUpdatedUploadingOrder) {
+            dd('not $isUpdatedUploadingOrder');
             return false;
         }
 
