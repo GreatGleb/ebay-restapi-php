@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log as DefaultLogger;
 
 class Log
 {
@@ -12,8 +13,7 @@ class Log
             $date = now()->toDateTimeString();
             $logMessage = $date . ' ' . $message . PHP_EOL;
 
-            $logPath = base_path('app/Console/Commands/logs.log');
-            File::append($logPath, $logMessage);
+            DefaultLogger::info($logMessage);
         } else {
             $request = [
                 'source' => 'Laravel',

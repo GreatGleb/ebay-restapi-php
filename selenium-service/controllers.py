@@ -7,6 +7,7 @@ import re
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
 import asyncio
@@ -96,26 +97,63 @@ class Controller:
 
         return providerId, key
 
-    def searchProductAndGetInfo(self, productReference):
-        wait = WebDriverWait(self.driver, 2)
+    def parseProductPageLayout(self, productReference):
+        wait = WebDriverWait(self.driver, 7)
 
-        search_input = wait.until(lambda d: d.find_element(By.CSS_SELECTOR, "#SmartSearchInput"))
+        productReference = productReference.strip().replace(" ", "")
 
-        print(productReference)
-        print('productReference')
+        # 3. Парсинг страницы товара
+        try:
+            container = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "flex-general")))
 
-        if search_input:
-            search_input.clear()
-            search_input.send_keys(productReference)
-        else:
-            print("Error: Could not find the search input field.")
+            # --- Проверка артикула (без очистки символов) ---
+            site_code_elem = container.find_elements(By.CSS_SELECTOR, ".flex-tecdoc-number .flex-value")
+            if site_code_elem:
+                site_code = site_code_elem[0].text.strip().replace(" ", "")
 
-        search_btn = wait.until(lambda d: d.find_element(By.CSS_SELECTOR, '#BodyContentPlaceHolder_SmartSearchBar_SmartSearchButton'))
+                # Прямое сравнение без удаления тире
+                if site_code != productReference.strip():
+                    print(f"Артикул не совпал: ожидалось '{productReference}', на сайте '{site_code}'")
+                    return {}
+            else:
+                return {}
 
-        old_url = self.driver.current_url
-        search_btn.click()
-        wait.until(lambda d: d.current_url != old_url)
+            result = {
+                'link': self.driver.current_url,
+                'name': container.find_element(By.CLASS_NAME, "flex-title").text.strip(),
+                'brand_id': None
+            }
 
+            # --- Парсинг brand_id из аргументов onclick ---
+            # Ищем вкладку 'Parametry', в которой вшит нужный ID
+            params_tab = container.find_elements(By.CSS_SELECTOR, ".flex-tab.flex-params")
+            if params_tab:
+                onclick_val = params_tab[0].get_attribute("onclick")
+                # Регулярка достает значения в одинарных кавычках: '7652921', '260019', '403'...
+                matches = re.findall(r"'(.*?)'", onclick_val)
+                if len(matches) >= 4:
+                    result['brand_id'] = matches[3] # Четвертый аргумент - наш tecdoc brand id
+
+            # --- Цена (Закупка без VAT) ---
+            price_elem = container.find_elements(By.CLASS_NAME, "flex-price")
+            if price_elem:
+                price_raw = price_elem[0].get_attribute("data-flex-purchase-price")
+                result['price'] = float(price_raw.strip().replace(",", "."))
+
+            # --- Склады ---
+            main_stock = container.find_elements(By.CSS_SELECTOR, ".flex-main-stock .Amount strong")
+            result['main_stock'] = int(''.join(filter(str.isdigit, main_stock[0].text)) or 0) if main_stock else 0
+
+            dist_stock = container.find_elements(By.CSS_SELECTOR, ".flex-distribution-stock .Amount strong")
+            result['second_stock'] = int(''.join(filter(str.isdigit, dist_stock[0].text)) or 0) if dist_stock else 0
+
+            return result
+
+        except Exception as e:
+            print(f"Ошибка парсинга {productReference}: {e}")
+            return {}
+
+    def parseSearchListPage(self, productReference):
         product_items = self.driver.find_elements(By.CSS_SELECTOR, '.flex-products .flex-item')
 
         result = {}
@@ -151,7 +189,7 @@ class Controller:
 
                         second_stock = item.find_elements(By.CSS_SELECTOR, '.flex-stocks .flex-distribution-stock .flex-items-count')
                         if second_stock:
-                            stock = main_stock[0].text.strip()
+                            stock = second_stock[0].text.strip()
                             stock = ''.join(filter(str.isdigit, stock))
                             product_variant['second_stock'] = int(stock)
 
@@ -186,6 +224,40 @@ class Controller:
                 result = variant
 
         return result
+
+    def searchProductAndGetInfo(self, productReference):
+        wait = WebDriverWait(self.driver, 5)
+
+        # 1. Вводим текст
+        search_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#SmartSearchInput")))
+        search_input.clear()
+        search_input.send_keys(productReference)
+
+        try:
+            # 2. Пробуем найти подсказку (даем ей 2 секунды)
+            hint_wait = WebDriverWait(self.driver, 2)
+            suggestion = hint_wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".flex-smart-search-whisperer .flex-product-by-number")))
+
+            old_url = self.driver.current_url
+            suggestion.click()
+            wait.until(lambda d: d.current_url != old_url)
+
+            # Если кликнули по подсказке — парсим страницу ТОВАРА (твой новый код)
+            return self.parseProductPageLayout(productReference)
+        except:
+            # 3. Если подсказка не вышла — жмем кнопку поиска (твой старый код)
+            print("Подсказка не найдена, идем через общий поиск...")
+
+        try:
+            search_btn = self.driver.find_element(By.CSS_SELECTOR, '#BodyContentPlaceHolder_SmartSearchBar_SmartSearchButton')
+            old_url = self.driver.current_url
+            search_btn.click()
+            wait.until(lambda d: d.current_url != old_url)
+
+            return self.parseSearchListPage(productReference)
+        except Exception as e:
+            print(f"Ошибка при поиске: {e}")
+            return {}
 
     async def products(self, request: Request):
         await self.set_driver()

@@ -33,6 +33,13 @@ Route::get('/jobs/update/products/collectData', function (Request $request) {
     return response()->json(['status' => 'Job dispatched']);
 });
 
+Route::get('/handle/update/products/collectData', function (Request $request) {
+    $collect = new CollectProductData();
+    $collect->handle();
+
+    return response()->json(['status' => 'Job dispatched']);
+});
+
 Route::get('/jobs/update/products/fromEbay', function (Request $request) {
     $logTraceId = $request->header('log-trace-id');
 

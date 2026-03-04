@@ -7,12 +7,20 @@ use App\Imports\EbayImport;
 
 class EbayData extends Ebay
 {
+    private static $cachedCompatibilities = null;
+
     private function getAllCompatibilities() {
+        if (self::$cachedCompatibilities !== null) {
+            return self::$cachedCompatibilities;
+        }
+
         $dirPath = storage_path('app/private');
         $file = $dirPath . '/ebay_models.xlsx';
 
-        $compatibilities = (new EbayImport)->toArray($file)[0];
-        return $compatibilities;
+        // Читаем и сохраняем в статику
+        self::$cachedCompatibilities = (new EbayImport)->toArray($file)[0];
+
+        return self::$cachedCompatibilities;
     }
 
     public static function addToXMLVariables($xml, $variables, $item, Ebay $ebay = null) {

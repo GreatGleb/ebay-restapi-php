@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Helpers\EbayData;
+use App\Services\ArtificialIntelligenceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -431,6 +433,7 @@ class UpdateProducts extends Controller
     public function toGoogleSheets($logTraceId = null): bool
     {
         Log::add($logTraceId, 'start updating DB to Google Sheets', 1);
+        dump('start updating DB to Google Sheets');
 
         $url = "http://ebay_restapi_nginx/python/products/update_from_db_to_google_sheets";
         $response = Http::timeout(300)
@@ -445,10 +448,12 @@ class UpdateProducts extends Controller
 
         if (!$response->successful()) {
             Log::add($logTraceId, 'request failed', 2);
+            dump('request failed');
 
             $result = false;
         } else {
             Log::add($logTraceId, 'response: ' . $response->body(), 2);
+            dump('response: ' . $response->body());
         }
 
         Log::add($logTraceId, 'finish updating DB to Google Sheets', 1);
@@ -621,6 +626,7 @@ class UpdateProducts extends Controller
             }
 
             Log::add($logTraceId, 'send request to scrapping', 3);
+            Log::add($logTraceId, json_encode($requestForScrapping, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), 3);
 
             $url = "http://ebay_restapi_nginx/selenium/products";
             $response = Http::timeout(300)
@@ -824,6 +830,464 @@ class UpdateProducts extends Controller
             }
 
             ProducerBrand::insert($insertData);
+        }
+    }
+
+    public function fromGemini($logTraceId = null, $productIds = []): bool
+    {
+        Log::add($logTraceId, 'start work Gemini', 1);
+        Log::add($logTraceId, 'get products what not published to ebay', 2);
+
+        $baseQuery = Product::query()
+            ->where('products.published_to_ebay_de', false)
+            ->whereNull('products.ebay_name_de');
+
+        if (!empty($productIds)) {
+            $baseQuery->whereIn('products.id', $productIds);
+        }
+
+        dump($baseQuery->pluck('id')->toArray());
+        dump('product ids');
+
+        // ГЕНЕРАЦИЯ ИМЕНИ ДЛЯ МАШИН (part_of_ebay_name_for_cars)
+        $baseQueryForCars = (clone $baseQuery)->whereNull('products.part_of_ebay_name_for_cars');
+
+        $queryFromPlNameToForCars = (clone $baseQueryForCars)
+            ->whereNotNull('products.name_original_pl')
+            ->where('products.name_original_pl', '!=', '')
+            ->orderBy('products.id');
+//      ↓ test ↓
+        $queryFromPlNameToForCars = (clone $baseQuery)
+            ->whereNotNull('products.name_original_pl')
+            ->where('products.name_original_pl', '!=', '')
+            ->orderBy('products.id');
+//      ↑ test ↑
+
+        $queryFromEBayToForCars = (clone $baseQueryForCars)
+            ->with(['ebaySimilarProducts'])
+            ->where(function ($query) {
+                $query->whereNull('products.name_original_pl')
+                    ->orWhere('products.name_original_pl', '');
+            })
+            ->has('ebaySimilarProducts')
+            ->orderBy('products.id');
+//      ↓ test ↓
+//        $queryFromEBayToForCars = (clone $baseQueryForCars)
+//            ->with(['ebaySimilarProducts'])
+//            ->has('ebaySimilarProducts')
+//            ->orderBy('products.id');
+//      ↑ test ↑
+
+        $queryFromTecdocToForCars = (clone $baseQueryForCars)
+            ->with(['productCompatibilities'])
+            ->where(function ($query) {
+                $query->whereNull('products.name_original_pl')
+                    ->orWhere('products.name_original_pl', '');
+            })
+            ->doesntHave('ebaySimilarProducts')
+            ->has('productCompatibilities')
+            ->orderBy('products.id');
+//      ↓ test ↓
+//        $queryFromTecdocToForCars = (clone $baseQueryForCars)
+//            ->with(['productCompatibilities'])
+//            ->has('productCompatibilities')
+//            ->orderBy('products.id');
+//      ↑ test ↑
+
+        // ОПРЕДЕЛЕНИЕ ТИПА ТОВАРА (part_of_ebay_de_name_product_type)
+        $baseQueryType = (clone $baseQuery)->whereNull('products.part_of_ebay_de_name_product_type');
+
+        $queryFromEBayToType = (clone $baseQueryType)
+            ->with(['ebaySimilarProducts'])
+            ->has('ebaySimilarProducts')
+            ->orderBy('products.id');
+
+        $queryFromTecdocToType = (clone $baseQueryType)
+            ->whereNotNull('products.product_type_de')
+            ->where('products.product_type_de', '!=', '')
+            ->doesntHave('ebaySimilarProducts')
+            ->orderBy('products.id');
+//      ↓ test ↓
+//        $queryFromTecdocToType = (clone $baseQueryType)
+//            ->whereNotNull('products.product_type_de')
+//            ->where('products.product_type_de', '!=', '')
+//            ->orderBy('products.id');
+//      ↑ test ↑
+
+        $countOfProducts = $baseQuery->count();
+        Log::add($logTraceId, 'got' . $countOfProducts . ' products for preparing names by AI', 2);
+        dump('got' . $countOfProducts . ' products for preparing names by AI');
+        $aiClass = app()->make(ArtificialIntelligenceService::class, [
+            'logTraceId' => $logTraceId
+        ]);
+
+        $productUpdateFields = [
+            'part_of_ebay_name_for_cars',
+            'part_of_ebay_de_name_product_type',
+            'ebay_name_de',
+        ];
+        $productUpdateData = [];
+
+        dump($queryFromPlNameToForCars->count());
+        dump('$queryFromPlNameToForCars->count()');
+        dump($queryFromEBayToForCars->count());
+        dump('$queryFromEBayToForCars->count()');
+        dump($queryFromTecdocToForCars->count());
+        dump('$queryFromTecdocToForCars->count()');
+        dump($queryFromEBayToType->count());
+        dump('$queryFromEBayToType->count()');
+        dump($queryFromTecdocToType->count());
+        dump('$queryFromTecdocToType->count()');
+
+        $this->runChunkGeneratingEbayNames(
+            $queryFromPlNameToForCars,
+            fn($p) => $p->name_original_pl,
+            $aiClass->formatPolandNameForCars(...),
+            'Generating eBay part Name (for Cars) from Gemini by PL Name',
+            $logTraceId,
+            $productUpdateData,
+            chunkSize: 10
+        );
+
+        $this->runChunkGeneratingEbayNames(
+            $queryFromEBayToForCars,
+            $this->eBayNamesImploding(...),
+            $aiClass->generateCarCompatibilityFromEbayDeNames(...),
+            'Generating eBay part Name (for Cars) from Gemini by eBay DE Names',
+            $logTraceId,
+            $productUpdateData,
+            chunkSize: 5
+        );
+
+        $this->runChunkGeneratingEbayNames(
+            $queryFromTecdocToForCars,
+            function($p) {
+                $productCompatibilitiesIds = $p->productCompatibilities
+                    ->pluck('car_tecdoc_id')
+                    ->toArray();
+                $productCompatibilitiesArray = EbayData::setCompatibiliesToXML($productCompatibilitiesIds);
+                $productCompatibilities = $this->prepareCompatibilitiesStringForGemini($productCompatibilitiesArray);
+                return $productCompatibilities;
+            },
+            $aiClass->generateCarCompatibilityFromTecDoc(...),
+            'Generating eBay part Name (for Cars) from Gemini by TecDoc',
+            $logTraceId,
+            $productUpdateData,
+            chunkSize: 10
+        );
+
+        $this->runChunkGeneratingEbayNames(
+            $queryFromEBayToType,
+            $this->eBayNamesImploding(...),
+            $aiClass->generateProductTypeFromEbayDeNames(...),
+            'Generating eBay part Name (Product Type) from Gemini by eBay DE Names',
+            $logTraceId,
+            $productUpdateData,
+            'part_of_ebay_de_name_product_type',
+            chunkSize: 5
+        );
+
+        $this->runChunkGeneratingEbayNames(
+            $queryFromTecdocToType,
+            function($p) {
+                return "product type: \"{$p->product_type_de}\", installation position: \"{$p->installation_position_de}\", specifics: \"{$p->specifics_de}\"";
+            },
+            $aiClass->generateProductTypeFromTecdoc(...),
+            'Generating eBay part Name (Product Type) from Gemini by TecDoc',
+            $logTraceId,
+            $productUpdateData,
+            'part_of_ebay_de_name_product_type',
+            chunkSize: 10
+        );
+
+        $toShorten = [];
+
+        foreach ($productUpdateData as $key => $item) {
+            if($item['part_of_ebay_de_name_product_type'] and $item['part_of_ebay_name_for_cars']) {
+                $fullName = $item['part_of_ebay_de_name_product_type'] . ' ' . $item['part_of_ebay_name_for_cars'];
+
+                if (mb_strlen($fullName) > 80) {
+                    // Добавляем в список на сокращение
+                    $toShorten[$key] = $fullName;
+                } else {
+                    // Сразу формируем финал для тех, кто прошел по лимиту
+                    $productUpdateData[$key]['ebay_name_de'] = $fullName;
+                }
+            }
+        }
+
+        dump($toShorten);
+
+        $this->shortenEbayNamesByArtificial(
+            $aiClass->generateShortenEbayName(...),
+            $toShorten,
+            $productUpdateData,
+            $logTraceId,
+            chunkSize: 10
+        );
+
+        dump($productUpdateData);
+
+        if (!empty($productUpdateData)) {
+            $now = now();
+            foreach ($productUpdateData as $key => $item) {
+                foreach ($productUpdateFields as $field) {
+                    // Проверяем: если значение есть и оно не пустая строка — берем его.
+                    // Иначе — записываем null.
+                    $val = $item[$field] ?? null;
+                    $productUpdateData[$key][$field] = ($val !== '') ? $val : null;
+                }
+
+                $productUpdateData[$key]['updated_at'] = $now;
+            }
+
+            $productUpdateFields[] = 'updated_at';
+            Product::upsert($productUpdateData, ['id'], $productUpdateFields);
+        }
+
+        Log::add($logTraceId, 'update db by artificial data', 3);
+        Log::add($logTraceId, 'finish work fromGemini', 1);
+
+        return true;
+    }
+
+    /**
+     * Универсальный метод для генерации названия через Gemini.
+     */
+    protected function generateEbayNameFromGemini(
+        \Illuminate\Support\Collection $products,
+        callable $textGenerator,
+        callable $geminiCaller,
+        string | null $logTraceId,
+        int $chunkKey,
+        string $fieldName = 'part_of_ebay_name_for_cars'
+    ): void {
+        if ($products->isEmpty()) {
+            return;
+        }
+
+        // 1. Формируем текст с помощью переданного callback
+        $inputText = "";
+        foreach ($products as $idx => $product) {
+            $inputText .= ($idx + 1) . ")\n" . $textGenerator($product) . "\n";
+        }
+
+//        dump($inputText);
+
+        try {
+            // 2. Вызываем нужный метод Gemini
+            $parsedNames = $geminiCaller($inputText, $products->count());
+
+            if (count($parsedNames) === $products->count()) {
+                // 3. Сопоставляем результаты
+                foreach ($products as $idx => $product) {
+                    $product->{$fieldName} = $parsedNames[$idx];
+                }
+            } else {
+                dump("AI Error: Count mismatch or not an array");
+                Log::add($logTraceId, "AI Error: Count mismatch or not an array for chunk {$chunkKey}", 4);
+            }
+
+//            dump($parsedNames);
+        } catch (\Exception $e) {
+            Log::add($logTraceId, "Artifical Exception: " . $e->getMessage(), 4);
+        }
+    }
+
+    /**
+     * Алгоритмическая группировка данных TecDoc совместимости для Gemini
+     */
+    private function prepareCompatibilitiesStringForGemini(array $compatibilityArray): string
+    {
+        if (empty($compatibilityArray)) return "No data";
+
+        $grouped = [];
+
+        foreach ($compatibilityArray as $item) {
+            $list = $item['Compatibility']['NameValueList'] ?? [];
+            $d = [];
+            foreach ($list as $pair) { $d[$pair['Name']] = $pair['Value']; }
+
+            if (!isset($d['Make'], $d['Model'])) continue;
+
+            $make = $d['Make'];
+            $trim = $d['Trim'] ?? '';
+
+            // Года
+            preg_match_all('/\b\d{4}\b/', $d['Year'] ?? '', $matches);
+            $years = $matches[0] ?? [];
+
+            // --- НОВЫЙ БЛОК: Разделение платформ ---
+            // "F10, F18" превращается в массив ["F10", "F18"]
+            $platforms = isset($d['Platform'])
+                ? array_map('trim', explode(',', $d['Platform']))
+                : ['Standard']; // Если платформы нет
+
+            foreach ($platforms as $platform) {
+                $groupKey = "{$d['Model']} {$platform}";
+
+                if (!isset($grouped[$make][$groupKey])) {
+                    $grouped[$make][$groupKey] = ['engines' => [], 'min_year' => null, 'max_year' => null];
+                }
+
+                if ($trim) {
+                    $grouped[$make][$groupKey]['engines'][$trim] = true;
+                }
+
+                foreach ($years as $year) {
+                    $year = (int)$year;
+                    if (is_null($grouped[$make][$groupKey]['min_year']) || $year < $grouped[$make][$groupKey]['min_year'])
+                        $grouped[$make][$groupKey]['min_year'] = $year;
+                    if (is_null($grouped[$make][$groupKey]['max_year']) || $year > $grouped[$make][$groupKey]['max_year'])
+                        $grouped[$make][$groupKey]['max_year'] = $year;
+                }
+            }
+        }
+
+        $outputLines = [];
+        $makeCount = 0;
+        foreach ($grouped as $make => $models) {
+            if ($makeCount >= 10) break;
+
+            $modelCount = 0;
+            foreach ($models as $modelName => $data) {
+                // 2. Лимит на количество СТРОК (моделей/платформ) внутри марки - не более 5
+                if ($modelCount >= 5) break;
+
+                // 3. Лимит на количество ДВИГАТЕЛЕЙ внутри группы - до 20 штук
+                $enginesArray = array_keys($data['engines']);
+                if (count($enginesArray) > 20) {
+                    $engines = implode(', ', array_slice($enginesArray, 0, 20)) . '...';
+                } else {
+                    $engines = implode(', ', $enginesArray);
+                }
+
+                $years = ($data['min_year'] && $data['max_year'])
+                    ? "({$data['min_year']}-{$data['max_year']})"
+                    : "";
+
+                // Формируем красивую строку
+                $outputLines[] = "{$make} {$modelName} [{$engines}] {$years}";
+
+                $modelCount++;
+            }
+
+            $makeCount++;
+        }
+
+        return implode("\n", $outputLines);
+    }
+
+    private function runChunkGeneratingEbayNames(
+        $query,
+        $dataCollectorMethod,
+        $geminiMethod,
+        $logMessage,
+        $logTraceId,
+        &$productUpdateData,
+        $fieldName = 'part_of_ebay_name_for_cars',
+        $chunkSize = 5
+    ): void
+    {
+        $chunkKey = 1;
+        $query->chunk($chunkSize, function ($products) use ($logTraceId, $dataCollectorMethod, $geminiMethod, $logMessage, &$chunkKey, &$productUpdateData, $fieldName) {
+            Log::add($logTraceId, 'start chunk ' . $chunkKey . " {$logMessage}", 2);
+
+            $this->generateEbayNameFromGemini(
+                $products,
+                $dataCollectorMethod,
+                $geminiMethod,
+                $logTraceId,
+                $chunkKey,
+                $fieldName
+            );
+
+            foreach ($products as $product) {
+                $productUpdateData[$product->id]['id'] ??= $product->id;
+
+                // Записываем результат работы Gemini в массив
+                $productUpdateData[$product->id][$fieldName] = $product->{$fieldName};
+
+                // Подтягиваем значения других полей, если они уже есть в объекте, но еще не в массиве
+                $productUpdateData[$product->id]['part_of_ebay_name_for_cars'] ??= $product->part_of_ebay_name_for_cars;
+                $productUpdateData[$product->id]['part_of_ebay_de_name_product_type'] ??= $product->part_of_ebay_de_name_product_type;
+            }
+
+            $chunkKey = $chunkKey + 1;
+            Log::add($logTraceId, "finish chunk {$logMessage}", 3);
+        });
+    }
+
+    private function eBayNamesImploding($p): string
+    {
+        $namesStr = "";
+        foreach ($p->ebaySimilarProducts as $similar) {
+            $names = json_decode($similar->names, true);
+            if (is_array($names)) {
+                $namesStr .= implode("\n", array_slice(array_unique($names), 0, 10)) . "\n";
+            }
+        }
+        return $namesStr;
+    }
+
+    public function shortenEbayNamesByArtificial($aiCaller, array $items, &$productUpdateData, $logTraceId, $chunkSize = 10): void
+    {
+        if (empty($items)) {
+            dump('empty shorten array');
+            return;
+        }
+
+        // Разделяем входящие товары на чанки по 10 штук
+        // preserve_keys = true критически важен для сохранения оригинальных индексов
+        $chunks = array_chunk($items, $chunkSize, true);
+
+        foreach ($chunks as $chunkKey => $chunkItems) {
+            // 1. Формируем текстовый список для промпта
+            $inputText = "";
+            $index = 1;
+            $keysMap = []; // Храним карту соответствия: Порядковый номер => Оригинальный ключ
+
+            foreach ($chunkItems as $key => $fullName) {
+                $inputText .= "{$index}) {$fullName}\n";
+                $keysMap[$index] = $key;
+                $index++;
+            }
+
+            $currentItemsCount = count($chunkItems);
+
+            try {
+                // 2. Вызываем нужный метод Artificial Class
+                $parsedNames = $aiCaller($inputText, $currentItemsCount);
+
+                if (count($parsedNames) === $currentItemsCount) {
+                    // 5. Сопоставляем обратно с оригинальными ключами
+                    foreach ($parsedNames as $i => $shortenedValue) {
+                        $originalIndex = $i + 1; // Так как ИИ считает с 1
+                        if (isset($keysMap[$originalIndex])) {
+                            if (mb_strlen($shortenedValue) <= 80) {
+                                $productUpdateData[$keysMap[$originalIndex]]['ebay_name_de'] = $shortenedValue;
+                            } else {
+                                // Жестко режем до 80 и убираем лишние пробелы/запятые в конце
+                                $hardCut = mb_substr($shortenedValue, 0, 80);
+
+                                // Опционально: откатываемся до последнего пробела,
+                                // чтобы не резать слово "MITSUBI..." на "MITSUB"
+                                $lastSpace = mb_strrpos($hardCut, ' ');
+                                if ($lastSpace !== false) {
+                                    $hardCut = mb_substr($hardCut, 0, $lastSpace);
+                                }
+
+                                $productUpdateData[$keysMap[$originalIndex]]['ebay_name_de'] = trim($hardCut);
+                            }
+                        }
+                    }
+                } else {
+                    dump("AI Error: Count mismatch or not an array");
+                    Log::add($logTraceId, "AI Error: Count mismatch or not an array for chunk {$chunkKey}", 4);
+                }
+            } catch (\Exception $e) {
+                Log::add($logTraceId, "Artifical Exception: " . $e->getMessage(), 4);
+            }
         }
     }
 }

@@ -31,10 +31,10 @@ class UpdateProductsFromEbay implements ShouldQueue
             return false;
         }
 
-        $isUpdatedFromEbay = $updater->fromEbay($this->logTraceId);
-        if(!$isUpdatedFromEbay) {
-            return false;
-        }
+//        $isUpdatedFromEbay = $updater->fromEbay($this->logTraceId);
+//        if(!$isUpdatedFromEbay) {
+//            return false;
+//        }
 
         $isUpdatedToGoogleSheets = $updater->toGoogleSheets($this->logTraceId);
 

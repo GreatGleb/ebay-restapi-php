@@ -34,23 +34,43 @@ class CollectProductData implements ShouldQueue
 
         $updater = new UpdateProducts();
         $isUpdatedFromGoogleSheets = $updater->fromGoogleSheets($this->logTraceId);
+        var_dump($isUpdatedFromGoogleSheets);
+        var_dump('$isUpdatedFromGoogleSheets');
         if(!$isUpdatedFromGoogleSheets) {
+            Log::add($this->logTraceId, 'can\'t update from google sheets - stop and exit', 1);
+            dump('can\'t update from google sheets - stop and exit');
+
             return false;
         }
 
         $queryProducts = Product::query()
             ->where('products.published_to_ebay_de', false)
-            ->whereNull('products.reference')
-            ->whereNotNull('products.tecdoc_number')
+//            ->whereNull('products.reference')
+//            ->whereNotNull('products.tecdoc_number')
+            ->where(function ($query) {
+                $query->whereNull('products.part_of_ebay_name_for_cars')
+                    ->orWhereNull('products.part_of_ebay_de_name_product_type');
+            })
+            ->whereNull('products.ebay_name_de')
             ->orderBy('products.id');
+
+//       ↓ test
+//        $queryProducts = Product::query()
+////            ->with('ebaySimilarProducts')
+////            ->whereHas('ebaySimilarProducts')
+//            ->where('products.published_to_ebay_de', false)
+//            ->whereNull('products.part_of_ebay_name_for_cars')
+//            ->whereNull('products.ebay_name_de')
+//            ->orderBy('products.id');
+//       ↑ test
 
         $productsCount = $queryProducts->count();
 
-        var_dump($queryProducts->pluck('id'));
-        var_dump('product ids');
+        dump($queryProducts->pluck('id')->toArray());
+        dump('product ids');
         Log::add($this->logTraceId, "Products number: $productsCount", 2);
-        var_dump($productsCount);
-        var_dump("Products number");
+        dump($productsCount);
+        dump("Products number");
 
         $chunkCounter = 0;
 
@@ -59,6 +79,8 @@ class CollectProductData implements ShouldQueue
             var_dump('$chunkCounter');
             Log::add($this->logTraceId, "start chunk #$chunkCounter", 2);
             $productIds = $products->pluck('id')->toArray();
+
+//            dump($products->toArray());
 
             $isUpdatedFromApNext = $updater->fromApNextEu($this->logTraceId, $productIds);
             if (!$isUpdatedFromApNext) {
@@ -78,6 +100,12 @@ class CollectProductData implements ShouldQueue
                 return false;
             }
 
+            $isUpdatedFromGemini = $updater->fromGemini($this->logTraceId, $productIds);
+            if (!$isUpdatedFromGemini) {
+                Log::add($this->logTraceId, "stop Gemini", 2);
+                return false;
+            }
+
             $updaterPhotos = new UpdateProductPhotos();
             $isUpdatedFromPhotos = $updaterPhotos->run($this->logTraceId, $productIds);
             if (!$isUpdatedFromPhotos) {
@@ -85,14 +113,16 @@ class CollectProductData implements ShouldQueue
                 return false;
             }
 
+//            return false;
+
             $chunkCounter++;
         });
 
-        $updaterStockAndPrices = new UpdateAutoPartnerStockAndPrice();
-        $updaterStockAndPrices->run();
-
-        $updaterPrices = new UpdateProductPrices();
-        $updaterPrices->run();
+//        $updaterStockAndPrices = new UpdateAutoPartnerStockAndPrice();
+//        $updaterStockAndPrices->run();
+//
+//        $updaterPrices = new UpdateProductPrices();
+//        $updaterPrices->run();
 
         $isUpdatedToGoogleSheets = $updater->toGoogleSheets($this->logTraceId);
 
