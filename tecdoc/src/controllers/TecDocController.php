@@ -585,6 +585,14 @@ class TecDocController
         return "null";
     }
 
+    public function searchRequest($string)
+    {
+        $searchedResults = $this->sendRequest([$this, 'search'], $string);
+        $searchedResults = $this->extractArrayOfObjectProperties($searchedResults);
+
+        return $searchedResults;
+    }
+
     public function search($string)
     {
         $oemCode = $this->getArticleDirectSearchAllNumbersWithState($string, 10);
@@ -613,7 +621,7 @@ class TecDocController
     public function getArticleDirectSearchAllNumbersWithState($string, $numberType)
     {
         $getArticleDirectSearchAllNumbersWithState = (new getArticleDirectSearchAllNumbersWithState())
-            ->setArticleCountry('LT')
+            ->setArticleCountry('DE')
             ->setLang('RU')
             ->setArticleNumber($string)
             //->setSearchExact(true)
@@ -811,40 +819,47 @@ class TecDocController
         $data = [];
 
         if($articleId) {
-//            $ruData = $this->getArticleData($articleId, 'ru', false, true, true);
-//            $enData = $this->getArticleData($articleId, 'en', false, true, true);
-//            $deDataFull = $this->getArticleData($articleId, 'de', true);
-
-            Log::add($this->logTraceId, 'get article data ru', 7);
-            $ruDataFull = $this->sendRequest([$this, 'getArticleData'], $articleId, 'ru', true);
-
-            Log::add($this->logTraceId, 'get article data en', 7);
-            $enData = $this->sendRequest([$this, 'getArticleData'], $articleId, 'en', false, true, true);
-
-            Log::add($this->logTraceId, 'get article data de', 7);
-            $deData = $this->sendRequest([$this, 'getArticleData'], $articleId, 'de', false, true, true);
-
-//            $data = $deDataFull;
-            $data = $ruDataFull;
-            $data["productTypes"] = [
-                "ru" => $ruDataFull["productTypes"] ?? "",
-                "en" => $enData["productTypes"] ?? "",
-                "de" => $deData["productTypes"] ?? "",
-            ];
-            $data["specifics"] = [
-                "ru" => $ruDataFull["specifics"] ?? "",
-                "en" => $enData["specifics"] ?? "",
-                "de" => $deData["specifics"] ?? "",
-            ];
-
-            $data['ean'] = $this->getEanFromArray($ruDataFull['gtins'] ?? []);
-
-            Log::add($this->logTraceId, 'get compatibilities', 7);
-            $data['compatibilities'] = $this->getArticleModels($articleId);
+            $data = $this->getInfoByArticleId($articleId);
         } else {
             Log::add($this->logTraceId, 'Article Not Found', 7);
             $data['error'] = 'Article Not Found';
         }
+
+        return $data;
+    }
+
+    public function getInfoByArticleId($articleId)
+    {
+//            $ruData = $this->getArticleData($articleId, 'ru', false, true, true);
+//            $enData = $this->getArticleData($articleId, 'en', false, true, true);
+//            $deDataFull = $this->getArticleData($articleId, 'de', true);
+
+        Log::add($this->logTraceId, 'get article data ru', 7);
+        $ruDataFull = $this->sendRequest([$this, 'getArticleData'], $articleId, 'ru', true);
+
+        Log::add($this->logTraceId, 'get article data en', 7);
+        $enData = $this->sendRequest([$this, 'getArticleData'], $articleId, 'en', false, true, true);
+
+        Log::add($this->logTraceId, 'get article data de', 7);
+        $deData = $this->sendRequest([$this, 'getArticleData'], $articleId, 'de', false, true, true);
+
+//            $data = $deDataFull;
+        $data = $ruDataFull;
+        $data["productTypes"] = [
+            "ru" => $ruDataFull["productTypes"] ?? "",
+            "en" => $enData["productTypes"] ?? "",
+            "de" => $deData["productTypes"] ?? "",
+        ];
+        $data["specifics"] = [
+            "ru" => $ruDataFull["specifics"] ?? "",
+            "en" => $enData["specifics"] ?? "",
+            "de" => $deData["specifics"] ?? "",
+        ];
+
+        $data['ean'] = $this->getEanFromArray($ruDataFull['gtins'] ?? []);
+
+        Log::add($this->logTraceId, 'get compatibilities', 7);
+        $data['compatibilities'] = $this->getArticleModels($articleId);
 
         return $data;
     }
@@ -870,7 +885,7 @@ class TecDocController
     public function getAllBrandsRequestFunction()
     {
         $request = (new GetAmBrands())
-            ->setArticleCountry('PL')//DE
+            ->setArticleCountry('DE')//DE
             ->setLang('en');
         $brands = $this->client->GetAmBrands($request)->getData();
 

@@ -14,9 +14,10 @@ use Great\Tecdoc\Controllers\UseTecDocController;
 $app = new Container;
 Facade::setFacadeApplication($app);
 
-$app->singleton('request', function() {
-    return Request::capture();
-});
+$request = Request::capture();
+
+$app->instance(Request::class, $request);
+$app->alias(Request::class, 'request');
 
 $app->singleton('router', function($app) {
     return new Router(new Illuminate\Events\Dispatcher, $app);
@@ -28,6 +29,7 @@ $router->group(['prefix' => 'tecdoc'], function ($router) {
     $router->get('/', [TecDocController::class, 'index']);
     $router->post('/products-info', [UseTecDocController::class, 'getProductsInfo']);
     $router->get('/get-all-brands', [UseTecDocController::class, 'getAllBrands']);
+    $router->get('/infoByOeCodes', [UseTecDocController::class, 'getProductInfoByOeCodes']);
     $router->get('/{reference}', [UseTecDocController::class, 'testGetProductInfo']);
 });
 
