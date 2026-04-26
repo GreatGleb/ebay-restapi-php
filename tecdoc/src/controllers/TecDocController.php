@@ -927,7 +927,7 @@ class TecDocController
     private function scrapAndSetApiKeys()
     {
         $url = "http://ebay_restapi_nginx/selenium/get_api_key";
-        $response = Http::timeout(300)
+        $response = Http::timeout(600)
             ->withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',

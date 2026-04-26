@@ -103,10 +103,14 @@ class PrepareProductColumns:
                 value = f'=IMAGE("{value}")'
             if db_key == 'oe_codes':
                 if source_type == 'fromDbToSheets':
-                    if value:
-                        value = 'saved to db from tecdoc'
+                    oe_codes_from_sheets = old_dict.get('oe_codes_from_sheets')
+                    if oe_codes_from_sheets:
+                        value = oe_codes_from_sheets
                     else:
-                        value = None
+                        if value:
+                            value = 'saved to db from tecdoc'
+                        else:
+                            value = None
             if db_key == 'car_compatibilities':
                 if source_type == 'fromDbToSheets':
                     if value:

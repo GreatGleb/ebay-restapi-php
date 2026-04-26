@@ -9,6 +9,6 @@ COPY . /var/www/tecdoc
 
 WORKDIR /var/www/tecdoc
 
-RUN composer install --optimize-autoloader --no-dev
+RUN composer update --optimize-autoloader --no-dev
 
 EXPOSE 9000

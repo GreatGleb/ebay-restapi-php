@@ -32,108 +32,115 @@ class UseTecDocController
         $logTraceId = getallheaders()['Log-Trace-Id'];
 
         try {
-            $oeCodesString = $request->query('reference');
+            $products = json_decode($request->getContent(), true);
 
-            if (!$oeCodesString) {
-                return "Артикул не передан";
-            }
+            Log::add($logTraceId, 'incoming products: ' . json_encode($products), 3);
 
-            $rawArray = preg_split('/[\/,]+/', $oeCodesString);
-
-            // 2. Очищаем каждый элемент:
-            // trim() уберет пробелы по краям, но оставит их внутри (как в "535 0174 10")
-            $oeCodesRaw = array_values(array_filter(array_map('trim', $rawArray)));
-            $oeCodes = [];
-
-            foreach ($oeCodesRaw as $key => $code) {
-                $parts = explode(' ', $code);
-                $totalParts = count($parts);
-
-                // Если частей больше одной, анализируем их длину
-                if ($totalParts > 1) {
-                    $isSeparateCodes = false;
-                    $longPartsCount = 0;
-
-                    foreach ($parts as $part) {
-                        // Если часть длинная (например, >= 6 символов), считаем ее "крупной"
-                        if (strlen($part) >= 6) {
-                            $longPartsCount++;
-                        }
-                    }
-
-                    // Если большинство частей "крупные", значит это разные коды,
-                    // которые случайно оказались через пробел.
-                    // Ищем только по последней части (как по наиболее вероятному артикулу)
-                    if ($longPartsCount >= 1) {
-                        foreach ($parts as $part) {
-                            $oeCodes[] = $part;
-                        }
-                    } else {
-                        // Иначе (когда части мелкие) считаем это одним целым кодом
-                        $oeCodes[] = $code;
-                    }
-                } else {
-                    $oeCodes[] = $code;
-                }
-            }
+            if (empty($products)) return json_encode(['success' => false, 'message' => 'Данные не переданы']);
 
             $tecdoc = new TecDocController(null);
-            $stats = [];
-            $itemStorage = []; // Храним здесь объекты, чтобы не перезаписывать их
+            $responseBatch = [];
 
-            foreach ($oeCodes as $code) {
-                $searchData = $tecdoc->searchRequest($code);
-                if (!$searchData) continue;
+            foreach ($products as $product) {
+                $oeCodesString = $product['reference'] ?? '';
+                if (!$oeCodesString) continue;
 
-                // Используем множество для этого кода, чтобы не учитывать дубли внутри одного поиска
-                $foundInThisCode = [];
+                $rawArray = preg_split('/[\/,]+/', $oeCodesString);
 
-                foreach ($searchData as $item) {
-                    $id = $item['articleId'];
+                // 2. Очищаем каждый элемент:
+                // trim() уберет пробелы по краям, но оставит их внутри (как в "535 0174 10")
+                $oeCodesRaw = array_values(array_filter(array_map('trim', $rawArray)));
+                $oeCodes = [];
 
-                    // Сохраняем объект, если видим его впервые
-                    if (!isset($itemStorage[$id])) {
-                        $itemStorage[$id] = $item;
+                foreach ($oeCodesRaw as $key => $code) {
+                    $parts = explode(' ', $code);
+                    $totalParts = count($parts);
+
+                    // Если частей больше одной, анализируем их длину
+                    if ($totalParts > 1) {
+                        $isSeparateCodes = false;
+                        $longPartsCount = 0;
+
+                        foreach ($parts as $part) {
+                            // Если часть длинная (например, >= 6 символов), считаем ее "крупной"
+                            if (strlen($part) >= 6) {
+                                $longPartsCount++;
+                            }
+                        }
+
+                        // Если большинство частей "крупные", значит это разные коды,
+                        // которые случайно оказались через пробел.
+                        // Ищем только по последней части (как по наиболее вероятному артикулу)
+                        if ($longPartsCount >= 1) {
+                            foreach ($parts as $part) {
+                                $oeCodes[] = $part;
+                            }
+                        } else {
+                            // Иначе (когда части мелкие) считаем это одним целым кодом
+                            $oeCodes[] = $code;
+                        }
+                    } else {
+                        $oeCodes[] = $code;
                     }
-
-                    $foundInThisCode[$id] = true;
                 }
 
-                // Прибавляем балл только 1 раз за этот конкретный OE-код
-                foreach (array_keys($foundInThisCode) as $id) {
-                    if (!isset($stats[$id])) {
-                        $stats[$id] = 0;
+                $stats = [];
+                $itemStorage = []; // Храним здесь объекты, чтобы не перезаписывать их
+
+                foreach ($oeCodes as $code) {
+                    $searchData = $tecdoc->searchRequest($code);
+                    if (!$searchData) continue;
+
+                    // Используем множество для этого кода, чтобы не учитывать дубли внутри одного поиска
+                    $foundInThisCode = [];
+
+                    foreach ($searchData as $item) {
+                        $id = $item['articleId'];
+
+                        // Сохраняем объект, если видим его впервые
+                        if (!isset($itemStorage[$id])) {
+                            $itemStorage[$id] = $item;
+                        }
+
+                        $foundInThisCode[$id] = true;
                     }
-                    $stats[$id]++;
+
+                    // Прибавляем балл только 1 раз за этот конкретный OE-код
+                    foreach (array_keys($foundInThisCode) as $id) {
+                        if (!isset($stats[$id])) {
+                            $stats[$id] = 0;
+                        }
+                        $stats[$id]++;
+                    }
                 }
-            }
 
-    // Собираем итоговый массив
-            $finalList = [];
-            foreach ($stats as $id => $hits) {
-                $finalList[] = [
-                    'item' => $itemStorage[$id],
-                    'hits' => $hits
-                ];
-            }
+                // Собираем итоговый массив
+                $finalList = [];
+                foreach ($stats as $id => $hits) {
+                    $finalList[] = [
+                        'item' => $itemStorage[$id],
+                        'hits' => $hits
+                    ];
+                }
 
-            // Сортируем по популярности (hits)
-            usort($finalList, function($a, $b) {
-                return $b['hits'] <=> $a['hits'];
-            });
+                // Сортируем по популярности (hits)
+                usort($finalList, function ($a, $b) {
+                    return $b['hits'] <=> $a['hits'];
+                });
 
-    // Берем топ-10
-            $result = array_slice($finalList, 0, 10);
+                // Берем топ-10
+                $result = array_slice($finalList, 0, 10);
 
-            $data = [];
-
-            if(isset($result[0]['item']['articleId'])) {
-                $articleId = $result[0]['item']['articleId'];
-                $data = $tecdoc->getInfoByArticleId($articleId);
+                if (isset($result[0]['item']['articleId'])) {
+                    $articleId = $result[0]['item']['articleId'];
+                    $data = $tecdoc->getInfoByArticleId($articleId);
+                    $data['product-id'] = $product['id'];
+                    $responseBatch[] = $data;
+                }
             }
 
             header('Content-Type: application/json');
-            return json_encode(['success' => true, 'data' => $data]);
+            return $responseBatch;
         } catch (\Exception $e) {
             Log::add($logTraceId, "TecDoc Error: " . $e->getMessage(), 3);
 

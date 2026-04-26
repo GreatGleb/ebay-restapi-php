@@ -29,7 +29,7 @@ $router->group(['prefix' => 'tecdoc'], function ($router) {
     $router->get('/', [TecDocController::class, 'index']);
     $router->post('/products-info', [UseTecDocController::class, 'getProductsInfo']);
     $router->get('/get-all-brands', [UseTecDocController::class, 'getAllBrands']);
-    $router->get('/infoByOeCodes', [UseTecDocController::class, 'getProductInfoByOeCodes']);
+    $router->post('/infoByOeCodes', [UseTecDocController::class, 'getProductInfoByOeCodes']);
     $router->get('/{reference}', [UseTecDocController::class, 'testGetProductInfo']);
 });
 

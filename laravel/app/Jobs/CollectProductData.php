@@ -84,12 +84,14 @@ class CollectProductData implements ShouldQueue
 
             $isUpdatedFromApNext = $updater->fromApNextEu($this->logTraceId, $productIds);
             if (!$isUpdatedFromApNext) {
+                dump("stop fromApNextEu");
                 Log::add($this->logTraceId, "stop fromApNextEu", 2);
                 return false;
             }
 
             $isUpdatedFromTecDoc = $updater->fromTecDoc($this->logTraceId, $productIds);
             if (!$isUpdatedFromTecDoc) {
+                dump("stop fromTecDoc");
                 Log::add($this->logTraceId, "stop fromTecDoc", 2);
                 return false;
             }

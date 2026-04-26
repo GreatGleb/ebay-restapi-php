@@ -3,27 +3,43 @@
 namespace Great\Tecdoc\Helpers;
 
 use Illuminate\Support\Facades\Http;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
 class Log
 {
+    private static $logger = null;
+
+    private static function getLogger(): Logger
+    {
+        if (!self::$logger) {
+            self::$logger = new Logger('tecdoc');
+            self::$logger->pushHandler(new StreamHandler('/var/www/tecdoc/storage/logs/tecdoc.log'));
+        }
+        return self::$logger;
+    }
+
     public static function add($traceId, string $message, int $indent) {
-        if(!$traceId) {
-            return false;
+        self::getLogger()->info($message);
+
+        if (!$traceId) {
+            return true;
         }
 
-        $request = [
-            'source' => 'Tecdoc',
-            'trace_id' => $traceId,
-            'message' => $message,
-            'indent' => $indent,
-        ];
-
-        $url = "http://ebay_restapi_nginx/logs/add";
-
-        Http::timeout(300)
-            ->withHeaders([
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json'
-            ])->post($url, $request);
+        try {
+            Http::timeout(5)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json'
+                ])->post("http://ebay_restapi_nginx/logs/add", [
+                    'source' => 'Tecdoc',
+                    'trace_id' => $traceId,
+                    'message' => $message,
+                    'indent' => $indent,
+                ]);
+        } catch (\Exception $e) {
+            self::getLogger()->warning('log-service unavailable: ' . $e->getMessage());
+        }
 
         return true;
     }

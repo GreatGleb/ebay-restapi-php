@@ -20,6 +20,7 @@ use App\Helpers\Log;
 class UpdateProducts extends Controller
 {
     public function run(Request $request) {
+//        Usually used from /python/products/save_to_db_from_google_sheets
         $products = $request->all();
 
 //        $allowedPropertiesInTableProducts = Schema::getColumnListing('products');
@@ -30,6 +31,7 @@ class UpdateProducts extends Controller
             'supplier_price_net',
             'stock_quantity_pl',
             'stock_quantity_pruszkow',
+            'oe_codes',
             'internal_description',
             'part_of_ebay_de_name_product_type',
             'part_of_ebay_name_for_cars',
@@ -54,15 +56,32 @@ class UpdateProducts extends Controller
             }
         }
 
-        $updateFields = array_keys($productsFiltered[0]);
+        $preparedData = collect($productsFiltered)->map(function ($item) {
+            $oeCodes = $item['oe_codes'] ?? null;
 
-        $resultOfUpdating = Product::upsert($productsFiltered, ['id'], $updateFields);
+            if ($oeCodes === 'saved to db from tecdoc') {
+                $oeCodes = null;
+            }
+
+            unset($item['oe_codes']);
+            $item['oe_codes_from_sheets'] = $oeCodes;
+
+            return $item;
+        })->toArray();
+
+        $resultOfUpdating = false;
+
+        if (!empty($preparedData)) {
+            $updateFields = array_keys($preparedData[0]);
+            $updateFields = array_diff($updateFields, ['id']);
+            $resultOfUpdating = Product::upsert($preparedData, ['id'], $updateFields);
+        }
 
 //            $photos = $product['photos'];
 //            $oe_codes = $product['oe_codes'];
 //            $car_compatibilities = $product['cars_compatibilities'];
 
-        return [$resultOfUpdating, $updateFields];
+        return $resultOfUpdating;
     }
 
     public function fromTecDoc($logTraceId = null, $productIds = []): bool
@@ -70,7 +89,7 @@ class UpdateProducts extends Controller
         Log::add($logTraceId, 'start work fromTecDoc', 1);
         Log::add($logTraceId, 'get products what not published to ebay', 2);
 
-        $queryProducts = Product::query()
+        $baseQuery = Product::query()
             ->select('products.*', 'producer_brands.tecdoc_id as producer_tecdoc_id')
             ->leftJoin('producer_brands', function ($join) {
                 $join->on(
@@ -79,30 +98,22 @@ class UpdateProducts extends Controller
                     DB::raw('LOWER(producer_brands.name)')
                 );
             })
-            ->where('products.published_to_ebay_de', false)
-            ->whereNull('products.reference')
-            ->orderBy('products.id');
+            ->when($productIds,
+                // Если $productIds НЕ пустой (выполнится этот callback):
+                fn($q) => $q->whereIn('products.id', $productIds),
 
-        if($productIds) {
-            $queryProducts = Product::query()
-                ->select('products.*', 'producer_brands.tecdoc_id as producer_tecdoc_id')
-                ->leftJoin('producer_brands', function ($join) {
-                    $join->on(
-                        DB::raw('LOWER(products.producer_brand)'),
-                        '=',
-                        DB::raw('LOWER(producer_brands.name)')
-                    );
-                })
-                ->whereIn('products.id', $productIds)
-                ->orderBy('products.id');
-        }
+                // Если $productIds пустой (выполнится этот callback):
+                fn($q) => $q->where('products.published_to_ebay_de', false)->whereNull('products.reference')
+            );
 
-        $countOfProducts = $queryProducts->count();
-
+        $countOfProducts = (clone $baseQuery)->count();
         Log::add($logTraceId, 'got' . $countOfProducts . ' products what not published to ebay', 2);
 
+        $oeQuery = (clone $baseQuery)->whereNotNull('oe_codes_from_sheets');
+        $standardQuery = (clone $baseQuery)->whereNull('oe_codes_from_sheets');
+
         $chunkKey = 1;
-        $queryProducts->chunk(10, function ($products) use ($logTraceId, &$chunkKey) {
+        $standardQuery->chunk(10, function ($products) use ($logTraceId, &$chunkKey) {
             Log::add($logTraceId, 'start chunk ' . $chunkKey . ' by 10 products', 2);
             Log::add($logTraceId, 'prepare request for tecdoc', 3);
 
@@ -145,6 +156,21 @@ class UpdateProducts extends Controller
             $chunkKey = $chunkKey + 1;
 
             Log::add($logTraceId, 'finish chunk', 3);
+        });
+
+        $oeQuery->chunk(10, function ($products) use ($logTraceId) {
+            $requestData = $products->map(fn($p) => [
+                'id' => $p->id,
+                'reference' => $p->oe_codes_from_sheets
+            ])->toArray();
+
+            $response = Http::timeout(21600)
+                ->withHeaders(['log-trace-id' => $logTraceId])
+                ->post("http://ebay_restapi_nginx/tecdoc/infoByOeCodes", $requestData);
+
+            if ($data = $response->json()) {
+                $this->updateDbProductTablesFromTecDoc($data, $logTraceId);
+            }
         });
 
         Log::add($logTraceId, 'finish work fromTecDoc', 1);
@@ -342,6 +368,7 @@ class UpdateProducts extends Controller
 //            $resultOfDeletingPhotos = ProductPhoto::whereIn('product_id', $productIds)->delete();
 //            $resultOfInsertingPhotos = ProductPhoto::insert($photoUpdateData);
         }
+
         if ($tecdocUpdateData) {
             Log::add($logTraceId, 'update db tecdoc data', 3);
             $productIds = collect($tecdocUpdateData)

@@ -9,6 +9,7 @@ use App\Models\Product;
 class GetProducts extends Controller
 {
     public function run() {
+//        Usually used from /python/products/update_from_db_to_google_sheets
         $products = Product::orderBy('id')
             ->get();
 
@@ -51,7 +52,9 @@ class GetProducts extends Controller
                 $product->car_compatibilities = [];
             }
 
-            if(isset($oeCodes[$product->id])) {
+            if(isset($product->oe_codes_from_sheets)) {
+                $product->oe_codes = $product->oe_codes_from_sheets;
+            } else if (isset($oeCodes[$product->id])) {
                 $product->oe_codes = $oeCodes[$product->id]->pluck('number')->toArray() ?? [];
             } else {
                 $product->oe_codes = [];
@@ -63,8 +66,6 @@ class GetProducts extends Controller
                 $ebaySimilarProductsName = implode("\n", $ebaySimilarProductsName);
                 $product->ebay_similar_products_name = $ebaySimilarProductsName;
                 $product->ebay_similar_products_photo = $ebaySimilarProducts[$product->id][0]->photo;
-            } else {
-                $product->oe_codes = [];
             }
 
             if(isset($photos[$product->id])) {
